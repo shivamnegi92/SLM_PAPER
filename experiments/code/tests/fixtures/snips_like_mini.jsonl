@@ -1,0 +1,4 @@
+{"tokens": ["play", "some", "jazz", "music"], "ner_tags": ["O", "O", "B-genre", "O"], "intent": "PlayMusic"}
+{"tokens": ["book", "a", "table", "for", "two", "at", "noon"], "ner_tags": ["O", "O", "O", "O", "B-party_size", "O", "B-time"], "intent": "BookRestaurant"}
+{"tokens": ["what", "is", "the", "weather", "in", "san", "diego", "tomorrow"], "ner_tags": ["O", "O", "O", "O", "O", "B-city", "I-city", "B-time"], "intent": "GetWeather"}
+{"tokens": ["what", "are", "my", "reward", "points"], "ner_tags": ["O", "O", "O", "O", "O"], "intent": "AccountQuery"}

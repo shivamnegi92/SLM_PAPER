@@ -1,0 +1,29 @@
+[project]
+name = "slm-paper-experiments"
+version = "0.0.1"
+description = "Public-benchmark experiments for the efficient SLM intent+slot paper (ICLR 2027)."
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+# Pure-logic core needs only pytest. Heavy model deps are opt-in so the core
+# test suite runs anywhere (no GPU / no large downloads).
+test = ["pytest>=7.4"]
+models = [
+    "torch>=2.1",
+    "transformers>=4.44",
+    "datasets>=2.19",
+    "seqeval>=1.2",
+    "numpy>=1.26",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short"

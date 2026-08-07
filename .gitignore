@@ -1,0 +1,22 @@
+# venv / python
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+
+# secrets / env
+.env
+
+# node (in case tooling adds it later)
+node_modules/
+
+# OS
+.DS_Store
+
+# large artifacts (models/data are downloaded, not committed)
+*.ckpt
+*.bin
+*.safetensors
+data/raw/
+data/cache/

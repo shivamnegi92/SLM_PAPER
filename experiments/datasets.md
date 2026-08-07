@@ -16,6 +16,20 @@
 - Slot-filling + implicit-slot analysis: ATIS, SNIPS, MASSIVE.
 - All are available via Hugging Face `datasets`. Pin the exact version/revision.
 
+## Verified Hub sources (2026-08-07) -- use these exact repo IDs
+| Dataset | Hub repo | Columns used | Status |
+|---|---|---|---|
+| ATIS | `tuetschek/atis` | `text`, `intent`, `slots` (whitespace-aligned BIO string) | Verified, loads fast, no LFS/Xet |
+| CLINC150 | `contemmcm/clinc150` | `text`, `intent`, `split` (single `complete` split, filter by `split` col) | Verified, loads fast |
+| BANKING77 | `mteb/banking77` (fallback `legacy-datasets/banking77`) | `text`, `label_text` / `label` | Verified schema; **blob download blocked by some corporate proxies** (Xet/LFS transport returns 407 on the CDN redirect even though API/metadata calls succeed). Works fine off-VPN or on unrestricted networks. |
+| SNIPS (with slots) | not yet found on the Hub | -- | **Open**: `benayas/snips` only has intent, no slots. No verified Hub source with BIO slots found yet. Fallback plan: pull the original public-domain SNIPS NLU benchmark files directly (sonos-nlu-benchmark, CC0) and parse into the same `Example` schema via `records_to_examples`. |
+| MASSIVE (en) | `AmazonScience/massive` | config `default` (script-based repo; only loads via `revision="refs/convert/parquet"`) | **Open**: the `default` parquet config bundles ALL locales/splits together (~1M+ rows) and is too slow to filter down in an interactive session. Needs a background job that streams and filters to `locale == "en-US"`, not a quick call. |
+
+**Practical note:** set `HF_HUB_DISABLE_XET=1` when downloading, and route through
+whatever proxy your network requires via standard `HTTP_PROXY`/`HTTPS_PROXY` env
+vars -- no proxy hostnames are hardcoded in `slmpaper/hf_loaders.py` (keeps the
+anonymized public release proxy-agnostic).
+
 ## Candidate public base models (verify license before use)
 
 | Model | Type | Params | License | Use |

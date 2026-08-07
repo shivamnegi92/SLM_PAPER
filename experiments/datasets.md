@@ -30,6 +30,25 @@ whatever proxy your network requires via standard `HTTP_PROXY`/`HTTPS_PROXY` env
 vars -- no proxy hostnames are hardcoded in `slmpaper/hf_loaders.py` (keeps the
 anonymized public release proxy-agnostic).
 
+## Investigated and closed (2026-08-07): why the agent sandbox can't pull BANKING77/SNIPS/MASSIVE
+Confirmed via live testing + a GEC code search (`Walmart-Tech-Chile/spec-kit-walmart`
+reference scripts) that there are two independent blockers, neither fixable from
+this sandbox:
+1. **No direct network route to `blob.core.windows.net`** from this environment
+   (DNS doesn't even resolve without a proxy) -- that's the CDN Xet/LFS-backed
+   repos redirect large files to, and the corporate sysproxy returns 407 on that
+   redirect.
+2. **Walmart's official HF-via-Artifactory proxy (`HF_ENDPOINT=https://ci.artifacts.walmart.com/artifactory/api/huggingfaceml/hub-huggingfaceml-release-remote`) only mirrors MODEL repos, not dataset repos.** Verified: a model
+   download (`sentence-transformers/all-MiniLM-L6-v2`) succeeds through it; every
+   dataset repo tried (`repo_type="dataset"`) returns 401, including via the
+   `hf_hub_download()` file-level API the reference scripts recommend.
+
+**Conclusion:** this is a sandbox-network limitation, not a code or credentials
+problem. The fix is downloading on a real Walmart laptop (full corporate internet
+with automatic blob-CDN routing) and handing off the files locally -- see
+`../experiments/code/data/README.md` for the manual-download workflow and the
+local-file loaders already built for it.
+
 ## Candidate public base models (verify license before use)
 
 | Model | Type | Params | License | Use |

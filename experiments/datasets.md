@@ -23,7 +23,15 @@
 | CLINC150 | `contemmcm/clinc150` | `text`, `intent`, `split` (single `complete` split, filter by `split` col) | Verified, loads fast |
 | BANKING77 | `mteb/banking77` (fallback `legacy-datasets/banking77`) | `text`, `label_text` / `label` | Verified schema; **blob download blocked by some corporate proxies** (Xet/LFS transport returns 407 on the CDN redirect even though API/metadata calls succeed). Works fine off-VPN or on unrestricted networks. |
 | SNIPS (with slots) | not yet found on the Hub | -- | **Open**: `benayas/snips` only has intent, no slots. No verified Hub source with BIO slots found yet. Fallback plan: pull the original public-domain SNIPS NLU benchmark files directly (sonos-nlu-benchmark, CC0) and parse into the same `Example` schema via `records_to_examples`. |
-| MASSIVE (en) | `AmazonScience/massive` | config `default` (script-based repo; only loads via `revision="refs/convert/parquet"`) | **Open**: the `default` parquet config bundles ALL locales/splits together (~1M+ rows) and is too slow to filter down in an interactive session. Needs a background job that streams and filters to `locale == "en-US"`, not a quick call. |
+| MASSIVE (en) | not a Hub dataset for this path | -- | **SOLVED via a different source** -- see "Datasets acquired" below (direct S3 tarball, no HF Hub involved). |
+
+## Datasets acquired (2026-08-07)
+| Dataset | Source | Loader | Verified stats |
+|---|---|---|---|
+| ATIS | HF `tuetschek/atis` (live) | `hf_loaders.load_atis` / `local_loaders.load_atis_local` | loads fine |
+| CLINC150 | HF `contemmcm/clinc150` (live) | `hf_loaders.load_clinc150` / `local_loaders.load_clinc150_local` | loads fine |
+| MASSIVE (en) | Direct S3 tarball: `https://amazon-massive-nlu-dataset.s3.amazonaws.com/amazon-massive-dataset-1.1.tar.gz` (linked from `github.com/alexa/massive` README). Plain HTTPS, reachable directly from this sandbox, ~40MB, no proxy/Xet/auth issues at all. | `slmpaper.massive.load_massive_local` (parses the `annot_utt` bracket-slot format) | **11,514 train / 2,974 test, 60 intents, 55 slot types** -- matches the official published MASSIVE stats exactly. Note: implicit-slot rate is trivially 0% here since `annot_utt` only ever brackets literal spans -- MASSIVE isn't useful for the Paper 2 implicit-slot analysis, ATIS/SNIPS are. |
+| BANKING77, SNIPS | still manual-download (see below) | `local_loaders.load_banking77_local` (SNIPS loader TBD) | -- |
 
 **Practical note:** set `HF_HUB_DISABLE_XET=1` when downloading, and route through
 whatever proxy your network requires via standard `HTTP_PROXY`/`HTTPS_PROXY` env

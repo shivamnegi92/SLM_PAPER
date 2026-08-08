@@ -1,0 +1,35 @@
+{
+  "dataset": "banking77",
+  "model": "models/gpt2",
+  "kind": "pruned_discriminative",
+  "depth": 6,
+  "use_crf": false,
+  "config": {
+    "epochs": 3,
+    "batch_size": 16,
+    "lr": 5e-05,
+    "slot_loss_weight": 2.0,
+    "max_train": 5000,
+    "seed": 42
+  },
+  "n_train": 5000,
+  "n_test": 3080,
+  "n_intents": 77,
+  "n_tags": 1,
+  "intent_accuracy": 0.8090909090909091,
+  "slot_f1": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0
+  },
+  "latency_ms": {
+    "n": 50,
+    "mean": 5.344268358894624,
+    "p50": 5.363417003536597,
+    "p95": 5.651207990013063
+  },
+  "train_time_s": 171.70489382743835
+}

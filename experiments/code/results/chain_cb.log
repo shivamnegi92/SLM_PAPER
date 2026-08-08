@@ -1,1 +1,5 @@
 [chain] waiting for Phase A to finish...
+[chain] Phase A done. Starting Phase C (CRF).
+==================== atis depth3 CRF ====================
+[atis] depth=3 train=4274 test=586 intents=17 tags=135
+Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]Loading weights: 100%|██████████| 148/148 [00:00<00:00, 17448.76it/s]

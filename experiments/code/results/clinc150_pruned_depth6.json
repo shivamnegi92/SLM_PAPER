@@ -1,0 +1,35 @@
+{
+  "dataset": "clinc150",
+  "model": "models/gpt2",
+  "kind": "pruned_discriminative",
+  "depth": 6,
+  "use_crf": false,
+  "config": {
+    "epochs": 3,
+    "batch_size": 16,
+    "lr": 5e-05,
+    "slot_loss_weight": 2.0,
+    "max_train": 5000,
+    "seed": 42
+  },
+  "n_train": 5000,
+  "n_test": 4500,
+  "n_intents": 150,
+  "n_tags": 1,
+  "intent_accuracy": 0.8144444444444444,
+  "slot_f1": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0
+  },
+  "latency_ms": {
+    "n": 50,
+    "mean": 5.1456342986784875,
+    "p50": 5.095792002975941,
+    "p95": 5.603291996521875
+  },
+  "train_time_s": 105.5036108493805
+}

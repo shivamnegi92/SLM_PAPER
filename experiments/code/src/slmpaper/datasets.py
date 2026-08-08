@@ -16,6 +16,7 @@ class Example:
     tokens: list[str]
     intent: str
     slots: dict[str, list[str]] = field(default_factory=dict)
+    bio_tags: list[str] = field(default_factory=list)
 
 
 def normalize_bio_record(tokens: list[str], bio_tags: list[str], intent: str) -> Example:
@@ -31,4 +32,5 @@ def normalize_bio_record(tokens: list[str], bio_tags: list[str], intent: str) ->
         tokens=list(tokens),
         intent=intent,
         slots=slots,
+        bio_tags=list(bio_tags),
     )

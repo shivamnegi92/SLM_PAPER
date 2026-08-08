@@ -12,6 +12,7 @@ def test_normalize_bio_record_builds_example():
     assert ex.text == "find samsung galaxy in electronics"
     assert ex.intent == "find_item"
     assert ex.slots == {"item": ["samsung galaxy"], "dept": ["electronics"]}
+    assert ex.bio_tags == ["O", "B-item", "I-item", "O", "B-dept"]
 
 
 def test_normalize_bio_record_no_slots():

@@ -225,3 +225,165 @@ Notes:
 - UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
   epoch 1/3 loss=2.5926
   epoch 2/3 loss=0.6977
+  epoch 3/3 loss=0.3128
+{
+  "dataset": "banking77",
+  "model": "distilbert-base-uncased",
+  "config": {
+    "epochs": 3,
+    "batch_size": 32,
+    "lr": 5e-05,
+    "slot_loss_weight": 2.0,
+    "max_train": 5000,
+    "seed": 42
+  },
+  "n_train": 5000,
+  "n_test": 3080,
+  "n_intents": 77,
+  "n_tags": 1,
+  "intent_accuracy": 0.8938311688311689,
+  "slot_f1": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0
+  },
+  "latency_ms": {
+    "n": 50,
+    "mean": 6.567320881295018,
+    "p50": 6.508334015961736,
+    "p95": 6.996166979661211
+  },
+  "train_time_s": 139.8313021659851
+}
+######## (3) Pareto fill-in: depths 6 & 9 for the 4 new datasets ########
+==================== snips depth 6 ====================
+[snips] depth=6 train=5000 test=700 intents=7 tags=79
+Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]Loading weights: 100%|██████████| 148/148 [00:00<00:00, 10227.48it/s]
+  epoch 1/3 loss=3.7078
+  epoch 2/3 loss=1.1520
+  epoch 3/3 loss=0.6258
+{
+  "dataset": "snips",
+  "model": "models/gpt2",
+  "kind": "pruned_discriminative",
+  "depth": 6,
+  "use_crf": false,
+  "config": {
+    "epochs": 3,
+    "batch_size": 16,
+    "lr": 5e-05,
+    "slot_loss_weight": 2.0,
+    "max_train": 5000,
+    "seed": 42
+  },
+  "n_train": 5000,
+  "n_test": 700,
+  "n_intents": 7,
+  "n_tags": 79,
+  "intent_accuracy": 0.9828571428571429,
+  "slot_f1": {
+    "precision": 0.8486212718064153,
+    "recall": 0.8405797101449275,
+    "f1": 0.8445813497619713,
+    "tp": 1508,
+    "fp": 269,
+    "fn": 286
+  },
+  "latency_ms": {
+    "n": 50,
+    "mean": 9.59273749962449,
+    "p50": 9.516874997643754,
+    "p95": 10.136500000953674
+  },
+  "train_time_s": 112.51803088188171
+}
+==================== snips depth 9 ====================
+[snips] depth=9 train=5000 test=700 intents=7 tags=79
+Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]Loading weights: 100%|██████████| 148/148 [00:00<00:00, 30589.71it/s]
+  epoch 1/3 loss=3.6079
+  epoch 2/3 loss=1.0295
+  epoch 3/3 loss=0.6010
+{
+  "dataset": "snips",
+  "model": "models/gpt2",
+  "kind": "pruned_discriminative",
+  "depth": 9,
+  "use_crf": false,
+  "config": {
+    "epochs": 3,
+    "batch_size": 16,
+    "lr": 5e-05,
+    "slot_loss_weight": 2.0,
+    "max_train": 5000,
+    "seed": 42
+  },
+  "n_train": 5000,
+  "n_test": 700,
+  "n_intents": 7,
+  "n_tags": 79,
+  "intent_accuracy": 0.9842857142857143,
+  "slot_f1": {
+    "precision": 0.8548022598870056,
+    "recall": 0.8433667781493869,
+    "f1": 0.8490460157126823,
+    "tp": 1513,
+    "fp": 257,
+    "fn": 281
+  },
+  "latency_ms": {
+    "n": 50,
+    "mean": 15.835339078330437,
+    "p50": 15.695499983849004,
+    "p95": 16.86354199773632
+  },
+  "train_time_s": 165.78038001060486
+}
+==================== massive depth 6 ====================
+[massive] depth=6 train=5000 test=2974 intents=60 tags=109
+Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]Loading weights: 100%|██████████| 148/148 [00:00<00:00, 22804.34it/s]
+  epoch 1/3 loss=6.2020
+  epoch 2/3 loss=3.1768
+  epoch 3/3 loss=2.0798
+{
+  "dataset": "massive",
+  "model": "models/gpt2",
+  "kind": "pruned_discriminative",
+  "depth": 6,
+  "use_crf": false,
+  "config": {
+    "epochs": 3,
+    "batch_size": 16,
+    "lr": 5e-05,
+    "slot_loss_weight": 2.0,
+    "max_train": 5000,
+    "seed": 42
+  },
+  "n_train": 5000,
+  "n_test": 2974,
+  "n_intents": 60,
+  "n_tags": 109,
+  "intent_accuracy": 0.7498318762609281,
+  "slot_f1": {
+    "precision": 0.5763677811550152,
+    "recall": 0.538898756660746,
+    "f1": 0.557003855333211,
+    "tp": 1517,
+    "fp": 1115,
+    "fn": 1298
+  },
+  "latency_ms": {
+    "n": 50,
+    "mean": 5.355751620954834,
+    "p50": 5.324541009031236,
+    "p95": 5.814540985738859
+  },
+  "train_time_s": 106.00876879692078
+}
+==================== massive depth 9 ====================
+[massive] depth=9 train=5000 test=2974 intents=60 tags=109
+Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]Loading weights: 100%|██████████| 148/148 [00:00<00:00, 31047.16it/s]
+  epoch 1/3 loss=6.0341
+  epoch 2/3 loss=2.9538

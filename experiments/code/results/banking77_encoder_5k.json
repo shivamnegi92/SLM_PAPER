@@ -1,0 +1,32 @@
+{
+  "dataset": "banking77",
+  "model": "distilbert-base-uncased",
+  "config": {
+    "epochs": 3,
+    "batch_size": 32,
+    "lr": 5e-05,
+    "slot_loss_weight": 2.0,
+    "max_train": 5000,
+    "seed": 42
+  },
+  "n_train": 5000,
+  "n_test": 3080,
+  "n_intents": 77,
+  "n_tags": 1,
+  "intent_accuracy": 0.8938311688311689,
+  "slot_f1": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0
+  },
+  "latency_ms": {
+    "n": 50,
+    "mean": 6.567320881295018,
+    "p50": 6.508334015961736,
+    "p95": 6.996166979661211
+  },
+  "train_time_s": 139.8313021659851
+}

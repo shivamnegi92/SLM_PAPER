@@ -1,0 +1,35 @@
+{
+  "dataset": "massive",
+  "model": "models/gpt2",
+  "kind": "pruned_discriminative",
+  "depth": 3,
+  "use_crf": true,
+  "config": {
+    "epochs": 3,
+    "batch_size": 16,
+    "lr": 5e-05,
+    "slot_loss_weight": 2.0,
+    "max_train": 5000,
+    "seed": 42
+  },
+  "n_train": 5000,
+  "n_test": 2974,
+  "n_intents": 60,
+  "n_tags": 109,
+  "intent_accuracy": 0.5477471418964358,
+  "slot_f1": {
+    "precision": 0.601018675721562,
+    "recall": 0.503019538188277,
+    "f1": 0.5476696963836781,
+    "tp": 1416,
+    "fp": 940,
+    "fn": 1399
+  },
+  "latency_ms": {
+    "n": 50,
+    "mean": 2.8330849792109802,
+    "p50": 2.8272090130485594,
+    "p95": 2.8975000022910535
+  },
+  "train_time_s": 36369.06611204147
+}

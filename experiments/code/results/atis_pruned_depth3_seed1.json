@@ -1,0 +1,35 @@
+{
+  "dataset": "atis",
+  "model": "models/gpt2",
+  "kind": "pruned_discriminative",
+  "depth": 3,
+  "use_crf": false,
+  "config": {
+    "epochs": 3,
+    "batch_size": 16,
+    "lr": 5e-05,
+    "slot_loss_weight": 2.0,
+    "max_train": 5000,
+    "seed": 1
+  },
+  "n_train": 4274,
+  "n_test": 586,
+  "n_intents": 17,
+  "n_tags": 135,
+  "intent_accuracy": 0.9778156996587031,
+  "slot_f1": {
+    "precision": 0.9176165803108808,
+    "recall": 0.898984771573604,
+    "f1": 0.9082051282051282,
+    "tp": 1771,
+    "fp": 159,
+    "fn": 199
+  },
+  "latency_ms": {
+    "n": 50,
+    "mean": 5.060546701424755,
+    "p50": 5.0446250243112445,
+    "p95": 5.23375000921078
+  },
+  "train_time_s": 63.02855110168457
+}

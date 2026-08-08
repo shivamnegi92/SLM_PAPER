@@ -3,3 +3,252 @@
 ==================== atis depth3 CRF ====================
 [atis] depth=3 train=4274 test=586 intents=17 tags=135
 Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]Loading weights: 100%|██████████| 148/148 [00:00<00:00, 17448.76it/s]
+  epoch 1/3 loss=26.3349
+  epoch 2/3 loss=9.3875
+  epoch 3/3 loss=4.6176
+{
+  "dataset": "atis",
+  "model": "models/gpt2",
+  "kind": "pruned_discriminative",
+  "depth": 3,
+  "use_crf": true,
+  "config": {
+    "epochs": 3,
+    "batch_size": 16,
+    "lr": 5e-05,
+    "slot_loss_weight": 2.0,
+    "max_train": 5000,
+    "seed": 42
+  },
+  "n_train": 4274,
+  "n_test": 586,
+  "n_intents": 17,
+  "n_tags": 135,
+  "intent_accuracy": 0.878839590443686,
+  "slot_f1": {
+    "precision": 0.9250513347022588,
+    "recall": 0.9147208121827411,
+    "f1": 0.9198570699336397,
+    "tp": 1802,
+    "fp": 146,
+    "fn": 168
+  },
+  "latency_ms": {
+    "n": 50,
+    "mean": 5.6789883627789095,
+    "p50": 5.661957984557375,
+    "p95": 6.050374999176711
+  },
+  "train_time_s": 103.14236998558044
+}
+==================== snips depth3 CRF ====================
+[snips] depth=3 train=5000 test=700 intents=7 tags=79
+Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]Loading weights: 100%|██████████| 148/148 [00:00<00:00, 26747.54it/s]
+  epoch 1/3 loss=31.9398
+  epoch 2/3 loss=11.5503
+  epoch 3/3 loss=6.6323
+{
+  "dataset": "snips",
+  "model": "models/gpt2",
+  "kind": "pruned_discriminative",
+  "depth": 3,
+  "use_crf": true,
+  "config": {
+    "epochs": 3,
+    "batch_size": 16,
+    "lr": 5e-05,
+    "slot_loss_weight": 2.0,
+    "max_train": 5000,
+    "seed": 42
+  },
+  "n_train": 5000,
+  "n_test": 700,
+  "n_intents": 7,
+  "n_tags": 79,
+  "intent_accuracy": 0.9728571428571429,
+  "slot_f1": {
+    "precision": 0.8216276477146043,
+    "recall": 0.8216276477146043,
+    "f1": 0.8216276477146043,
+    "tp": 1474,
+    "fp": 320,
+    "fn": 320
+  },
+  "latency_ms": {
+    "n": 50,
+    "mean": 5.808707482065074,
+    "p50": 5.820709018735215,
+    "p95": 6.10483399941586
+  },
+  "train_time_s": 101.10888910293579
+}
+==================== massive depth3 CRF ====================
+[massive] depth=3 train=5000 test=2974 intents=60 tags=109
+Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]Loading weights: 100%|██████████| 148/148 [00:00<00:00, 21082.63it/s]
+  epoch 1/3 loss=25.8000
+  epoch 2/3 loss=14.3995
+  epoch 3/3 loss=10.2064
+{
+  "dataset": "massive",
+  "model": "models/gpt2",
+  "kind": "pruned_discriminative",
+  "depth": 3,
+  "use_crf": true,
+  "config": {
+    "epochs": 3,
+    "batch_size": 16,
+    "lr": 5e-05,
+    "slot_loss_weight": 2.0,
+    "max_train": 5000,
+    "seed": 42
+  },
+  "n_train": 5000,
+  "n_test": 2974,
+  "n_intents": 60,
+  "n_tags": 109,
+  "intent_accuracy": 0.5477471418964358,
+  "slot_f1": {
+    "precision": 0.601018675721562,
+    "recall": 0.503019538188277,
+    "f1": 0.5476696963836781,
+    "tp": 1416,
+    "fp": 940,
+    "fn": 1399
+  },
+  "latency_ms": {
+    "n": 50,
+    "mean": 2.8330849792109802,
+    "p50": 2.8272090130485594,
+    "p95": 2.8975000022910535
+  },
+  "train_time_s": 36369.06611204147
+}
+PHASE C DONE
+[chain] Phase C done. Starting Phase B (seeds).
+============ atis depth 3 seed 1 ============
+[atis] depth=3 train=4274 test=586 intents=17 tags=135
+Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]Loading weights: 100%|██████████| 148/148 [00:00<00:00, 9968.32it/s]
+  epoch 1/3 loss=3.0029
+  epoch 2/3 loss=1.1199
+  epoch 3/3 loss=0.5730
+{
+  "dataset": "atis",
+  "model": "models/gpt2",
+  "kind": "pruned_discriminative",
+  "depth": 3,
+  "use_crf": false,
+  "config": {
+    "epochs": 3,
+    "batch_size": 16,
+    "lr": 5e-05,
+    "slot_loss_weight": 2.0,
+    "max_train": 5000,
+    "seed": 1
+  },
+  "n_train": 4274,
+  "n_test": 586,
+  "n_intents": 17,
+  "n_tags": 135,
+  "intent_accuracy": 0.9778156996587031,
+  "slot_f1": {
+    "precision": 0.9176165803108808,
+    "recall": 0.898984771573604,
+    "f1": 0.9082051282051282,
+    "tp": 1771,
+    "fp": 159,
+    "fn": 199
+  },
+  "latency_ms": {
+    "n": 50,
+    "mean": 5.060546701424755,
+    "p50": 5.0446250243112445,
+    "p95": 5.23375000921078
+  },
+  "train_time_s": 63.02855110168457
+}
+============ atis depth 12 seed 1 ============
+[atis] depth=12 train=4274 test=586 intents=17 tags=135
+Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]Loading weights: 100%|██████████| 148/148 [00:00<00:00, 29133.95it/s]
+  epoch 1/3 loss=3.0354
+  epoch 2/3 loss=0.9013
+  epoch 3/3 loss=0.5335
+{
+  "dataset": "atis",
+  "model": "models/gpt2",
+  "kind": "pruned_discriminative",
+  "depth": 12,
+  "use_crf": false,
+  "config": {
+    "epochs": 3,
+    "batch_size": 16,
+    "lr": 5e-05,
+    "slot_loss_weight": 2.0,
+    "max_train": 5000,
+    "seed": 1
+  },
+  "n_train": 4274,
+  "n_test": 586,
+  "n_intents": 17,
+  "n_tags": 135,
+  "intent_accuracy": 0.9795221843003413,
+  "slot_f1": {
+    "precision": 0.9297606659729448,
+    "recall": 0.9071065989847715,
+    "f1": 0.9182939362795477,
+    "tp": 1787,
+    "fp": 135,
+    "fn": 183
+  },
+  "latency_ms": {
+    "n": 50,
+    "mean": 20.99391162104439,
+    "p50": 20.498208003118634,
+    "p95": 23.83674998418428
+  },
+  "train_time_s": 205.36014318466187
+}
+============ snips depth 3 seed 1 ============
+[snips] depth=3 train=5000 test=700 intents=7 tags=79
+Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]Loading weights: 100%|██████████| 148/148 [00:00<00:00, 13960.89it/s]
+  epoch 1/3 loss=3.9801
+  epoch 2/3 loss=1.3675
+  epoch 3/3 loss=0.8090
+{
+  "dataset": "snips",
+  "model": "models/gpt2",
+  "kind": "pruned_discriminative",
+  "depth": 3,
+  "use_crf": false,
+  "config": {
+    "epochs": 3,
+    "batch_size": 16,
+    "lr": 5e-05,
+    "slot_loss_weight": 2.0,
+    "max_train": 5000,
+    "seed": 1
+  },
+  "n_train": 5000,
+  "n_test": 700,
+  "n_intents": 7,
+  "n_tags": 79,
+  "intent_accuracy": 0.9814285714285714,
+  "slot_f1": {
+    "precision": 0.8226990400903444,
+    "recall": 0.8121516164994426,
+    "f1": 0.817391304347826,
+    "tp": 1457,
+    "fp": 314,
+    "fn": 337
+  },
+  "latency_ms": {
+    "n": 50,
+    "mean": 5.151000077603385,
+    "p50": 5.186374997720122,
+    "p95": 5.2882089803460985
+  },
+  "train_time_s": 68.40719413757324
+}
+============ snips depth 12 seed 1 ============
+[snips] depth=12 train=5000 test=700 intents=7 tags=79
+Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]Loading weights: 100%|██████████| 148/148 [00:00<00:00, 15573.82it/s]
+  epoch 1/3 loss=4.1544

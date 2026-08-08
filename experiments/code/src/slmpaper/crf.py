@@ -49,9 +49,14 @@ class LinearChainCRF(nn.Module):
         return torch.logsumexp(alpha, dim=1)  # (B,)
 
     def neg_log_likelihood(self, emissions, tags, mask):
+        """Per-token-normalized NLL, so its scale is comparable to a token-mean
+        softmax cross-entropy (otherwise the CRF term, which sums over the whole
+        sequence, dominates the joint loss and starves the intent head).
+        """
         gold = self._gold_score(emissions, tags, mask)
         logz = self._log_partition(emissions, mask)
-        return (logz - gold).mean()
+        n_tokens = mask.float().sum().clamp(min=1.0)
+        return (logz - gold).sum() / n_tokens
 
     @torch.no_grad()
     def decode(self, emissions, mask):

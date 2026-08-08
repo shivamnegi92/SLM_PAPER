@@ -20,32 +20,9 @@ import torch
 from transformers import AutoTokenizer
 
 from slmpaper.batch import prepare_batch
+from slmpaper.data_registry import load_split
 from slmpaper.evaluation import evaluate_model
 from slmpaper.labels import build_intent_vocab, build_tag_vocab
-
-
-def load_split(dataset: str, split: str):
-    """Return a list[Example] for (dataset, split) using the verified loaders."""
-    d = dataset.lower()
-    if d == "snips":
-        from slmpaper.local_loaders import load_snips_local
-        return load_snips_local("data/raw/snips", split="train" if split == "train" else "validate")
-    if d == "banking77":
-        from slmpaper.local_loaders import load_banking77_local
-        fname = "train.csv" if split == "train" else "test.csv"
-        return load_banking77_local(f"data/raw/banking77/{fname}")
-    if d == "atis":
-        from slmpaper.local_loaders import load_atis_iob_local
-        fname = "atis.train.csv" if split == "train" else "atis.test.csv"
-        return load_atis_iob_local(f"data/raw/atis_iob/{fname}")
-    if d == "massive":
-        from slmpaper.massive import load_massive_local
-        return load_massive_local("data/raw/massive/1.1/data/en-US.jsonl",
-                                   split="train" if split == "train" else "test")
-    if d == "clinc150":
-        from slmpaper.hf_loaders import load_clinc150
-        return load_clinc150("train" if split == "train" else "test")
-    raise ValueError(f"unknown dataset {dataset!r}")
 
 
 def make_batches(examples, tokenizer, intent2id, tag2id, batch_size):

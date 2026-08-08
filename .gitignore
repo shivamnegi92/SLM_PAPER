@@ -20,3 +20,4 @@ node_modules/
 *.safetensors
 data/raw/
 data/cache/
+experiments/code/models/

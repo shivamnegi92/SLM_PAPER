@@ -101,13 +101,31 @@ favorable 2.4-3.0pt cost on the 100+-class fine-grained intent taxonomies
 intent-set granularity.** Every depth-3 config is ~4x faster than depth-12.
 
 ### 5.3 Ablations
-- **CRF vs softmax slot head:** Table 3 in aggregated results (depths-3, ATIS/
-  SNIPS/MASSIVE). Hypothesis: CRF narrows the slot-F1 gap vs the bidirectional
-  encoder by enforcing valid BIO transitions.
-- **Depth Pareto (quality/latency):** Table 2 -- ATIS full 4-depth curve
-  (3/6/9/12), 2-point {3,12} on the other four; latency scales ~linearly with
-  depth (5.1 -> 10.9 -> 15.8 -> 19.5 ms on ATIS).
-- **Seed variance (>=3 seeds):** Table 4, mean +/- std over seeds {42,1,2}.
+- **CRF vs softmax slot head** (depth-3, length-normalized CRF loss): small,
+  consistent slot-F1 gain -- ATIS +0.19, SNIPS +0.27, MASSIVE +0.09. CRF helps
+  marginally but does not close the gap to the bidirectional encoder; the
+  encoder's slot advantage is attention-directionality, not tag-transition
+  modeling. (An earlier un-normalized CRF loss inflated slot F1 while starving
+  the intent head -- a joint-loss-balancing pitfall we report.)
+- **Depth Pareto (quality/latency):** full 3/6/9/12 curve, all 5 datasets.
+  Accuracy peaks around depth 6-9 then plateaus/slightly dips at 12; latency is
+  ~linear in depth. depth-3 = aggressive-speed pick (~4x faster than 12);
+  depth 6-9 = accuracy-optimal knee.
+- **Seed variance (n=3 seeds {42,1,2}; MASSIVE n=2), intent acc mean+/-std:**
+
+  | Dataset | depth 3 | depth 12 | depth-3 == depth-12 within std? |
+  |---|---:|---:|---|
+  | ATIS | 97.95+/-0.14 | 97.84+/-0.29 | YES |
+  | SNIPS | 98.19+/-0.18 | 98.14+/-0.00 | YES (d3 nominally higher) |
+  | CLINC150 | 78.06+/-0.91 | 80.44+/-1.68 | YES (bands overlap) |
+  | MASSIVE | 73.49+/-0.32 | 74.50+/-0.12 | NO (~1pt real) |
+  | BANKING77 | 78.74+/-0.29 | 81.32+/-0.81 | NO (~2.6pt real) |
+
+  Refined C1 claim: the probe-selected depth-3 is statistically indistinguishable
+  from full depth on 3/5 datasets; on MASSIVE and (especially) the 77-class
+  single-domain BANKING77, extra depth yields a small but seed-robust gain --
+  i.e. depth genuinely helps for many fine-grained *same-domain* intents. Every
+  depth-3 config remains ~4x faster regardless.
 - Slot-loss weight lambda: fixed at 2.0 here; sweep is a stretch item.
 
 ### 5.4 Reliability — parse-failure rate (generative vs discriminative)

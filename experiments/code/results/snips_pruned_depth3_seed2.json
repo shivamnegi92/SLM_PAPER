@@ -3,33 +3,33 @@
   "model": "models/gpt2",
   "kind": "pruned_discriminative",
   "depth": 3,
-  "use_crf": true,
+  "use_crf": false,
   "config": {
     "epochs": 3,
     "batch_size": 16,
     "lr": 5e-05,
     "slot_loss_weight": 2.0,
     "max_train": 5000,
-    "seed": 42
+    "seed": 2
   },
   "n_train": 5000,
   "n_test": 700,
   "n_intents": 7,
   "n_tags": 79,
-  "intent_accuracy": 0.9857142857142858,
+  "intent_accuracy": 0.9842857142857143,
   "slot_f1": {
-    "precision": 0.8232351306281267,
-    "recall": 0.8255295429208472,
-    "f1": 0.8243807403284165,
-    "tp": 1481,
-    "fp": 318,
-    "fn": 313
+    "precision": 0.8246498599439775,
+    "recall": 0.8205128205128205,
+    "f1": 0.8225761385861972,
+    "tp": 1472,
+    "fp": 313,
+    "fn": 322
   },
   "latency_ms": {
     "n": 50,
-    "mean": 5.020232539973222,
-    "p50": 4.992667003534734,
-    "p95": 5.319415999110788
+    "mean": 4.98847501934506,
+    "p50": 4.958083009114489,
+    "p95": 5.274750001262873
   },
-  "train_time_s": 75.97669076919556
+  "train_time_s": 65.86849808692932
 }

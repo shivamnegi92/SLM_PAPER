@@ -22,7 +22,7 @@ from transformers import AutoTokenizer
 
 from slmpaper.batch import prepare_batch
 from slmpaper.data_registry import load_split
-from slmpaper.evaluation import evaluate_model
+from slmpaper.evaluation import evaluate_model, evaluate_model_crf
 from slmpaper.labels import build_intent_vocab, build_tag_vocab
 from slmpaper.pruned_model import PrunedGenerativeClassifier
 
@@ -44,6 +44,7 @@ def main():
     ap.add_argument("--batch-size", type=int, default=16)
     ap.add_argument("--lr", type=float, default=5e-5)
     ap.add_argument("--slot-loss-weight", type=float, default=2.0)
+    ap.add_argument("--use-crf", action="store_true", help="CRF slot head instead of softmax")
     ap.add_argument("--max-train", type=int, default=0)
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--output", required=True)
@@ -72,7 +73,7 @@ def main():
         tokenizer.pad_token = tokenizer.eos_token
     model = PrunedGenerativeClassifier.from_pretrained_backbone(
         args.model_path, depth=args.depth, num_intents=len(intent2id), num_tags=len(tag2id),
-        slot_loss_weight=args.slot_loss_weight,
+        slot_loss_weight=args.slot_loss_weight, use_crf=args.use_crf,
     ).to(device)
 
     train_batches = make_batches(train, tokenizer, intent2id, tag2id, args.batch_size)
@@ -95,7 +96,8 @@ def main():
         print(f"  epoch {epoch+1}/{args.epochs} loss={total/max(len(train_batches),1):.4f}", flush=True)
     train_time = time.time() - t0
 
-    metrics = evaluate_model(model, test_batches, id2intent, id2tag, device=device)
+    eval_fn = evaluate_model_crf if args.use_crf else evaluate_model
+    metrics = eval_fn(model, test_batches, id2intent, id2tag, device=device)
 
     from slmpaper.latency import measure_latency
     one = make_batches(test[:1], tokenizer, intent2id, tag2id, 1)[0]
@@ -109,7 +111,7 @@ def main():
 
     result = {
         "dataset": args.dataset, "model": args.model_path, "kind": "pruned_discriminative",
-        "depth": args.depth,
+        "depth": args.depth, "use_crf": args.use_crf,
         "config": {"epochs": args.epochs, "batch_size": args.batch_size, "lr": args.lr,
                     "slot_loss_weight": args.slot_loss_weight, "max_train": args.max_train,
                     "seed": args.seed},

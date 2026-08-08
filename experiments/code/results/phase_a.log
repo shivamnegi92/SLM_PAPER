@@ -1,0 +1,175 @@
+######## (1) B2 encoder @ matched 5000 budget ########
+==================== atis encoder-5k ====================
+[atis] loading data...
+  train=4274 test=586
+  intents=17 tags=135 test(kept)=586
+Loading weights:   0%|          | 0/100 [00:00<?, ?it/s]Loading weights: 100%|██████████| 100/100 [00:00<00:00, 8169.98it/s]
+[transformers] [1mDistilBertModel LOAD REPORT[0m from: distilbert-base-uncased
+Key                     | Status     |  | 
+------------------------+------------+--+-
+vocab_projector.bias    | UNEXPECTED |  | 
+vocab_transform.weight  | UNEXPECTED |  | 
+vocab_transform.bias    | UNEXPECTED |  | 
+vocab_layer_norm.weight | UNEXPECTED |  | 
+vocab_layer_norm.bias   | UNEXPECTED |  | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+  epoch 1/3 loss=2.4522
+  epoch 2/3 loss=0.5125
+  epoch 3/3 loss=0.2595
+{
+  "dataset": "atis",
+  "model": "distilbert-base-uncased",
+  "config": {
+    "epochs": 3,
+    "batch_size": 32,
+    "lr": 5e-05,
+    "slot_loss_weight": 2.0,
+    "max_train": 5000,
+    "seed": 42
+  },
+  "n_train": 4274,
+  "n_test": 586,
+  "n_intents": 17,
+  "n_tags": 135,
+  "intent_accuracy": 0.9795221843003413,
+  "slot_f1": {
+    "precision": 0.942900454775139,
+    "recall": 0.9472081218274112,
+    "f1": 0.9450493795897694,
+    "tp": 1866,
+    "fp": 113,
+    "fn": 104
+  },
+  "latency_ms": {
+    "n": 50,
+    "mean": 7.5294149806723,
+    "p50": 7.362624979577959,
+    "p95": 7.922207994852215
+  },
+  "train_time_s": 76.48860597610474
+}
+==================== snips encoder-5k ====================
+[snips] loading data...
+  train=5000 test=700
+  intents=7 tags=79 test(kept)=700
+Loading weights:   0%|          | 0/100 [00:00<?, ?it/s]Loading weights: 100%|██████████| 100/100 [00:00<00:00, 17702.71it/s]
+[transformers] [1mDistilBertModel LOAD REPORT[0m from: distilbert-base-uncased
+Key                     | Status     |  | 
+------------------------+------------+--+-
+vocab_transform.bias    | UNEXPECTED |  | 
+vocab_layer_norm.bias   | UNEXPECTED |  | 
+vocab_transform.weight  | UNEXPECTED |  | 
+vocab_projector.bias    | UNEXPECTED |  | 
+vocab_layer_norm.weight | UNEXPECTED |  | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+  epoch 1/3 loss=3.0208
+  epoch 2/3 loss=0.5295
+  epoch 3/3 loss=0.2444
+{
+  "dataset": "snips",
+  "model": "distilbert-base-uncased",
+  "config": {
+    "epochs": 3,
+    "batch_size": 32,
+    "lr": 5e-05,
+    "slot_loss_weight": 2.0,
+    "max_train": 5000,
+    "seed": 42
+  },
+  "n_train": 5000,
+  "n_test": 700,
+  "n_intents": 7,
+  "n_tags": 79,
+  "intent_accuracy": 0.9914285714285714,
+  "slot_f1": {
+    "precision": 0.9310344827586207,
+    "recall": 0.9331103678929766,
+    "f1": 0.9320712694877507,
+    "tp": 1674,
+    "fp": 124,
+    "fn": 120
+  },
+  "latency_ms": {
+    "n": 50,
+    "mean": 7.107686698436737,
+    "p50": 7.034457987174392,
+    "p95": 7.625333004398271
+  },
+  "train_time_s": 78.38490009307861
+}
+==================== massive encoder-5k ====================
+[massive] loading data...
+  train=5000 test=2974
+  intents=60 tags=109 test(kept)=2974
+Loading weights:   0%|          | 0/100 [00:00<?, ?it/s]Loading weights: 100%|██████████| 100/100 [00:00<00:00, 13307.22it/s]
+[transformers] [1mDistilBertModel LOAD REPORT[0m from: distilbert-base-uncased
+Key                     | Status     |  | 
+------------------------+------------+--+-
+vocab_projector.bias    | UNEXPECTED |  | 
+vocab_layer_norm.bias   | UNEXPECTED |  | 
+vocab_transform.weight  | UNEXPECTED |  | 
+vocab_transform.bias    | UNEXPECTED |  | 
+vocab_layer_norm.weight | UNEXPECTED |  | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+  epoch 1/3 loss=5.1877
+  epoch 2/3 loss=2.0668
+  epoch 3/3 loss=1.1992
+{
+  "dataset": "massive",
+  "model": "distilbert-base-uncased",
+  "config": {
+    "epochs": 3,
+    "batch_size": 32,
+    "lr": 5e-05,
+    "slot_loss_weight": 2.0,
+    "max_train": 5000,
+    "seed": 42
+  },
+  "n_train": 5000,
+  "n_test": 2974,
+  "n_intents": 60,
+  "n_tags": 109,
+  "intent_accuracy": 0.8372562205783457,
+  "slot_f1": {
+    "precision": 0.7119073470865002,
+    "recall": 0.6987566607460035,
+    "f1": 0.7052707063463607,
+    "tp": 1967,
+    "fp": 796,
+    "fn": 848
+  },
+  "latency_ms": {
+    "n": 50,
+    "mean": 6.744357560528442,
+    "p50": 6.5814999979920685,
+    "p95": 7.156500010751188
+  },
+  "train_time_s": 70.79858589172363
+}
+==================== clinc150 encoder-5k ====================
+[clinc150] loading data...
+Using the latest cached version of the dataset since contemmcm/clinc150 couldn't be found on the Hugging Face Hub (offline mode is enabled).
+Found the latest cached dataset configuration 'full' at /Users/s0n0611/.cache/huggingface/datasets/contemmcm___clinc150/full/0.0.0/2bbb9afebdafb9b9f6719250310bfcf3b1e8f666 (last modified on Fri Aug  7 19:30:51 2026).
+Using the latest cached version of the dataset since contemmcm/clinc150 couldn't be found on the Hugging Face Hub (offline mode is enabled).
+Found the latest cached dataset configuration 'full' at /Users/s0n0611/.cache/huggingface/datasets/contemmcm___clinc150/full/0.0.0/2bbb9afebdafb9b9f6719250310bfcf3b1e8f666 (last modified on Fri Aug  7 19:30:51 2026).
+  train=5000 test=4500
+  intents=150 tags=1 test(kept)=4500
+Loading weights:   0%|          | 0/100 [00:00<?, ?it/s]Loading weights: 100%|██████████| 100/100 [00:00<00:00, 31961.47it/s]
+[transformers] [1mDistilBertModel LOAD REPORT[0m from: distilbert-base-uncased
+Key                     | Status     |  | 
+------------------------+------------+--+-
+vocab_layer_norm.weight | UNEXPECTED |  | 
+vocab_projector.bias    | UNEXPECTED |  | 
+vocab_transform.bias    | UNEXPECTED |  | 
+vocab_layer_norm.bias   | UNEXPECTED |  | 
+vocab_transform.weight  | UNEXPECTED |  | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+  epoch 1/3 loss=3.3087

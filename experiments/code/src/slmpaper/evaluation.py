@@ -4,6 +4,7 @@ from __future__ import annotations
 import torch
 
 from .bio import bio_to_spans
+from .crf_compact import compact_to_word_level
 from .metrics import intent_accuracy, span_f1
 
 
@@ -50,6 +51,37 @@ def evaluate_model(model, batches, id2intent, id2tag, device="cpu") -> dict:
             )
             pred_span_lists.append(tags_to_spans(p_tags))
             gold_span_lists.append(tags_to_spans(g_tags))
+
+    return {
+        "intent_accuracy": intent_accuracy(pred_intents, gold_intents),
+        "slot_f1": span_f1(pred_span_lists, gold_span_lists),
+    }
+
+
+@torch.no_grad()
+def evaluate_model_crf(model, batches, id2intent, id2tag, device="cpu") -> dict:
+    """Like evaluate_model but decodes slots with the model's CRF (Viterbi)."""
+    model.eval()
+    pred_intents, gold_intents = [], []
+    pred_span_lists, gold_span_lists = [], []
+
+    for batch in batches:
+        out = model(
+            input_ids=batch.input_ids.to(device),
+            attention_mask=batch.attention_mask.to(device),
+        )
+        intent_pred = out.intent_logits.argmax(-1).tolist()
+        w_emit, w_tags, w_mask = compact_to_word_level(out.slot_logits, batch.slot_labels)
+        paths = model.crf.decode(w_emit, w_mask)
+
+        for i in range(len(intent_pred)):
+            pred_intents.append(id2intent.get(intent_pred[i], ""))
+            gold_intents.append(id2intent[batch.intent_labels[i].item()])
+            n = int(w_mask[i].long().sum().item())
+            pred_tags = [id2tag.get(t, "O") for t in paths[i][:n]]
+            gold_tags = [id2tag[int(t)] for t in w_tags[i][:n].tolist()]
+            pred_span_lists.append(tags_to_spans(pred_tags))
+            gold_span_lists.append(tags_to_spans(gold_tags))
 
     return {
         "intent_accuracy": intent_accuracy(pred_intents, gold_intents),

@@ -19,6 +19,8 @@ import torch
 import torch.nn as nn
 from transformers import GPT2Config, GPT2Model
 
+from .crf import LinearChainCRF
+from .crf_compact import compact_to_word_level
 from .probe import pool_hidden_states
 from .pruning import truncate_gpt2_backbone
 
@@ -41,6 +43,7 @@ class PrunedGenerativeClassifier(nn.Module):
         num_tags: int,
         slot_loss_weight: float = 1.0,
         dropout: float = 0.1,
+        use_crf: bool = False,
     ):
         super().__init__()
         backbone = GPT2Model(config)
@@ -53,16 +56,18 @@ class PrunedGenerativeClassifier(nn.Module):
         self.intent_head = nn.Linear(hidden_size, num_intents)
         self.slot_head = nn.Linear(hidden_size, num_tags)
         self.slot_loss_weight = slot_loss_weight
+        self.crf = LinearChainCRF(num_tags) if use_crf else None
 
     @classmethod
     def from_pretrained_backbone(
         cls, model_path: str, depth: int, num_intents: int, num_tags: int,
-        slot_loss_weight: float = 1.0, dropout: float = 0.1,
+        slot_loss_weight: float = 1.0, dropout: float = 0.1, use_crf: bool = False,
     ) -> "PrunedGenerativeClassifier":
         """Load a real pretrained GPT2 backbone, then truncate + attach heads."""
         pretrained = GPT2Model.from_pretrained(model_path)
         model = cls(pretrained.config, depth=depth, num_intents=num_intents,
-                    num_tags=num_tags, slot_loss_weight=slot_loss_weight, dropout=dropout)
+                    num_tags=num_tags, slot_loss_weight=slot_loss_weight,
+                    dropout=dropout, use_crf=use_crf)
         model.backbone = truncate_gpt2_backbone_model(pretrained, depth)
         return model
 
@@ -83,10 +88,14 @@ class PrunedGenerativeClassifier(nn.Module):
         loss = intent_loss = slot_loss = None
         if intent_labels is not None and slot_labels is not None:
             intent_loss = nn.functional.cross_entropy(intent_logits, intent_labels)
-            slot_loss = nn.functional.cross_entropy(
-                slot_logits.view(-1, slot_logits.size(-1)), slot_labels.view(-1),
-                ignore_index=-100,
-            )
+            if self.crf is not None:
+                w_emit, w_tags, w_mask = compact_to_word_level(slot_logits, slot_labels)
+                slot_loss = self.crf.neg_log_likelihood(w_emit, w_tags, w_mask)
+            else:
+                slot_loss = nn.functional.cross_entropy(
+                    slot_logits.view(-1, slot_logits.size(-1)), slot_labels.view(-1),
+                    ignore_index=-100,
+                )
             loss = intent_loss + self.slot_loss_weight * slot_loss
 
         return PrunedOutput(

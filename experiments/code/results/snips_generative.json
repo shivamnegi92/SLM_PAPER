@@ -1,0 +1,33 @@
+{
+  "dataset": "snips",
+  "model": "models/gpt2",
+  "kind": "generative",
+  "config": {
+    "epochs": 3,
+    "batch_size": 8,
+    "lr": 5e-05,
+    "max_train": 3000,
+    "max_eval": 300,
+    "max_new_tokens": 48,
+    "seed": 42
+  },
+  "n_train": 3000,
+  "n_eval": 300,
+  "intent_accuracy": 0.9633333333333334,
+  "slot_value_f1": {
+    "precision": 0.8537234042553191,
+    "recall": 0.7679425837320574,
+    "f1": 0.8085642317380353,
+    "tp": 642,
+    "fp": 110,
+    "fn": 194
+  },
+  "parse_failure_rate": 0.03333333333333333,
+  "latency_ms": {
+    "n": 295,
+    "mean": 241.419173148658,
+    "p50": 243.1960420217365,
+    "p95": 350.1709590200335
+  },
+  "train_time_s": 385.25128698349
+}

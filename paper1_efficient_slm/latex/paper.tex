@@ -64,8 +64,9 @@ chosen a priori from a cheap linear probe.}
 hidden states predicts a near-optimal pruned depth before expensive fine-tuning.
 \textbf{(C2)} \emph{Generative$\rightarrow$discriminative conversion}: a large
 speedup plus a reliability guarantee (parse-failure rate $\rightarrow$ 0 by
-construction). \textbf{(C4)} a negative-results study of common CPU inference
-optimizations and their root causes. We position our contribution honestly:
+construction). \textbf{(C3)} a real, measured implicit-slot scope statement (0\%
+on our benchmarks) that honestly bounds where span-based heads suffice.
+\textbf{(C4)} a negative-results study of common CPU inference optimizations and their root causes. We position our contribution honestly:
 against the generative baseline the win is decisive; against a purpose-built
 bidirectional encoder we are competitive, and our recipe requires no separate
 encoder---it reuses an existing decoder.
@@ -138,6 +139,13 @@ Encoder discriminative (DistilBERT) & \textbf{98.98} & \textbf{95.1} & 0 & 7.0\\
 each depth confirms the probe: depth 3 matches or beats full depth on intent
 accuracy on ATIS/SNIPS while being $\sim$4$\times$ faster.
 
+\begin{figure}[t]\centering
+\includegraphics[width=0.6\linewidth]{../../experiments/figures/fig_probe_sweep.pdf}
+\caption{Linear-probe intent accuracy vs.\ backbone depth, all five datasets.
+Every curve is nearly flat: probe accuracy saturates by depth 3, motivating the
+a-priori depth-3 pick before any fine-tuning.}
+\end{figure}
+
 \begin{table}[t]\centering
 \caption{Multi-seed intent accuracy (mean$\pm$std, 3 seeds; MASSIVE 2 seeds).
 The probe-selected depth-3 is statistically indistinguishable from full depth on
@@ -179,6 +187,20 @@ intent-only CLINC150; generative latency likewise scales with output length
 (359/243/83\,ms). The discriminative model is flat ($\sim$5--7\,ms) and always
 valid, independent of schema complexity.
 
+\begin{figure}[t]\centering
+\includegraphics[width=0.47\linewidth]{../../experiments/figures/fig_latency_bars.pdf}\hfill
+\includegraphics[width=0.47\linewidth]{../../experiments/figures/fig_parsefail.pdf}
+\caption{Left: P50 CPU latency on ATIS (log scale). Right: structured-output
+parse-failure rate; ours is 0\% by construction regardless of schema size.}
+\end{figure}
+
+\begin{figure}[t]\centering
+\includegraphics[width=0.6\linewidth]{../../experiments/figures/fig_pareto.pdf}
+\caption{Depth Pareto: intent accuracy vs.\ P50 latency for depths
+$\{3,6,9,12\}$, all five datasets. Accuracy gains beyond depth 6--9 are small
+relative to the added latency.}
+\end{figure}
+
 \textbf{5.3 CRF ablation.} With a length-normalized CRF loss, the CRF slot head
 gives a small consistent gain over softmax at depth 3 (ATIS $+0.19$, SNIPS
 $+0.27$, MASSIVE $+0.09$ F1); it does not close the gap to the bidirectional
@@ -201,6 +223,18 @@ tensor-only output surgery). Takeaway: for shallow closed-set NLU the win came
 from \emph{pruning + discriminative single-pass}, not post-hoc kernel/quant
 tricks; ONNX graph execution is an orthogonal, stackable win with export
 friction.
+
+\textbf{C3: implicit slots (scope statement).} A slot value is
+\emph{implicit} if it is not a contiguous span of the utterance; span-based
+taggers cannot recover it by construction. We measured the implicit-slot rate
+on all three slot-filling benchmarks and found it is exactly \textbf{0\%}
+(ATIS: 0/16{,}350; SNIPS: 0/37{,}542; MASSIVE: 0/14{,}159 gold slot values).
+These benchmarks are span-annotation-first by design, so our span-based heads
+have no theoretical recall ceiling here; tasks with a genuine implicit-slot
+rate (e.g.\ coreference- or ellipsis-dependent slot filling) would need a
+generative fallback or explicit non-span recovery rules, which we leave to
+future work rather than force onto benchmarks that do not exhibit the
+phenomenon.
 
 \section{Discussion and Limitations}
 Closed-set assumption; open-set/novel-intent detection is out of scope.

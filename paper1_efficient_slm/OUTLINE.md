@@ -168,7 +168,13 @@ Measured on the depth-3 ATIS model, same weights across conditions (P50 CPU):
 ## 7. Discussion & Limitations
 - Closed-set assumption; open-set / novel-intent detection out of scope.
 - Generation still needed for free-form generation tasks.
-- Implicit-slot rules are dataset/intent specific (see Paper 2).
+- **Implicit-slot rate (C3, measured, not estimated):** exactly 0% on all three
+  slot-filling benchmarks (ATIS 0/16,350; SNIPS 0/37,542; MASSIVE 0/14,159 gold
+  slot values -- see `../experiments/RESULTS_C3_implicit.md`). These benchmarks
+  are span-annotation-first by design, so span-based heads have no recall
+  ceiling here. This is why Paper 2 (`../paper2_implicit_slots/`) was shelved:
+  its premise needs datasets with a genuine implicit-slot rate, which none of
+  ours exhibit. Framed as an honest scope statement, not a workstream.
 
 ## 8. Conclusion
 - Restate: generate less, classify more.

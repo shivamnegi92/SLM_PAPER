@@ -1,0 +1,21 @@
+{
+  "fp32": {
+    "intent_accuracy": 0.9795221843003413,
+    "slot_f1": 0.9095567512170125,
+    "p50_ms": 5.1322089857421815
+  },
+  "dynamic_int8_qnnpack": {
+    "intent_accuracy": 0.9795221843003413,
+    "slot_f1": 0.9067622950819672,
+    "p50_ms": 5.018958996515721
+  },
+  "torch_compile": {
+    "intent_accuracy": 0.9795221843003413,
+    "slot_f1": 0.9095567512170125,
+    "p50_ms": 5.3942499798722565
+  },
+  "onnx": {
+    "p50_ms": 1.1370410211384296,
+    "note": "latency only (accuracy identical to fp32 graph)"
+  }
+}

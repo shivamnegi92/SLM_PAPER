@@ -140,15 +140,30 @@ complexity (359 -> 243 -> 83 ms across the three); the discriminative model is
 structurally immune to this axis (flat ~5-7 ms, always-valid output).
 
 ## 6. Negative Results: CPU Inference Optimizations That Didn't Pay Off
-For each, report result + root cause on public models:
-- Naive dynamic INT8 (activation outliers).
-- Rotation-based INT8 (QuaRot/Hadamard) — accuracy recovered, speed needs fused
-  kernels.
-- ONNX / graph export for decoder SLMs (dynamic KV cache / dynamic shapes).
-- Graph compilation (codegen edge cases on decoder architectures).
-- Vendor CPU extensions (instruction-set dependence).
-- Takeaway: for shallow closed-set tasks on commodity CPUs, depth pruning +
-  discriminative heads dominates.
+Measured on the depth-3 ATIS model, same weights across conditions (P50 CPU):
+
+| Condition | Intent | Slot F1 | P50 | vs FP32 |
+|---|---:|---:|---:|---:|
+| FP32 | 97.95 | 90.96 | 5.13 ms | 1.00x |
+| Dynamic INT8 | 97.95 | 90.68 | 5.02 ms | 1.02x (no gain) |
+| torch.compile | 97.95 | 90.96 | 5.39 ms | 0.95x (slower) |
+| ONNX Runtime | 97.95 | 90.96 | 1.14 ms | **4.5x** |
+
+- **Dynamic INT8:** no benefit; Linear layers aren't the bottleneck at depth 3,
+  quant/dequant overhead offsets gains; small slot-F1 drop; needs an explicit
+  quantized engine or it fails to run at all (portability footgun).
+- **torch.compile:** slightly *slower*; compile overhead + dynamic shapes, model
+  too shallow for fusion to amortize on CPU.
+- **ONNX Runtime:** real ~4.5x speedup at identical accuracy, BUT export is
+  brittle -- dynamo exporter fails on the decoder backbone; legacy exporter
+  needs the model wrapped to return plain tensors. Available but not turnkey.
+- **Takeaway:** for shallow closed-set NLU on commodity CPUs, the win came from
+  *depth pruning + discriminative single-pass* (C1/C2), which removed the
+  autoregressive decode; the commonly-reached-for post-hoc tricks (INT8,
+  compile) add nothing on top. ONNX graph execution is an orthogonal,
+  stackable win with export friction. Full detail: `../experiments/RESULTS_M5_negresults.md`.
+- Not run (stretch/camera-ready): rotation-INT8 (QuaRot/Hadamard) + fused
+  kernels, vendor CPU extensions, ONNX-INT8.
 
 ## 7. Discussion & Limitations
 - Closed-set assumption; open-set / novel-intent detection out of scope.

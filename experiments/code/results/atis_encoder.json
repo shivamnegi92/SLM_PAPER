@@ -1,0 +1,32 @@
+{
+  "dataset": "atis",
+  "model": "distilbert-base-uncased",
+  "config": {
+    "epochs": 3,
+    "batch_size": 32,
+    "lr": 5e-05,
+    "slot_loss_weight": 2.0,
+    "max_train": 0,
+    "seed": 42
+  },
+  "n_train": 4274,
+  "n_test": 586,
+  "n_intents": 17,
+  "n_tags": 101,
+  "intent_accuracy": 0.9897610921501706,
+  "slot_f1": {
+    "precision": 0.9485108531044927,
+    "recall": 0.9538071065989848,
+    "f1": 0.9511516071880537,
+    "tp": 1879,
+    "fp": 102,
+    "fn": 91
+  },
+  "latency_ms": {
+    "n": 50,
+    "mean": 7.092278301715851,
+    "p50": 6.985874992096797,
+    "p95": 7.6804159907624125
+  },
+  "train_time_s": 76.31644701957703
+}

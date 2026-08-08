@@ -1,0 +1,32 @@
+{
+  "dataset": "massive",
+  "model": "distilbert-base-uncased",
+  "config": {
+    "epochs": 3,
+    "batch_size": 32,
+    "lr": 5e-05,
+    "slot_loss_weight": 2.0,
+    "max_train": 0,
+    "seed": 42
+  },
+  "n_train": 11514,
+  "n_test": 2974,
+  "n_intents": 60,
+  "n_tags": 111,
+  "intent_accuracy": 0.8698722259583053,
+  "slot_f1": {
+    "precision": 0.7927667269439421,
+    "recall": 0.7786856127886324,
+    "f1": 0.7856630824372761,
+    "tp": 2192,
+    "fp": 573,
+    "fn": 623
+  },
+  "latency_ms": {
+    "n": 50,
+    "mean": 6.7517158191185445,
+    "p50": 6.694249983411282,
+    "p95": 7.197917002486065
+  },
+  "train_time_s": 160.006206035614
+}

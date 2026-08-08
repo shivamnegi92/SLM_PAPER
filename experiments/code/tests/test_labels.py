@@ -14,8 +14,10 @@ def test_build_intent_vocab_sorted_deterministic():
     assert intent2id == {"a_intent": 0, "b_intent": 1}
 
 
-def test_build_tag_vocab_includes_o_and_all_bio_tags():
+def test_build_tag_vocab_includes_both_bi_variants_per_type():
+    # Even though train only shows B-date (never I-date), the vocab must include
+    # I-date too, so an unseen I-date in the test set never KeyErrors.
     examples = [_ex("x", ["O", "B-city", "I-city"]), _ex("x", ["O", "B-date"])]
     tag2id = build_tag_vocab(examples)
-    assert set(tag2id) == {"O", "B-city", "I-city", "B-date"}
+    assert set(tag2id) == {"O", "B-city", "I-city", "B-date", "I-date"}
     assert tag2id["O"] == 0  # O always id 0 by convention (pad-safe default)

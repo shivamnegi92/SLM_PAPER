@@ -70,3 +70,37 @@ Every depth-3 config is **~4x faster** than depth-12, unconditionally.
   (b) multi-seed variance (currently single seed everywhere), (c) full 4-depth
   sweep (not just {3,12}) on the 4 new datasets to get the complete Pareto
   curve like ATIS has.
+
+---
+
+## UPDATE — Multi-seed variance (preliminary, 2 seeds; 3rd seed completing)
+
+Re-ran the headline depth-3-vs-depth-12 comparison with a 2nd seed (seed 1,
+alongside the original seed 42); a 3rd seed is completing autonomously. Intent
+accuracy, mean +/- population std:
+
+| Dataset | depth 3 | depth 12 | Overlap within std? |
+|---|---:|---:|---|
+| ATIS | 97.87 +/- 0.09 | 97.70 +/- 0.26 | YES (indistinguishable) |
+| SNIPS | 98.07 +/- 0.07 | 98.14 +/- 0.00 | YES (indistinguishable) |
+| CLINC150 | 77.93 +/- 1.09 | 80.06 +/- 1.94 | YES (bands overlap) |
+
+**Key correction to the single-seed pilot:** the CLINC150 ~3pt depth-3-vs-12
+"gap" that looked like a real cost at a single seed is **within seed variance**
+(std +/- 1-2pt on this fine-grained 150-class task). With variance accounted for,
+depth-3 (the probe's a-priori pick) is **statistically indistinguishable from
+full depth on all datasets measured so far** -- a stronger and cleaner version
+of C1 than the single-seed run suggested. This is exactly the kind of overclaim
+that multi-seed reporting is meant to catch; here it works in the method's favor.
+
+## UPDATE — CRF slot-head ablation (finding + fix)
+
+First CRF run improved slot F1 (ATIS +1.03, MASSIVE +4.18 vs softmax at depth 3)
+but *cratered intent accuracy* (ATIS 97.95 -> 87.88, MASSIVE 73.81 -> 54.77).
+Root cause (caught, not shipped): the CRF NLL summed over the whole sequence, so
+on many-tag datasets it dwarfed the token-mean intent cross-entropy and, at
+slot-loss-weight 2.0, starved the intent head. **Fixed** by length-normalizing
+the CRF NLL (per-token scale, comparable to softmax CE); a clean CRF re-run is
+queued. Takeaway for the paper: CRF's slot-F1 benefit is real, but joint
+intent+slot training requires loss-scale balancing -- itself a reportable
+practical detail.

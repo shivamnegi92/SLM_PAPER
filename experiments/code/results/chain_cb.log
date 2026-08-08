@@ -252,3 +252,216 @@ PHASE C DONE
 [snips] depth=12 train=5000 test=700 intents=7 tags=79
 Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]Loading weights: 100%|██████████| 148/148 [00:00<00:00, 15573.82it/s]
   epoch 1/3 loss=4.1544
+  epoch 2/3 loss=1.1385
+  epoch 3/3 loss=0.7030
+{
+  "dataset": "snips",
+  "model": "models/gpt2",
+  "kind": "pruned_discriminative",
+  "depth": 12,
+  "use_crf": false,
+  "config": {
+    "epochs": 3,
+    "batch_size": 16,
+    "lr": 5e-05,
+    "slot_loss_weight": 2.0,
+    "max_train": 5000,
+    "seed": 1
+  },
+  "n_train": 5000,
+  "n_test": 700,
+  "n_intents": 7,
+  "n_tags": 79,
+  "intent_accuracy": 0.9814285714285714,
+  "slot_f1": {
+    "precision": 0.8260144524735964,
+    "recall": 0.8283166109253066,
+    "f1": 0.8271639298636236,
+    "tp": 1486,
+    "fp": 313,
+    "fn": 308
+  },
+  "latency_ms": {
+    "n": 50,
+    "mean": 20.507803339860402,
+    "p50": 20.244624989572912,
+    "p95": 22.1100420167204
+  },
+  "train_time_s": 235.9915919303894
+}
+============ massive depth 3 seed 1 ============
+[massive] depth=3 train=5000 test=2974 intents=60 tags=107
+Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]Loading weights: 100%|██████████| 148/148 [00:00<00:00, 21085.50it/s]
+Traceback (most recent call last):
+  File "/Users/s0n0611/Documents/GitHub/SLM_PAPER/experiments/code/scripts/train_pruned.py", line 131, in <module>
+    main()
+  File "/Users/s0n0611/Documents/GitHub/SLM_PAPER/experiments/code/scripts/train_pruned.py", line 80, in main
+    test_batches = make_batches(test, tokenizer, intent2id, tag2id, args.batch_size)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/s0n0611/Documents/GitHub/SLM_PAPER/experiments/code/scripts/train_pruned.py", line 34, in make_batches
+    batches.append(prepare_batch(chunk, tokenizer, intent2id, tag2id))
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/s0n0611/Documents/GitHub/SLM_PAPER/experiments/code/src/slmpaper/batch.py", line 42, in prepare_batch
+    aligned = align_labels_with_tokens(
+              ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/s0n0611/Documents/GitHub/SLM_PAPER/experiments/code/src/slmpaper/align.py", line 26, in align_labels_with_tokens
+    aligned.append(tag2id[word_tags[word_id]])
+                   ~~~~~~^^^^^^^^^^^^^^^^^^^^
+KeyError: 'B-music_album'
+FAILED: massive depth 3 seed 1
+============ massive depth 12 seed 1 ============
+[massive] depth=12 train=5000 test=2974 intents=60 tags=107
+Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]Loading weights: 100%|██████████| 148/148 [00:00<00:00, 26387.12it/s]
+Traceback (most recent call last):
+  File "/Users/s0n0611/Documents/GitHub/SLM_PAPER/experiments/code/scripts/train_pruned.py", line 131, in <module>
+    main()
+  File "/Users/s0n0611/Documents/GitHub/SLM_PAPER/experiments/code/scripts/train_pruned.py", line 80, in main
+    test_batches = make_batches(test, tokenizer, intent2id, tag2id, args.batch_size)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/s0n0611/Documents/GitHub/SLM_PAPER/experiments/code/scripts/train_pruned.py", line 34, in make_batches
+    batches.append(prepare_batch(chunk, tokenizer, intent2id, tag2id))
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/s0n0611/Documents/GitHub/SLM_PAPER/experiments/code/src/slmpaper/batch.py", line 42, in prepare_batch
+    aligned = align_labels_with_tokens(
+              ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/s0n0611/Documents/GitHub/SLM_PAPER/experiments/code/src/slmpaper/align.py", line 26, in align_labels_with_tokens
+    aligned.append(tag2id[word_tags[word_id]])
+                   ~~~~~~^^^^^^^^^^^^^^^^^^^^
+KeyError: 'B-music_album'
+FAILED: massive depth 12 seed 1
+============ clinc150 depth 3 seed 1 ============
+Using the latest cached version of the dataset since contemmcm/clinc150 couldn't be found on the Hugging Face Hub (offline mode is enabled).
+Found the latest cached dataset configuration 'full' at /Users/s0n0611/.cache/huggingface/datasets/contemmcm___clinc150/full/0.0.0/2bbb9afebdafb9b9f6719250310bfcf3b1e8f666 (last modified on Fri Aug  7 19:30:51 2026).
+Using the latest cached version of the dataset since contemmcm/clinc150 couldn't be found on the Hugging Face Hub (offline mode is enabled).
+Found the latest cached dataset configuration 'full' at /Users/s0n0611/.cache/huggingface/datasets/contemmcm___clinc150/full/0.0.0/2bbb9afebdafb9b9f6719250310bfcf3b1e8f666 (last modified on Fri Aug  7 19:30:51 2026).
+[clinc150] depth=3 train=5000 test=4500 intents=150 tags=1
+Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]Loading weights: 100%|██████████| 148/148 [00:00<00:00, 35439.43it/s]
+  epoch 1/3 loss=4.4616
+  epoch 2/3 loss=2.2742
+  epoch 3/3 loss=1.1505
+{
+  "dataset": "clinc150",
+  "model": "models/gpt2",
+  "kind": "pruned_discriminative",
+  "depth": 3,
+  "use_crf": false,
+  "config": {
+    "epochs": 3,
+    "batch_size": 16,
+    "lr": 5e-05,
+    "slot_loss_weight": 2.0,
+    "max_train": 5000,
+    "seed": 1
+  },
+  "n_train": 5000,
+  "n_test": 4500,
+  "n_intents": 150,
+  "n_tags": 1,
+  "intent_accuracy": 0.7684444444444445,
+  "slot_f1": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0
+  },
+  "latency_ms": {
+    "n": 50,
+    "mean": 2.970861700596288,
+    "p50": 2.947291999589652,
+    "p95": 3.174041979946196
+  },
+  "train_time_s": 64.0357677936554
+}
+============ clinc150 depth 12 seed 1 ============
+Using the latest cached version of the dataset since contemmcm/clinc150 couldn't be found on the Hugging Face Hub (offline mode is enabled).
+Found the latest cached dataset configuration 'full' at /Users/s0n0611/.cache/huggingface/datasets/contemmcm___clinc150/full/0.0.0/2bbb9afebdafb9b9f6719250310bfcf3b1e8f666 (last modified on Fri Aug  7 19:30:51 2026).
+Using the latest cached version of the dataset since contemmcm/clinc150 couldn't be found on the Hugging Face Hub (offline mode is enabled).
+Found the latest cached dataset configuration 'full' at /Users/s0n0611/.cache/huggingface/datasets/contemmcm___clinc150/full/0.0.0/2bbb9afebdafb9b9f6719250310bfcf3b1e8f666 (last modified on Fri Aug  7 19:30:51 2026).
+[clinc150] depth=12 train=5000 test=4500 intents=150 tags=1
+Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]Loading weights: 100%|██████████| 148/148 [00:00<00:00, 19376.86it/s]
+  epoch 1/3 loss=4.7819
+  epoch 2/3 loss=2.4325
+  epoch 3/3 loss=1.1127
+{
+  "dataset": "clinc150",
+  "model": "models/gpt2",
+  "kind": "pruned_discriminative",
+  "depth": 12,
+  "use_crf": false,
+  "config": {
+    "epochs": 3,
+    "batch_size": 16,
+    "lr": 5e-05,
+    "slot_loss_weight": 2.0,
+    "max_train": 5000,
+    "seed": 1
+  },
+  "n_train": 5000,
+  "n_test": 4500,
+  "n_intents": 150,
+  "n_tags": 1,
+  "intent_accuracy": 0.7811111111111111,
+  "slot_f1": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0
+  },
+  "latency_ms": {
+    "n": 50,
+    "mean": 11.060799200204201,
+    "p50": 10.944042005576193,
+    "p95": 12.297750014113262
+  },
+  "train_time_s": 233.10696721076965
+}
+============ banking77 depth 3 seed 1 ============
+[banking77] depth=3 train=5000 test=3080 intents=77 tags=1
+Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]Loading weights: 100%|██████████| 148/148 [00:00<00:00, 22349.49it/s]
+  epoch 1/3 loss=3.3456
+  epoch 2/3 loss=1.5151
+  epoch 3/3 loss=0.9013
+{
+  "dataset": "banking77",
+  "model": "models/gpt2",
+  "kind": "pruned_discriminative",
+  "depth": 3,
+  "use_crf": false,
+  "config": {
+    "epochs": 3,
+    "batch_size": 16,
+    "lr": 5e-05,
+    "slot_loss_weight": 2.0,
+    "max_train": 5000,
+    "seed": 1
+  },
+  "n_train": 5000,
+  "n_test": 3080,
+  "n_intents": 77,
+  "n_tags": 1,
+  "intent_accuracy": 0.7902597402597402,
+  "slot_f1": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0
+  },
+  "latency_ms": {
+    "n": 50,
+    "mean": 3.047160019632429,
+    "p50": 2.9309999954421073,
+    "p95": 3.517041011946276
+  },
+  "train_time_s": 94.79654312133789
+}
+============ banking77 depth 12 seed 1 ============
+[banking77] depth=12 train=5000 test=3080 intents=77 tags=1
+Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]Loading weights: 100%|██████████| 148/148 [00:00<00:00, 9005.09it/s]
+  epoch 1/3 loss=4.0726
+  epoch 2/3 loss=1.8168

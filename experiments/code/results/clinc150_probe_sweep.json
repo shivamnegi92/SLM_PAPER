@@ -1,0 +1,19 @@
+{
+  "dataset": "clinc150",
+  "model": "models/gpt2",
+  "n_layer_full": 12,
+  "config": {
+    "max_train": 4000,
+    "val_frac": 0.2,
+    "epsilon": 0.02,
+    "probe_epochs": 200,
+    "seed": 42
+  },
+  "depth_to_probe_accuracy": {
+    "3": 0.8774999976158142,
+    "6": 0.8774999976158142,
+    "9": 0.8525000214576721,
+    "12": 0.8612499833106995
+  },
+  "recommended_depth": 3
+}

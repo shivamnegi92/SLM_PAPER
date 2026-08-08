@@ -1,0 +1,19 @@
+{
+  "dataset": "massive",
+  "model": "models/gpt2",
+  "n_layer_full": 12,
+  "config": {
+    "max_train": 4000,
+    "val_frac": 0.2,
+    "epsilon": 0.02,
+    "probe_epochs": 200,
+    "seed": 42
+  },
+  "depth_to_probe_accuracy": {
+    "3": 0.7462499737739563,
+    "6": 0.7387499809265137,
+    "9": 0.7287499904632568,
+    "12": 0.737500011920929
+  },
+  "recommended_depth": 3
+}

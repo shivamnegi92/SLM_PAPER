@@ -1,0 +1,32 @@
+{
+  "dataset": "clinc150",
+  "model": "distilbert-base-uncased",
+  "config": {
+    "epochs": 3,
+    "batch_size": 32,
+    "lr": 5e-05,
+    "slot_loss_weight": 2.0,
+    "max_train": 5000,
+    "seed": 42
+  },
+  "n_train": 5000,
+  "n_test": 4500,
+  "n_intents": 150,
+  "n_tags": 1,
+  "intent_accuracy": 0.9295555555555556,
+  "slot_f1": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0
+  },
+  "latency_ms": {
+    "n": 50,
+    "mean": 6.611063401214778,
+    "p50": 6.561209011124447,
+    "p95": 7.034750015009195
+  },
+  "train_time_s": 69.61555480957031
+}

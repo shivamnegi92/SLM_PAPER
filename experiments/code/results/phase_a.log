@@ -173,3 +173,55 @@ vocab_transform.weight  | UNEXPECTED |  |
 Notes:
 - UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
   epoch 1/3 loss=3.3087
+  epoch 2/3 loss=0.8687
+  epoch 3/3 loss=0.2965
+{
+  "dataset": "clinc150",
+  "model": "distilbert-base-uncased",
+  "config": {
+    "epochs": 3,
+    "batch_size": 32,
+    "lr": 5e-05,
+    "slot_loss_weight": 2.0,
+    "max_train": 5000,
+    "seed": 42
+  },
+  "n_train": 5000,
+  "n_test": 4500,
+  "n_intents": 150,
+  "n_tags": 1,
+  "intent_accuracy": 0.9295555555555556,
+  "slot_f1": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0
+  },
+  "latency_ms": {
+    "n": 50,
+    "mean": 6.611063401214778,
+    "p50": 6.561209011124447,
+    "p95": 7.034750015009195
+  },
+  "train_time_s": 69.61555480957031
+}
+==================== banking77 encoder-5k ====================
+[banking77] loading data...
+  train=5000 test=3080
+  intents=77 tags=1 test(kept)=3080
+Loading weights:   0%|          | 0/100 [00:00<?, ?it/s]Loading weights: 100%|██████████| 100/100 [00:00<00:00, 16069.51it/s]
+[transformers] [1mDistilBertModel LOAD REPORT[0m from: distilbert-base-uncased
+Key                     | Status     |  | 
+------------------------+------------+--+-
+vocab_transform.bias    | UNEXPECTED |  | 
+vocab_projector.bias    | UNEXPECTED |  | 
+vocab_transform.weight  | UNEXPECTED |  | 
+vocab_layer_norm.weight | UNEXPECTED |  | 
+vocab_layer_norm.bias   | UNEXPECTED |  | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+  epoch 1/3 loss=2.5926
+  epoch 2/3 loss=0.6977

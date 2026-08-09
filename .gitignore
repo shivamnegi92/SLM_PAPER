@@ -18,6 +18,7 @@ node_modules/
 *.ckpt
 *.bin
 *.safetensors
-data/raw/
-data/cache/
-experiments/code/models/
+**/data/raw/
+**/data/cache/
+**/models/
+experiments/code/results/*.onnx

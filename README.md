@@ -10,6 +10,7 @@ results are used anywhere. See `COMPLIANCE.md`.
 SLM_PAPER/
 ├── README.md                        # this file
 ├── PROJECT_REPORT.md                # in-depth, all-real-numbers project report (start here)
+├── ENTERPRISE_VALUE.md              # business-value translation of the results (generic, no company tie-in)
 ├── COMPLIANCE.md                    # hard rule: public-only, no internal refs
 ├── PROPOSAL.md                      # venue strategy + both paper pitches
 ├── paper1_efficient_slm/

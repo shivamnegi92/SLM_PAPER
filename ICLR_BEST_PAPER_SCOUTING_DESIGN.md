@@ -23,7 +23,7 @@ Every candidate must:
 2. Require no commercial or hosted LLM API.
 3. Be executable on commodity CPU hardware without a required GPU stage.
 4. Use public models, datasets, and reproducible evaluation.
-5. Focus on technical GenAI, SLM, VLM, or inference-time learning.
+5. Focus on technical GenAI, SLM, VLM, inference-time learning, or local SLM tool use.
 6. State a falsifiable hypothesis and a credible negative outcome.
 7. Explain what new knowledge the field gains if the hypothesis is supported.
 
@@ -33,16 +33,17 @@ The existing intent-classification work may be reused as one experimental asset,
 
 Use a first-principles, adversarially filtered search rather than a trend-only or compute-convenience-only search.
 
-Generate 30 independent candidates across six families:
+Generate 30 independent candidates across seven families:
 
-1. Adaptive SLM inference
-2. Inference-time learning and test-time adaptation
-3. Representation, memory, and KV-cache compression
-4. Uncertainty, hallucination detection, and selective generation
-5. Tiny VLM inference and cross-modal reasoning
-6. Mechanistic understanding of small generative models
+1. Adaptive SLM inference (4 candidates)
+2. Inference-time learning and test-time adaptation (4 candidates)
+3. Representation, memory, and KV-cache compression (4 candidates)
+4. Uncertainty, hallucination detection, and selective generation (4 candidates)
+5. Tiny VLM inference and cross-modal reasoning (4 candidates)
+6. Mechanistic understanding of small generative models (5 candidates)
+7. Local SLM tool use, routing, and executable feedback (5 candidates)
 
-Each family contributes five candidates. Candidates must represent distinct research questions, not cosmetic variants of one method.
+The allocation totals 30 candidates. Candidates must represent distinct research questions, not cosmetic variants of one method.
 
 ## 4. Candidate record
 
@@ -143,6 +144,10 @@ Target paper shape:
 ## 8. Scope controls
 
 - VLM work is included only when the full evaluation is genuinely CPU-feasible.
+- Tool-use research must use local deterministic tools (for example calculator, unit conversion, retrieval over a fixed corpus, date/time, SQL over a sandbox database, and constrained Python), never a paid or hosted model API.
+- Tool-use candidates must separate at least four failure stages: invocation decision, tool selection, argument binding, and post-execution answer synthesis.
+- Tool execution must be sandboxed, deterministic where possible, and scored separately from final-answer quality.
+- Candidate US-origin model families include Microsoft Phi, NVIDIA Nemotron, Meta Llama, IBM Granite, Google Gemma, OpenAI GPT-2 as a non-tool-trained control, and Apple OpenELM as an additional control. Exact checkpoint provenance, license, chat template, and native function-call support must be verified from official model cards before inclusion.
 - No topic receives bonus points merely because code already exists in this repository.
 - Benchmark creation alone cannot win unless it exposes a new scientific phenomenon.
 - Negative results are valuable only when they identify a mechanism or boundary condition.

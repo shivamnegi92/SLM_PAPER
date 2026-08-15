@@ -11,6 +11,9 @@ __pycache__/
 # node (in case tooling adds it later)
 node_modules/
 
+# test-orchestrator local state
+.wibey-test/
+
 # OS
 .DS_Store
 

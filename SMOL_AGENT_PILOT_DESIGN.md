@@ -1,8 +1,8 @@
 # Smol-Agent Falsification Pilot: Experimental Design
 
-**Target venue:** ICLR 2027  
-**Status:** Design for review; no empirical claims  
-**Primary topic:** Adaptive lifecycle control for CPU-scale small language models  
+**Target venue:** ICLR 2027
+**Status:** Design for review; no empirical claims
+**Primary topic:** Adaptive lifecycle control for CPU-scale small language models
 **Fallback:** The planning tax in small agents
 
 ## 1. Decision summary

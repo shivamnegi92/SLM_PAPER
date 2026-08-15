@@ -41,7 +41,7 @@ Generate 30 independent candidates across seven families:
 4. Uncertainty, hallucination detection, and selective generation (4 candidates)
 5. Tiny VLM inference and cross-modal reasoning (4 candidates)
 6. Mechanistic understanding of small generative models (5 candidates)
-7. Local SLM tool use, routing, and executable feedback (5 candidates)
+7. Agentic Small Language Models ("Smol Agents"): tool use, planning, routing, memory, and executable feedback (5 candidates)
 
 The allocation totals 30 candidates. Candidates must represent distinct research questions, not cosmetic variants of one method.
 
@@ -145,6 +145,7 @@ Target paper shape:
 
 - VLM work is included only when the full evaluation is genuinely CPU-feasible.
 - Tool-use research must use local deterministic tools (for example calculator, unit conversion, retrieval over a fixed corpus, date/time, SQL over a sandbox database, and constrained Python), never a paid or hosted model API.
+- The Smol-Agent family covers five distinct questions: reliable tool invocation and argument binding; budgeted planning versus direct action; compact working/episodic memory; calibrated routing and abstention; and bounded self-repair from executable feedback.
 - Tool-use candidates must separate at least four failure stages: invocation decision, tool selection, argument binding, and post-execution answer synthesis.
 - Tool execution must be sandboxed, deterministic where possible, and scored separately from final-answer quality.
 - Candidate US-origin model families include Microsoft Phi, NVIDIA Nemotron, Meta Llama, IBM Granite, Google Gemma, OpenAI GPT-2 as a non-tool-trained control, and Apple OpenELM as an additional control. Exact checkpoint provenance, license, chat template, and native function-call support must be verified from official model cards before inclusion.

@@ -1,0 +1,19 @@
+{
+  "dataset": "clinc150",
+  "model": "/Users/s0n0611/Documents/GitHub/SLM_PAPER/nemotron-mini-4b",
+  "n_layer_full": 32,
+  "config": {
+    "max_train": 120,
+    "val_frac": 0.2,
+    "epsilon": 0.02,
+    "probe_epochs": 10,
+    "seed": 42
+  },
+  "depth_to_probe_accuracy": {
+    "8": 0.1818181872367859,
+    "16": 0.1818181872367859,
+    "24": 0.1818181872367859,
+    "32": 0.1818181872367859
+  },
+  "recommended_depth": 8
+}

@@ -1,0 +1,19 @@
+{
+  "dataset": "banking77",
+  "model": "/Users/s0n0611/Documents/GitHub/SLM_PAPER/phi-3.5-mini",
+  "n_layer_full": 32,
+  "config": {
+    "max_train": 120,
+    "val_frac": 0.2,
+    "epsilon": 0.02,
+    "probe_epochs": 10,
+    "seed": 42
+  },
+  "depth_to_probe_accuracy": {
+    "8": 0.1428571492433548,
+    "16": 0.0714285746216774,
+    "24": 0.2142857164144516,
+    "32": 0.0
+  },
+  "recommended_depth": 24
+}

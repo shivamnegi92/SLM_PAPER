@@ -1,0 +1,35 @@
+{
+  "dataset": "banking77",
+  "model": "/Users/s0n0611/Documents/GitHub/SLM_PAPER/phi-3.5-mini",
+  "kind": "pruned_discriminative",
+  "depth": 12,
+  "use_crf": false,
+  "config": {
+    "epochs": 1,
+    "batch_size": 2,
+    "lr": 5e-05,
+    "slot_loss_weight": 2.0,
+    "max_train": 150,
+    "seed": 42
+  },
+  "n_train": 150,
+  "n_test": 2560,
+  "n_intents": 64,
+  "n_tags": 1,
+  "intent_accuracy": 0.183203125,
+  "slot_f1": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0
+  },
+  "latency_ms": {
+    "n": 50,
+    "mean": 87.88058919948526,
+    "p50": 87.43545800098218,
+    "p95": 92.79691701522097
+  },
+  "train_time_s": 8563.38958287239
+}

@@ -1,0 +1,35 @@
+{
+  "dataset": "atis",
+  "model": "/Users/s0n0611/Documents/GitHub/SLM_PAPER/phi-3.5-mini",
+  "kind": "pruned_discriminative",
+  "depth": 3,
+  "use_crf": false,
+  "config": {
+    "epochs": 1,
+    "batch_size": 2,
+    "lr": 5e-05,
+    "slot_loss_weight": 2.0,
+    "max_train": 80,
+    "seed": 42
+  },
+  "n_train": 80,
+  "n_test": 483,
+  "n_intents": 9,
+  "n_tags": 81,
+  "intent_accuracy": 0.7701863354037267,
+  "slot_f1": {
+    "precision": 0.4348060344827586,
+    "recall": 0.5015537600994406,
+    "f1": 0.46580086580086577,
+    "tp": 807,
+    "fp": 1049,
+    "fn": 802
+  },
+  "latency_ms": {
+    "n": 50,
+    "mean": 46.312162539106794,
+    "p50": 46.25025001587346,
+    "p95": 52.532542002154514
+  },
+  "train_time_s": 1120.9023077487946
+}

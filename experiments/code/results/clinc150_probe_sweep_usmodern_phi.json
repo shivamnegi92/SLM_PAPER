@@ -1,0 +1,19 @@
+{
+  "dataset": "clinc150",
+  "model": "/Users/s0n0611/Documents/GitHub/SLM_PAPER/phi-3.5-mini",
+  "n_layer_full": 32,
+  "config": {
+    "max_train": 120,
+    "val_frac": 0.2,
+    "epsilon": 0.02,
+    "probe_epochs": 10,
+    "seed": 42
+  },
+  "depth_to_probe_accuracy": {
+    "8": 0.3636363744735718,
+    "16": 0.09090909361839294,
+    "24": 0.27272728085517883,
+    "32": 0.0
+  },
+  "recommended_depth": 8
+}

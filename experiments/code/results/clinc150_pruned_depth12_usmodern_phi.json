@@ -1,0 +1,35 @@
+{
+  "dataset": "clinc150",
+  "model": "/Users/s0n0611/Documents/GitHub/SLM_PAPER/phi-3.5-mini",
+  "kind": "pruned_discriminative",
+  "depth": 12,
+  "use_crf": false,
+  "config": {
+    "epochs": 1,
+    "batch_size": 2,
+    "lr": 5e-05,
+    "slot_loss_weight": 2.0,
+    "max_train": 150,
+    "seed": 42
+  },
+  "n_train": 150,
+  "n_test": 2790,
+  "n_intents": 93,
+  "n_tags": 1,
+  "intent_accuracy": 0.2068100358422939,
+  "slot_f1": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "tp": 0,
+    "fp": 0,
+    "fn": 0
+  },
+  "latency_ms": {
+    "n": 50,
+    "mean": 77.7800867811311,
+    "p50": 77.15249998727813,
+    "p95": 81.60133301862516
+  },
+  "train_time_s": 5242.390580177307
+}

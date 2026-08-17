@@ -1,0 +1,19 @@
+{
+  "dataset": "massive",
+  "model": "/Users/s0n0611/Documents/GitHub/SLM_PAPER/phi-3.5-mini",
+  "n_layer_full": 32,
+  "config": {
+    "max_train": 120,
+    "val_frac": 0.2,
+    "epsilon": 0.02,
+    "probe_epochs": 10,
+    "seed": 42
+  },
+  "depth_to_probe_accuracy": {
+    "8": 0.0555555559694767,
+    "16": 0.2222222238779068,
+    "24": 0.5,
+    "32": 0.1111111119389534
+  },
+  "recommended_depth": 24
+}

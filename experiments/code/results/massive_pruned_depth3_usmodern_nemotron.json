@@ -1,0 +1,35 @@
+{
+  "dataset": "massive",
+  "model": "/Users/s0n0611/Documents/GitHub/SLM_PAPER/nemotron-mini-4b",
+  "kind": "pruned_discriminative",
+  "depth": 3,
+  "use_crf": false,
+  "config": {
+    "epochs": 1,
+    "batch_size": 2,
+    "lr": 5e-05,
+    "slot_loss_weight": 2.0,
+    "max_train": 150,
+    "seed": 42
+  },
+  "n_train": 150,
+  "n_test": 2605,
+  "n_intents": 47,
+  "n_tags": 73,
+  "intent_accuracy": 0.19923224568138195,
+  "slot_f1": {
+    "precision": 0.21160409556313994,
+    "recall": 0.17757774140752863,
+    "f1": 0.1931034482758621,
+    "tp": 434,
+    "fp": 1617,
+    "fn": 2010
+  },
+  "latency_ms": {
+    "n": 50,
+    "mean": 88.14768163952976,
+    "p50": 87.72629199665971,
+    "p95": 98.39445902616717
+  },
+  "train_time_s": 32213.633997917175
+}

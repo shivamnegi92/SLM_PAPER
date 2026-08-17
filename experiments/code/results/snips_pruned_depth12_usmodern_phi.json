@@ -1,0 +1,35 @@
+{
+  "dataset": "snips",
+  "model": "/Users/s0n0611/Documents/GitHub/SLM_PAPER/phi-3.5-mini",
+  "kind": "pruned_discriminative",
+  "depth": 12,
+  "use_crf": false,
+  "config": {
+    "epochs": 1,
+    "batch_size": 2,
+    "lr": 5e-05,
+    "slot_loss_weight": 2.0,
+    "max_train": 150,
+    "seed": 42
+  },
+  "n_train": 150,
+  "n_test": 687,
+  "n_intents": 7,
+  "n_tags": 77,
+  "intent_accuracy": 0.9199417758369723,
+  "slot_f1": {
+    "precision": 0.35555555555555557,
+    "recall": 0.4083947816222348,
+    "f1": 0.38014783526927143,
+    "tp": 720,
+    "fp": 1305,
+    "fn": 1043
+  },
+  "latency_ms": {
+    "n": 50,
+    "mean": 160.00636675860733,
+    "p50": 159.14391601108946,
+    "p95": 167.13937500026077
+  },
+  "train_time_s": 7449.579897880554
+}

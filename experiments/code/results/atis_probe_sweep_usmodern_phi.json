@@ -1,0 +1,19 @@
+{
+  "dataset": "atis",
+  "model": "/Users/s0n0611/Documents/GitHub/SLM_PAPER/phi-3.5-mini",
+  "n_layer_full": 32,
+  "config": {
+    "max_train": 120,
+    "val_frac": 0.2,
+    "epsilon": 0.02,
+    "probe_epochs": 10,
+    "seed": 42
+  },
+  "depth_to_probe_accuracy": {
+    "8": 0.6666666865348816,
+    "16": 0.7916666865348816,
+    "24": 0.7916666865348816,
+    "32": 0.5416666865348816
+  },
+  "recommended_depth": 16
+}

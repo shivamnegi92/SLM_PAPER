@@ -1,5 +1,12 @@
 # Tier-1 Frontier Experiments — Results Log
 
+> **SUPERSEDED IN PART — see `DISSOCIATION_RESULTS.md` (n=78 pooled).**
+> The n=27 numbers below are underpowered. Two updates at scale:
+> 1. The subspace dissociation **replicates and is significant** (p < 0.0001).
+> 2. The KL trust-region BREAK reduction **does not replicate** (p = 0.63) and
+>    costs 20.5 pts of STEER (p = 0.012). Treat Finding 1 below as falsified.
+
+
 Implementation: `src/intervene_pareto.py`. Llama-3.2-3B, `intermediate`, fp32,
 MPS, layers [18,20,22,24], n=42 (test=9/seed), inference-time only, no weight
 updates. Reference notes: `references/NOTES.md`.
@@ -17,7 +24,8 @@ updates. Reference notes: `references/NOTES.md`.
 
 ---
 
-## Finding 1 — KL trust region reduces BREAK, weakly
+## Finding 1 — KL trust region reduces BREAK, weakly  
+> **FALSIFIED at n=78** — see `DISSOCIATION_RESULTS.md` Result 3.
 
 λ sweep {1, 3, 10, 20, 50} gives a clean interior optimum near λ≈10: λ=1 is
 indistinguishable from baseline, λ=50 destroys the edit (11.1% STEER). Pooled,

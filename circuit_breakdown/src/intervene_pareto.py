@@ -266,36 +266,75 @@ def optimize_sample(h, r, layers, ctrl_ids, ctrl_base, bases, cfg):
 
 
 def eval_set(h, recs, layers, bases, cfg, ctrl_ids, ctrl_base):
+    """Evaluate with a LADDER of decision metrics, most->least discontinuous.
+
+    Schaeffer et al. (2304.15004) show discontinuous metrics manufacture
+    apparent all-or-nothing behaviour while the underlying quantity moves
+    smoothly. Our Finding 3 reproduced exactly that inside this method, so we
+    now report every rung:
+
+      steer        full-vocab argmax == clean          (most discontinuous)
+      steer_2way   p(clean) > p(corrupt)               (intermediate)
+      delta_p2way  change in p(clean)/(p(clean)+p(corrupt))  (continuous, bounded)
+      delta_logit  change in logit(clean)              (continuous, unbounded)
+
+    Also records `pred_is_corrupt`: when steering fails, is the model still
+    emitting the corrupt token, or has it been pushed to some third token?
+    That distinguishes "edit did nothing" from "edit broke the decision".
+    """
     steer, brk, dlog, drops, norms = [], [], [], [], []
+    steer2, dp2, pred_corrupt = [], [], []
 
     for r in recs:
         ep = optimize_sample(h, r, layers, ctrl_ids, ctrl_base, bases, cfg)
         vecs = ep.detached()
 
         with torch.no_grad():
-            base_clean = h.model(r.corrupt_ids).logits[0, -1][r.cid].item()
+            base_logits = h.model(r.corrupt_ids).logits[0, -1]
+            base_clean = base_logits[r.cid].item()
+            base_p2 = float(
+                torch.softmax(
+                    torch.stack([base_logits[r.cid], base_logits[r.kid]]).float(), 0
+                )[0]
+            )
+
             logits = forward_logits(h, r.corrupt_ids, layers, vecs, r.dpos)
             pred = int(logits.argmax().item())
             steer.append(int(pred == r.cid))
+            pred_corrupt.append(int(pred == r.kid))
             dlog.append(float(logits[r.cid].item() - base_clean))
 
+            p2 = float(
+                torch.softmax(
+                    torch.stack([logits[r.cid], logits[r.kid]]).float(), 0
+                )[0]
+            )
+            steer2.append(int(p2 > 0.5))
+            dp2.append(p2 - base_p2)
+
             neg = [-v for v in vecs]
-            p2 = int(
+            pb = int(
                 forward_logits(h, r.clean_ids, layers, neg, r.dpos).argmax().item()
             )
-            brk.append(int(p2 != r.cid))
+            brk.append(int(pb != r.cid))
 
         drops.append(control_degradation(h, layers, vecs, ctrl_ids, ctrl_base))
         norms.append(ep.total_norm())
 
+    m = lambda x: float(np.mean(x)) if x else 0.0
     return {
-        "steer": float(np.mean(steer)) if steer else 0.0,
-        "break": float(np.mean(brk)) if brk else 0.0,
-        "delta_logit_clean": float(np.mean(dlog)) if dlog else 0.0,
-        "control_drop": float(np.mean(drops)) if drops else 0.0,
-        "edit_norm_mean": float(np.mean(norms)) if norms else 0.0,
+        "steer": m(steer),
+        "steer_2way": m(steer2),
+        "break": m(brk),
+        "delta_logit_clean": m(dlog),
+        "delta_p2way": m(dp2),
+        "pred_is_corrupt": m(pred_corrupt),
+        "control_drop": m(drops),
+        "edit_norm_mean": m(norms),
         "steer_flags": steer,
+        "steer2_flags": steer2,
         "break_flags": brk,
+        "delta_p2way_all": dp2,
     }
 
 
@@ -366,12 +405,18 @@ def run(args):
 
     s_mean, s_ci = bootstrap_rate(mt["steer_flags"], iters=args.bootstrap_iters, seed=args.seed)
     b_mean, b_ci = bootstrap_rate(mt["break_flags"], iters=args.bootstrap_iters, seed=args.seed + 1)
+    s2_mean, s2_ci = bootstrap_rate(mt["steer2_flags"], iters=args.bootstrap_iters, seed=args.seed + 2)
 
     print("\n=== PARETO RESULT (TEST) ===")
     print(
         f"steer={s_mean:.1%} [{s_ci[0]:.1%},{s_ci[1]:.1%}]  "
-        f"break={b_mean:.1%} [{b_ci[0]:.1%},{b_ci[1]:.1%}]  "
+        f"steer2way={s2_mean:.1%} [{s2_ci[0]:.1%},{s2_ci[1]:.1%}]  "
+        f"break={b_mean:.1%} [{b_ci[0]:.1%},{b_ci[1]:.1%}]"
+    )
+    print(
         f"dlogit={mt['delta_logit_clean']:+.3f}  "
+        f"dp2way={mt['delta_p2way']:+.4f}  "
+        f"pred_is_corrupt={mt['pred_is_corrupt']:.1%}  "
         f"ctrl={mt['control_drop']:.1%}  "
         f"|edit|={mt['edit_norm_mean']:.2f}"
     )
@@ -389,7 +434,8 @@ def run(args):
         "subspace_complement": bool(args.subspace_complement),
         "lr_autoscale": bool(args.lr_autoscale),
         "seed": args.seed,
-        "test": {**mt, "steer": s_mean, "steer_ci": s_ci, "break": b_mean, "break_ci": b_ci},
+        "test": {**mt, "steer": s_mean, "steer_ci": s_ci, "break": b_mean, "break_ci": b_ci,
+                 "steer_2way": s2_mean, "steer_2way_ci": s2_ci},
     }
 
     outdir = Path(args.outdir)

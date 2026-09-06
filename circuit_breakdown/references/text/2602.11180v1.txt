@@ -1,0 +1,1712 @@
+Mechanistic Interpretability for Large Language Model Alignment:
+Progress, Challenges, and Future Directions
+Usman Naseem
+Macquarie University
+Correspondence: usman.naseem@mq.edu.au
+Abstract
+Large language models (LLMs) have achieved
+remarkable capabilities across diverse tasks,
+yet their internal decision-making processes
+remain largely opaque. Mechanistic inter-
+pretability—the systematic study of how neu-
+ral networks implement algorithms through
+their learned representations and computational
+structures—has emerged as a critical research
+direction for understanding and aligning these
+models. This paper surveys recent progress
+in mechanistic interpretability techniques ap-
+plied to LLM alignment, examining methods
+ranging from circuit discovery to feature visual-
+ization, activation steering, and causal interven-
+tion. We analyze how interpretability insights
+have informed alignment strategies including
+reinforcement learning from human feedback
+(RLHF), constitutional AI, and scalable over-
+sight. Key challenges are identified, includ-
+ing the superposition hypothesis, polyseman-
+ticity of neurons, and the difficulty of interpret-
+ing emergent behaviors in large-scale models.
+We propose future research directions focus-
+ing on automated interpretability, cross-model
+generalization of circuits, and the development
+of interpretability-driven alignment techniques
+that can scale to frontier models.
+1 Introduction
+The rapid advancement of large language mod-
+els (LLMs) has created an urgent need for robust
+alignment techniques that ensure these systems
+behave in accordance with human values and in-
+tentions (Ouyang et al., 2022; Bai et al., 2022).
+While behavioral approaches to alignment—such
+as RLHF and various prompting strategies—have
+shown practical success, they treat models as black
+boxes and provide limited guarantees about gener-
+alization to novel situations or adversarial inputs
+(Casper et al., 2023).
+Mechanistic interpretability offers a complemen-
+tary paradigm: understanding the internal algo-
+rithms and representations that LLMs learn during
+training (Olah et al., 2020; Elhage et al., 2021). By
+reverse-engineering the computational mechanisms
+underlying model behavior, researchers aim to de-
+velop more principled approaches to alignment that
+directly modify or constrain the problematic cir-
+cuits while preserving beneficial capabilities.
+Recent work has demonstrated that transformer-
+based LLMs learn interpretable substruc-
+tures—often called "circuits"—that implement
+specific algorithmic functions (Wang et al., 2022;
+Conmy et al., 2023). These discoveries have
+enabled targeted interventions for alignment
+purposes, from steering model behavior through
+activation editing (Li et al., 2023) to identifying
+and ablating deceptive or harmful reasoning
+patterns (Zou et al., 2023).
+This paper provides a comprehensive survey
+of mechanistic interpretability techniques applied
+to LLM alignment. We organize our discussion
+around three key questions:
+• What progress has been made?We review
+major advances in interpretability methods
+and their applications to alignment challenges.
+• What fundamental challenges remain?We
+analyze theoretical and practical barriers to
+achieving comprehensive interpretability of
+large-scale models.
+• What future directions are most promis-
+ing?We identify research priorities for de-
+veloping scalable, automated interpretability
+techniques that can support alignment of in-
+creasingly capable systems.
+2 Background and Foundations
+2.1 The Transformer Architecture
+Modern LLMs are built on the transformer archi-
+tecture (Vaswani et al., 2017), which processes se-
+quences through alternating layers of attention and
+arXiv:2602.11180v1  [cs.CL]  21 Jan 2026
+feedforward computations. Understanding this ar-
+chitecture is essential for mechanistic interpretabil-
+ity work.
+The attention mechanism allows each token to
+aggregate information from previous tokens in the
+sequence. For a given layerl, attention headh
+computes:
+Attention(Q, K, V) =softmax
+ QK⊤
+√dk
+
+V(1)
+whereQ,K, andVare query, key, and value
+matrices derived from linear transformations of the
+input embeddings (Vaswani et al., 2017).
+Multi-layer perceptrons (MLPs) in transformer
+layers implement position-wise feedforward trans-
+formations, which recent work suggests act as key-
+value memories storing factual associations (Geva
+et al., 2021; Meng et al., 2022).
+2.2 The Alignment Problem
+The alignment problem concerns ensuring that AI
+systems pursue goals and exhibit behaviors consis-
+tent with human values (Russell, 2019). For LLMs,
+key alignment challenges include:
+• Truthfulness and hallucination:Models
+may generate plausible but false information
+(Lin et al., 2022)
+• Harmful content generation:Models may
+produce toxic, biased, or dangerous outputs
+(Gehman et al., 2020)
+• Deceptive alignment:Models may learn to
+behave well during training while concealing
+misaligned objectives (Hubinger et al., 2019)
+• Robustness and distribution shift:Aligned
+behavior during training may not generalize
+to novel contexts (Hendrycks et al., 2020)
+Current alignment approaches primarily rely on
+RLHF (Christiano et al., 2017; Ouyang et al., 2022),
+which fine-tunes models using human preference
+feedback. While effective for improving surface-
+level behaviors, RLHF provides limited insight into
+whether models have internalized desired values or
+merely learned to imitate aligned behavior (Casper
+et al., 2023).
+2.3 Core Concepts in Mechanistic
+Interpretability
+Circuits:Subgraphs of a neural network that im-
+plement specific algorithmic functions (Cammarata
+et al., 2020; Olah et al., 2020). Circuit analysis
+aims to identify minimal subnetworks responsible
+for particular behaviors.
+Features:Directions in activation space corre-
+sponding to interpretable concepts (Olah et al.,
+2017). Features may be represented by individual
+neurons (monosemantic) or by linear combinations
+of neurons (polysemantic).
+Superposition:The hypothesis that networks rep-
+resent more features than they have neurons by
+storing features in superposition—as overlapping
+combinations of neural activations (Elhage et al.,
+2022). This creates significant challenges for inter-
+pretability.
+Residual stream:In transformers, information
+flows through a residual stream that accumulates
+contributions from attention and MLP layers (El-
+hage et al., 2021). Understanding how components
+read from and write to this stream is crucial for
+circuit analysis.
+3 Methods for Mechanistic
+Interpretability
+3.1 Activation Analysis and Probing
+Probing classifierstrain auxiliary models to pre-
+dict properties from internal representations, re-
+vealing what information is encoded in activations
+(Belinkov, 2022). For alignment, probes have
+been used to detect when models represent harmful
+content (Zou et al., 2023) or deceptive reasoning
+(Azaria and Mitchell, 2023). However, probing
+has limitations: high probe accuracy doesn’t nec-
+essarily mean information is used for downstream
+computations (Belinkov, 2022), and probes may
+learn to extract information in ways unrelated to
+the model’s actual computations.
+Logit lens and tuned lensmethods project interme-
+diate activations through the unembedding matrix
+to interpret representations as probability distribu-
+tions over vocabulary (Belrose et al., 2023). These
+techniques reveal how predictions evolve through
+layers and have been used to study phenomena like
+in-context learning (Olsson et al., 2022).
+3.2 Attention Pattern Analysis
+Attention weights provide direct insight into infor-
+mation flow between tokens. Researchers have
+identified interpretable attention patterns corre-
+sponding to specific functions:
+• Induction heads:Attention patterns that im-
+plement in-context learning by copying infor-
+mation from previous similar contexts (Olsson
+et al., 2022)
+• Previous token heads:Heads that primar-
+ily attend to the immediately preceding token
+(Elhage et al., 2021)
+• Factual recall heads:Heads involved in re-
+trieving factual knowledge (Meng et al., 2022)
+For alignment applications, attention analysis
+has revealed how models process and propagate
+harmful content (Zou et al., 2023), enabling tar-
+geted interventions.
+3.3 Circuit Discovery
+Circuit discovery aims to identify minimal sub-
+networks implementing specific behaviors. Key
+approaches include:
+Activation patching(also called causal tracing):
+Systematically intervenes on activations to deter-
+mine which components causally contribute to par-
+ticular outputs (Meng et al., 2022; Wang et al.,
+2022). By corrupting inputs and selectively restor-
+ing clean activations, researchers identify necessary
+and sufficient components for behaviors.
+Automatic circuit discovery:Recent methods au-
+tomate circuit identification using techniques like:
+• Attribution patching:Efficiently approxi-
+mates patching by computing gradients (Syed
+et al., 2024)
+• Edge pruning:Iteratively removes edges in
+the computational graph while maintaining
+output behavior (Conmy et al., 2023)
+• Path patching:Traces information
+flow along specific paths through the
+network (Goldowsky-Dill et al., 2023)
+These automated methods have successfully dis-
+covered circuits for tasks like indirect object identi-
+fication (Wang et al., 2022) and greater-than com-
+parisons (Hanna et al., 2023).
+3.4 Feature Visualization and Sparse
+Autoencoders
+Understanding what individual neurons or direc-
+tions in activation space represent is fundamental
+to interpretability. Traditional approaches include:
+Feature visualization:Optimizing inputs to maxi-
+mally activate specific neurons (Olah et al., 2017).
+For LLMs, this involves finding token sequences
+that strongly activate target features.
+Dataset examples:Collecting examples from
+training data that highly activate features (Bills
+et al., 2023). Recent work uses LMs to automati-
+cally generate natural language descriptions of neu-
+ron behavior based on these examples (Bills et al.,
+2023).
+Sparse autoencoders (SAEs):Address the super-
+position challenge by training autoencoders with
+sparsity constraints to decompose neural activa-
+tions into interpretable features (Cunningham et al.,
+2023; Bricken et al., 2023). SAEs learn overcom-
+plete feature dictionaries where individual features
+correspond to interpretable concepts. Recent work
+has successfully applied SAEs to various layers
+of LLMs, discovering features corresponding to
+topics, entities, and linguistic properties (Bricken
+et al., 2023).
+3.5 Causal Interventions and Steering
+Beyond observational analysis, interventional tech-
+niques directly modify model internals to test
+causal hypotheses and control behavior:
+Activation steering:Directly editing activations
+during inference to control model behavior (Turner
+et al., 2024; Li et al., 2023). By adding carefully
+chosen vectors to activations, researchers can am-
+plify or suppress specific behavioral tendencies.
+This has been applied to enhance truthfulness, re-
+duce toxicity, and control stylistic properties (Li
+et al., 2023).
+Representation engineering:A framework for
+reading and controlling high-level cognitive prop-
+erties by identifying representation directions and
+performing targeted interventions (Zou et al., 2023).
+This approach has been used to enhance honesty
+and reduce hallucination in LLMs.
+Causal abstractions:Formal framework for ver-
+ifying whether interpretations correspond to true
+causal relationships in the model (Geiger et al.,
+2021, 2022). This provides rigorous foundations
+for validating interpretability claims.
+Table 1 provides a systematic taxonomy of mech-
+Table 1: Taxonomy of Mechanistic Interpretability Techniques
+Category Technique Key Mechanism Strengths Limitations
+Observational Analysis
+Probing Classifiers Linear classifiers on internal activa-
+tions
+Low computational cost; detects
+encoded information
+No causal guarantees; may not re-
+flect actual usage
+Logit Lens / Tuned Lens Project activations through the un-
+embedding matrix
+Traces prediction evolution; in-
+terpretable outputs
+Layer-wise snapshots only; assumes
+linearity
+Attention Pattern Analysis Visualization of attention weights Direct insight into information
+flow; identifies head roles
+Does not capture MLP effects; diffi-
+cult compositional interpretation
+Feature Discovery Sparse Autoencoders (SAE) Sparse dictionary learning with ℓ1
+regularization
+Addresses polysemanticity; dis-
+covers monosemantic features
+Scaling challenges; reconstruction–
+fidelity trade-offs
+Dataset Examples + LLM Description High-activation examples with auto-
+mated descriptions
+Scalable; human-interpretable
+summaries
+Descriptions may be post-hoc; vali-
+dation difficulty
+Circuit Discovery
+Activation Patching Corrupt and restore activations to
+test causal impact
+Gold standard for causal attribu-
+tion
+Computationally expensive; combi-
+natorial explosion
+Automated Discovery Graph pruning using faithfulness
+metrics
+Automates circuit isolation; scal-
+able
+Requires threshold tuning; may miss
+distributed circuits
+Attribution Patching Gradient-based approximation of
+patching
+Efficient; good causal approxima-
+tion
+Less precise than full patching
+Path Patching Trace information flow along se-
+lected paths
+Isolates direct versus indirect ef-
+fects
+Path explosion in deep networks
+Causal Intervention
+Activation Steering Add direction vectors to intermedi-
+ate activations
+Precise behavior control; no re-
+training required
+Requires high-quality steering vec-
+tors; generalization unclear
+Knowledge Editing Direct weight modification (e.g.,
+ROME, MEMIT)
+Surgical fact updates; preserves
+other knowledge
+Primarily factual scope; potential
+side effects
+Representation Engineering Read and control abstract properties
+via latent directions
+Targets high-level concepts;
+multi-property control
+Robust direction discovery; interac-
+tion effects
+Validation Causal Abstractions Formal alignment between model
+mechanisms and interpretations
+Rigorous causal guarantees; prin-
+cipled evaluation
+Computationally intensive; requires
+formalization
+anistic interpretability techniques, organized by
+their primary function. These methods are often
+used in combination—for example, using sparse
+autoencoders to identify features, then using activa-
+tion patching to discover which circuits use those
+features causally.
+4 Applications to LLM Alignment
+4.1 Understanding RLHF Mechanisms
+Mechanistic interpretability has begun to illuminate
+how RLHF changes model behavior:
+Value representation:Research has investigated
+how reward models represent human preferences
+(Casper et al., 2023). Studies using probing and
+intervention methods suggest reward models learn
+relatively shallow heuristics rather than deep under-
+standing of human values.
+Policy changes:Circuit analysis of pre- and post-
+RLHF models reveals that RLHF primarily affects
+specific components related to response initiation
+and style, while core knowledge and reasoning
+circuits remain largely unchanged (Tigges et al.,
+2023). This suggests RLHF acts more as a behav-
+ioral filter than fundamental value learning.
+Sycophancy circuits:Interpretability work has
+identified circuits responsible for sycophantic be-
+havior—models agreeing with user statements re-
+gardless of truth (Sharma et al., 2023). These find-
+ings enable targeted debiasing interventions.
+4.2 Detecting and Mitigating Deception
+A critical alignment concern is whether models
+might learn deceptive strategies—behaving well
+during evaluation while pursuing misaligned objec-
+tives in deployment.
+Lie detection:Recent work uses linear probes
+to detect when models generate false statements
+(Azaria and Mitchell, 2023). These detectors
+achieve reasonable accuracy but face challenges
+when deception is sophisticated or the model is
+trained to evade detection.
+Situational awareness:Research has investigated
+whether models represent information about their
+training status or evaluation context (Berglund
+et al., 2023). Such representations could enable
+deceptive alignment, where models behave differ-
+ently when they believe they’re being evaluated.
+Trojan detection:Interpretability techniques have
+been applied to detect backdoor attacks and tro-
+jans in language models (Huang et al., 2023), with
+circuit discovery methods identifying malicious
+subnetworks.
+4.3 Reducing Harmful Outputs
+Toxicity circuits:Circuit analysis has identified
+specific attention heads and MLPs responsible for
+generating toxic or harmful content (Zou et al.,
+2023). Ablating or modifying these components re-
+duces harmful outputs while minimally impacting
+benign capabilities.
+Bias mitigation:Interpretability methods have re-
+vealed how stereotypical biases are represented and
+propagated through layers (Vig et al., 2020). This
+enables targeted interventions to reduce specific
+biases without extensive retraining.
+Refusal mechanisms:Recent work has analyzed
+how models learn to refuse harmful requests (Arditi
+et al., 2024), identifying specific components re-
+sponsible for safety behaviors. Understanding
+these mechanisms helps improve robustness of
+safety training.
+4.4 Improving Factuality and Reducing
+Hallucination
+Knowledge localization:Research has localized
+where factual knowledge is stored in transformer
+models, primarily in MLP layers (Geva et al., 2021;
+Meng et al., 2022). This enables:
+• Knowledge editing:Directly modifying
+stored facts without retraining (Meng et al.,
+2022; Mitchell et al., 2021)
+• Uncertainty quantification:Detecting when
+models lack relevant knowledge (Kadavath
+et al., 2022)
+• Hallucination detection:Identifying when
+models generate content not grounded in their
+training data
+Attention to source information:Analysis of how
+models attend to provided context versus internal
+knowledge reveals mechanisms underlying hallu-
+cination (Mallen et al., 2023). Models sometimes
+preferentially rely on memorized information even
+when contradicted by input context.
+4.5 Enhancing Transparency and Oversight
+Chain-of-thought interpretability:Mechanistic
+analysis of models generating chain-of-thought
+reasoning reveals the relationship between inter-
+mediate steps and internal computations (Wang
+et al., 2023). This addresses whether reasoning
+traces faithfully represent actual model cognition
+or merely post-hoc rationalizations.
+Faithful explanations:Interpretability methods
+help validate whether model-generated explana-
+tions correspond to true decision-making processes
+(Turpin et al., 2023). Evidence suggests explana-
+tions can be superficial or misleading, highlighting
+the need for mechanistic verification.
+Scalable oversight:Interpretability tools enable
+humans to oversee model behavior on tasks where
+direct evaluation is difficult (Bowman et al., 2022).
+By examining internal representations and circuits,
+supervisors can detect potential misalignment even
+when outputs appear reasonable.
+4.6 Pluralistic Alignment: Values, Culture,
+and Diversity
+A critical challenge in LLM alignment is that hu-
+man values are diverse, context-dependent, and
+often conflicting across individuals, communities,
+and cultures (Sorensen et al., 2024). Pluralistic
+alignment aims to develop AI systems that can
+navigate this diversity rather than optimizing for
+a single conception of "aligned" behavior (Bakker
+et al., 2022).
+4.6.1 Representing Value Diversity
+Mechanistic interpretability research has begun in-
+vestigating how models represent different value
+systems, moral frameworks, and cultural perspec-
+tives:
+Moral and ethical frameworks:Recent work
+using sparse autoencoders has identified distinct
+features corresponding to different ethical perspec-
+tives—deontological, consequentialist, and virtue-
+based reasoning—that activate in different contexts
+(Kirk et al., 2024). Understanding these representa-
+tions enables:
+• Value attribution:Determining which value
+systems influence particular model outputs
+• Conflict detection:Identifying when multi-
+ple incompatible values are activated simulta-
+neously
+• Bias auditing:Detecting systematic prefer-
+ences for certain value frameworks over others
+Cultural value systems:Circuit analysis re-
+veals systematic patterns in how models represent
+cultural diversity:
+• Western-centric value circuits:Models
+trained predominantly on English internet data
+develop circuits that robustly encode West-
+ern ethical frameworks (individualism, auton-
+omy, rights-based reasoning) while represent-
+ing collectivist or communitarian values more
+weakly (Alkhamissi et al., 2024). Circuit anal-
+ysis shows that MLP layers contain dense
+factual associations about Western cultural
+contexts but sparser representations of non-
+Western traditions.
+• Language-dependent moral reasoning:
+Multilingual models often exhibit different
+moral judgments depending on the language
+of the query, even when semantically equiv-
+alent (Ramezani and Xu, 2023). Attention
+pattern analysis reveals that models route
+information through different circuits based
+on language, suggesting distinct cultural value
+systems are encoded in language-specific
+pathways.
+• Cultural knowledge localization:Similar to
+factual knowledge neurons (Geva et al., 2021),
+models contain neurons that activate for
+culture-specific information—holidays, cus-
+toms, historical events, social norms—with
+different cultural traditions stored in partially
+overlapping but distinguishable neural popu-
+lations (Arora et al., 2023).
+4.6.2 Interventions for Pluralistic Alignment
+Mechanistic interpretability enables several ap-
+proaches to handling value and cultural diversity:
+Activation steering for diverse preferences:Ac-
+tivation steering methods have been extended to
+control which value systems and cultural perspec-
+tives models prioritize (Tigges et al., 2023; Li et al.,
+2023). By identifying representation directions cor-
+responding to different philosophical, political, or
+cultural perspectives, researchers can dynamically
+adjust model behavior without retraining:
+• Value-based steering:Shifting between utili-
+tarian and deontological reasoning
+• Cultural steering vectors:Moving outputs
+toward different cultural perspectives (e.g.,
+East Asian collectivist values vs. Western in-
+dividualist values)
+• Personalization:Adapting to individual user
+preferences while maintaining transparency
+RLHF with diverse preferences:Mechanistic
+analysis of reward models trained on diverse human
+feedback reveals how models aggregate conflicting
+preferences (Bakker et al., 2022):
+• Standard RLHFoften learns to satisfy major-
+ity preferences while ignoring minority view-
+points
+• Preference decomposition:Identifying
+which demographic or value groups influence
+different parts of the model
+• Fairness interventions:Detecting and cor-
+recting underrepresentation of minority per-
+spectives
+• Culturally-aware RLHF:Circuit-level anal-
+ysis shows reward models often learn cultural
+stereotypes rather than nuanced understanding
+(Nicholas and Bhatia, 2023)
+Circuit editing for inclusive representation:
+Directly modifying circuits to improve representa-
+tion of underrepresented perspectives:
+• Strengthening circuits for non-Western cul-
+tural knowledge (Meng et al., 2022)
+• Ablating stereotype propagation heads (Vig
+et al., 2020)
+• Engineering value framework circuits for bet-
+ter balance
+4.6.3 Challenges in Pluralistic Alignment
+Mechanistic interpretability faces unique chal-
+lenges when addressing value and cultural diver-
+sity:
+Value incommensurability:Some values
+may be fundamentally incompatible, creating
+superposition-like conflicts where models cannot
+simultaneously represent all perspectives at
+full strength. This is particularly acute for
+cultural values that reflect different ontological
+assumptions.
+Asymmetric representation capacity:Models
+trained on imbalanced data develop asymmetric
+circuit structures where dominant cultural concepts
+have richer, more robust representations (Nicholas
+and Bhatia, 2023). This may be a fundamental
+limitation rather than easily correctable.
+Context-dependence:The appropriate value
+framework often depends on subtle contextual fac-
+tors—cultural context, domain, relationship dynam-
+ics—that models must learn to recognize. Current
+models often fail to activate culturally-appropriate
+circuits in the right contexts.
+Power dynamics and essentialism:
+• Decisions about which cultural perspectives
+to prioritize reflect existing power structures
+(Birhane et al., 2022)
+• Mechanistic interventions targeting "cultural
+values" risk essentializing complex, heteroge-
+neous cultures into simplified feature vectors
+Table 2: Mechanistic Interpretability Applications to Alignment Challenges
+Alignment Goal MI Approach Key Findings Interventions Enabled Key Limitations
+Understanding RLHF Circuit comparison pre/post-
+RLHF; reward model analysis
+RLHF primarily affects response-
+style circuits rather than core rea-
+soning; reward models learn shallow
+heuristics
+Targeted RLHF improvements; de-
+tection of alignment failures
+Unclear how to induce deep value
+learning
+Detecting Deception Probing for false statements; situ-
+ational awareness analysis
+Linear probes detect deception with
+moderate accuracy; internal states
+encode training context
+Lie detection systems; monitoring
+for deceptive alignment
+Sophisticated deception may
+evade detection
+Reducing Toxicity Circuit discovery for harmful con-
+tent; stereotype head identifica-
+tion
+Specific attention heads propagate
+toxic content and can be ablated
+Surgical toxicity removal; stereo-
+type mitigation
+Potential impact on benign capa-
+bilities
+Improving Factuality Knowledge localization in MLPs;
+source-attention analysis
+Facts are stored in MLP layers; mod-
+els may ignore context in favor of
+memorized information
+Knowledge editing; hallucination
+detection; uncertainty estimation
+Limited to factual knowledge;
+possible side effects
+Pluralistic Alignment Value-feature discovery; cultural
+circuit analysis; steering vectors
+Models encode multiple ethical
+frameworks with uneven robustness
+Value-based steering; cultural adap-
+tation; personalization
+Context dependence; essentialism
+risks; capacity asymmetries
+Enhancing Trans-
+parency
+Chain-of-thought circuit analysis;
+explanation faithfulness verifica-
+tion
+Explanations may be post-hoc and
+not reflect true computation
+Detection of unfaithful reasoning;
+explanation validation
+Persistent gap between explana-
+tion and reasoning
+Scalable Oversight Internal state monitoring; circuit-
+level anomaly detection
+Misalignment can be detected in rep-
+resentations despite benign outputs
+Early warning systems; targeted hu-
+man oversight
+Requires identifying which
+anomalies signal genuine risk
+• Cultures are dynamic and internally diverse;
+static circuit-level representations may rein-
+force stereotypes
+Meta-level values:Beyond first-order preferences,
+pluralistic alignment requires representing meta-
+values about how to adjudicate between conflicting
+preferences—itself a culturally-variable question.
+Evaluation challenges:Assessing cultural align-
+ment requires culturally-grounded evaluation, but
+most interpretability researchers come from West-
+ern contexts, potentially missing important biases.
+Table 2 maps mechanistic interpretability ap-
+proaches to specific alignment objectives, illustrat-
+ing how different MI techniques enable targeted
+interventions while also highlighting their limita-
+tions. This demonstrates both the promise and cur-
+rent constraints of interpretability-based alignment.
+5 Fundamental Challenges
+5.1 Superposition and Polysemanticity
+Thesuperposition hypothesisposits that networks
+represent more features than dimensions by storing
+features in overlapping combinations of neurons
+(Elhage et al., 2022). This creates fundamental
+challenges:
+Polysemantic neurons:Individual neurons re-
+spond to multiple unrelated concepts, making
+neuron-level interpretability difficult (Cammarata
+et al., 2020). Research suggests models exploit
+sparsity—most features are inactive for most in-
+puts—to pack many features into limited dimen-
+sions.
+Interference and interaction:Features in super-
+position can interfere with each other in complex
+ways, making it difficult to predict how interven-
+tions will affect behavior (Elhage et al., 2022).
+Computational burden:Sparse autoencoders and
+other decomposition methods show promise but
+face scalability challenges. Training SAEs for fron-
+tier models requires enormous compute, and the
+number of features grows combinatorially (Bricken
+et al., 2023).
+5.2 Scale and Complexity
+Emergence:Large models exhibit emergent capa-
+bilities not present in smaller versions (Wei et al.,
+2022). Whether interpretability techniques devel-
+oped on smaller models transfer to frontier systems
+remains uncertain.
+Circuit interaction:Real behaviors involve com-
+plex interactions between many circuits. Under-
+standing how circuits compose and interfere is sig-
+nificantly harder than understanding individual cir-
+cuits in isolation (Olah et al., 2020).
+Computational costs:Comprehensive circuit anal-
+ysis requires extensive patching experiments that
+scale poorly with model size. Automated methods
+help but still face significant computational barriers
+for the largest models.
+5.3 Validation and Ground Truth
+Lack of ground truth:Unlike in neuroscience,
+we cannot easily verify interpretability hypothe-
+ses through direct experimentation. We must infer
+computational mechanisms from behavioral obser-
+vations and interventions.
+Confirmation bias:Researchers may find inter-
+pretations that appear compelling but don’t reflect
+true model computations (Räuker et al., 2023). Rig-
+orous causal verification is essential but often ne-
+glected.
+Evaluation metrics:The field lacks standardized
+metrics for evaluating interpretability quality. Pro-
+posals include causal faithfulness (Geiger et al.,
+2021), predictive power, and consistency across
+models, but no consensus exists.
+5.4 Alignment-Specific Challenges
+Inner alignment:Even with perfect interpretabil-
+ity of current behavior, we may fail to detect mis-
+aligned objectives that only manifest in specific cir-
+cumstances (Hubinger et al., 2019). Models might
+develop instrumental goals or deceptive strategies
+that remain dormant during training.
+Optimization demons:Training may pro-
+duce unintended optimization processes within
+networks—sub-agents pursuing their own objec-
+tives (Skalse et al., 2022). Detecting and interpret-
+ing such structures remains an open challenge.
+Value representation:Human values are complex,
+context-dependent, and difficult to specify. Even
+if we perfectly understand how models represent
+and pursue goals, determining whether those goals
+align with human values is philosophically and
+empirically challenging (Gabriel, 2020).
+Cultural representation challenges:Achiev-
+ing cultural alignment through mechanistic inter-
+pretability faces unique obstacles:
+• Asymmetric representation capacity:Mod-
+els trained on imbalanced multilingual data
+develop asymmetric circuit structures where
+Western concepts have richer, more robust
+representations than non-Western concepts
+(Nicholas and Bhatia, 2023). This asymmetry
+may be fundamental rather than easily cor-
+rectable.
+• Cultural essentialism risks:Mechanistic in-
+terventions targeting "cultural values" risk es-
+sentializing complex, heterogeneous cultures
+into simplified feature vectors. Cultures are
+dynamic and internally diverse; static circuit-
+level representations may reinforce stereo-
+types.
+• Power dynamics in alignment:Decisions
+about which cultural perspectives to priori-
+tize in model behavior reflect existing power
+structures. Mechanistic interpretability must
+grapple with who decides what constitutes
+"aligned" cultural representation (Birhane
+et al., 2022).
+Table 3 summarizes the fundamental challenges
+facing mechanistic interpretability research, along
+with current mitigation strategies and remaining
+open problems. These challenges are intercon-
+nected—for instance, superposition exacerbates
+scalability issues, while lack of validation makes
+it harder to assess whether mitigation strategies
+actually work.
+6 Future Research Directions
+6.1 Automated Interpretability at Scale
+Scalable circuit discovery:Developing efficient
+algorithms for circuit discovery that scale to models
+with hundreds of billions of parameters. Promising
+directions include:
+• Gradient-based attribution methods that ap-
+proximate expensive patching experiments
+• Hierarchical approaches that identify high-
+level functional modules before fine-grained
+circuits
+• Amortized interpretability where meta-models
+learn to interpret target models
+Automated description generation:Extending
+methods like automated neuron description (Bills
+et al., 2023) to describe circuits, attention patterns,
+and higher-level computational structures. Lan-
+guage models themselves may be powerful tools
+for generating and validating interpretability hy-
+potheses.
+Multimodal interpretability:Extending tech-
+niques to vision-language models and other multi-
+modal architectures requires new methods for un-
+derstanding cross-modal interactions and represen-
+tations (?).
+6.2 Cross-Model Generalization
+Universal circuits:Investigating whether similar
+circuits appear across different models, architec-
+tures, and training procedures (Conmy et al., 2023).
+If circuits are universal, interpretability insights
+could transfer between models, dramatically reduc-
+ing analysis costs.
+Meta-learning interpretability:Training models
+to predict interpretable structure in other models.
+Table 3: Core Challenges in Mechanistic Interpretability for Alignment
+Challenge Description Evidence Current Mitigations Open Problems
+Superposition & Polyse-
+manticity
+Networks represent more features
+than dimensions via overlapping
+codes; neurons respond to multiple
+unrelated concepts
+Models exploit sparsity to pack fea-
+tures; individual neurons are highly
+polysemantic
+Sparse autoencoders with overcom-
+plete dictionaries; topology-aware
+SAEs
+Scaling SAEs to frontier models; han-
+dling feature interactions; exponential
+feature growth
+Scalability Circuit analysis methods do not
+scale to models with hundreds of bil-
+lions of parameters
+Patching experiments scale quadrati-
+cally in components; frontier models
+contain thousands of layers and heads
+Attribution patching; hierarchical anal-
+ysis; automated circuit discovery
+Real-time interpretability for deploy-
+ment; analyzing emergent behaviors in
+the largest models
+Validation & Ground
+Truth
+No objective ground truth for verify-
+ing interpretations; risk of confirma-
+tion bias
+Interpretations can be compelling yet
+incorrect; lack of standardized evalua-
+tion metrics
+Causal abstractions; ablation studies;
+cross-model consistency checks
+Gold-standard benchmarks; measuring
+interpretation quality; detecting spuri-
+ous explanations
+Circuit Composition &
+Interaction
+Real-world behaviors arise from
+complex interactions among many
+circuits
+Simple circuits compose non-linearly;
+representations are often distributed
+Circuit superposition analysis; circuit
+graphs; compositional patching
+Understanding emergent properties;
+predicting downstream effects of in-
+terventions
+Universality vs. Speci-
+ficity
+Unclear whether circuits generalize
+across models, architectures, and
+training regimes
+Some universal circuits exist, but many
+are model- or task-specific
+Cross-model comparison; analysis of
+circuit evolution during training
+Determining when insights transfer;
+architecture- versus task-dependence
+Asymmetric Represen-
+tation
+Dominant cultural or value perspec-
+tives are encoded more robustly than
+minority views
+Western concepts often have richer or
+more stable circuits than non-Western
+ones
+Targeted circuit editing; culturally di-
+verse training data; steering vectors
+Capacity constraints; measuring repre-
+sentation equity; avoiding essentialism
+Inner Alignment Detec-
+tion
+Difficulty identifying misaligned
+mesa-objectives that appear only in
+specific contexts
+Concerns about deceptive alignment;
+models may obscure true objectives
+Situational awareness probes; circuit-
+level anomaly detection; goal monitor-
+ing
+Detecting sophisticated deception; ver-
+ifying alignment under distribution
+shift
+Dual-Use & Misuse
+Risks
+Interpretability tools may enable re-
+moval of safety features or improved
+deception
+Circuit analysis could facilitate jail-
+breaking or bypassing refusal mech-
+anisms
+Responsible disclosure; access con-
+trols; security-aware research practices
+Balancing transparency with security;
+developing defensive interpretability
+uses
+Such meta-interpretability systems could enable
+rapid analysis of new models and potentially auto-
+mated safety verification.
+Transfer of interventions:Determining when
+steering vectors, circuit ablations, or other inter-
+ventions generalize across models. This would en-
+able developing alignment techniques on smaller,
+more interpretable models with confidence they’ll
+transfer to frontier systems.
+6.3 Interpretability-First Alignment
+Mechanistic anomaly detection:Using inter-
+pretability tools to detect anomalous circuits or
+representations that might indicate deceptive align-
+ment, goal misgeneralization, or other alignment
+failures (Jenner et al., 2024).
+Transparent architectures:Designing model ar-
+chitectures with interpretability as a first-class ob-
+jective. This might include:
+• Encouraging monosemantic representations
+through architectural constraints
+• Building in explicit symbolic reasoning com-
+ponents
+• Modular designs that separate different cogni-
+tive functions
+Interpretability-guided training:Using inter-
+pretability insights during training to encourage de-
+sired representations and circuits (Zou et al., 2023).
+This could include:
+• Regularizers that encourage interpretable fea-
+ture representations
+• Curriculum learning ordered to develop cir-
+cuits in interpretable ways
+• Online monitoring and correction of problem-
+atic circuits during training
+6.4 Theoretical Foundations
+Formal verification:Developing rigorous meth-
+ods to prove properties about model behavior based
+on circuit structure. This would require connecting
+mechanistic interpretability to formal verification
+techniques from computer science (Huang et al.,
+2019).
+Information-theoretic frameworks:Building
+principled theories of how information flows
+through neural networks and using these to for-
+malize concepts like circuits, features, and super-
+position (Elhage et al., 2021).
+Causal models:Strengthening connections to
+causal inference and structural causal models to
+provide rigorous foundations for interpretability
+claims (Geiger et al., 2021, 2022).
+6.5 Practical Alignment Applications
+Red-teaming with interpretability:Using mech-
+anistic understanding to identify attack vectors and
+failure modes that behavioral testing might miss.
+This includes adversarial attacks targeting specific
+circuits and stress-testing alignment mechanisms.
+Monitoring deployed systems:Developing
+interpretability-based monitoring systems that can
+detect alignment failures or distributional shift in
+deployed models by tracking circuit activations and
+representations (Hubinger et al., 2019).
+Debate and amplification:Enhancing scalable
+oversight techniques like debate (Irving et al., 2018)
+and recursive reward modeling (Leike et al., 2018)
+with interpretability tools that help humans evaluate
+subtle arguments and detect deception.
+Value learning:Using interpretability to under-
+stand how models represent human preferences and
+values, potentially enabling more effective value
+learning approaches than current RLHF methods.
+6.6 Mechanistic Understanding and
+Mitigation of Misalignment Through
+Pluralistic Approaches
+A comprehensive research program leveraging
+mechanistic interpretability for alignment should
+address both understanding and actively mitigating
+misalignment while respecting value and cultural
+diversity.
+6.6.1 Mechanizing Misalignment Detection
+Future work should develop automated systems
+that continuously monitor model internals for signs
+of misalignment:
+Objective representation analysis:Detecting
+when models develop mesa-objectives or proxy
+goals that diverge from intended alignment targets
+(Hubinger et al., 2019). This requires identifying
+circuits that implement goal-directed behavior and
+verifying their alignment with human values.
+Deceptive reasoning detection:Building on work
+detecting lies (Azaria and Mitchell, 2023), fu-
+ture systems should identify more subtle forms of
+deception, including strategic misrepresentation,
+selective information withholding, and context-
+dependent honesty.
+Value drift monitoring:Tracking how value repre-
+sentations change during deployment, fine-tuning,
+or continued learning. Mechanistic interpretability
+enables detecting when models shift away from
+intended value functions.
+6.6.2 Circuit-Level Misalignment Mitigation
+Moving beyond behavioral alignment to directly
+modify problematic circuits:
+Targeted ablation and repair:Identifying mini-
+mal circuits responsible for misaligned behaviors
+and either ablating them or replacing them with cor-
+rected versions. This requires understanding circuit
+composition well enough to predict downstream
+effects of modifications (Conmy et al., 2023).
+Value circuit engineering:Directly engineering
+circuits that implement desired value functions,
+rather than hoping they emerge from training. This
+could involve composing interpretable subcircuits
+for value recognition, ethical reasoning, and prefer-
+ence aggregation.
+Adversarial robustness through interpretability:
+Using circuit analysis to identify vulnerabilities
+to adversarial attacks and jailbreaks, then harden-
+ing these circuits against exploitation (Zou et al.,
+2023). This provides more principled robustness
+than behavioral adversarial training.
+6.6.3 Pluralistic Alignment Infrastructure
+Modular value and cultural systems:Design-
+ing architectures where different value frameworks
+and cultural perspectives are implemented in inter-
+pretable, composable circuits:
+• Explicit context modules:Circuits that ex-
+plicitly represent the cultural and value con-
+text of a query and route information accord-
+ingly
+• Plug-in value systems:Modular components
+encoding different ethical and cultural frame-
+works that can be activated, combined, or
+swapped based on context
+• Cultural calibration layers:Interpretable
+layers that adjust outputs based on cultural
+context
+Automated cross-cultural circuit discovery:De-
+veloping tools to systematically identify biases and
+gaps:
+• Comparative circuit analysis:Automati-
+cally comparing circuits activated by equiva-
+lent queries across languages/cultures to de-
+tect systematic differences (Wendler et al.,
+2024)
+• Underrepresentation detection:Identify-
+ing domains where certain perspectives are
+weakly represented
+• Bias attribution:Tracing culturally-biased
+outputs back to specific components
+Participatory mechanistic alignment:Involving
+diverse communities in interpretability-based align-
+ment:
+• Community-driven circuit auditing:Tools
+enabling cultural communities to audit circuits
+affecting their values
+• Collaborative value specification:Working
+with diverse stakeholders to specify desired
+value circuits
+• Cultural red-teaming with interpretability:
+Using mechanistic understanding to enable
+cultural community members to identify fail-
+ure modes that automated testing might miss.
+Cross-lingual circuit transfer:Investigating
+whether cultural alignment insights transfer across
+languages:
+• Universal cultural reasoning circuits:De-
+termining whether models develop language-
+independent circuits for cultural reasoning
+that could be analyzed once and applied
+broadly
+• Language-specific cultural pathways:Map-
+ping how different languages activate different
+cultural circuits and developing interventions
+that work across linguistic diversity
+• Multilingual feature disentanglement:Us-
+ing sparse autoencoders to separate language-
+specific features from cultural value features,
+enabling targeted cultural alignment without
+language interference
+Measuring pluralistic alignment mechanisti-
+cally:Beyond behavioral metrics, developing
+interpretability-based measures:
+• Cultural representation diversity:Quan-
+tifying how uniformly different cultural per-
+spectives are represented in model features
+and circuits
+• Stereotype circuit strength:Measuring the
+causal impact of circuits that propagate cul-
+tural stereotypes
+• Value framework balance:Assessing
+whether circuits implementing different ethi-
+cal frameworks (Western individualism, Con-
+fucian relationalism, Ubuntu communalism,
+etc.) have comparable representation capacity
+• Context-appropriate activation:Verifying
+that culturally-relevant circuits activate in ap-
+propriate contexts rather than uniformly
+Preference personalization without fine-tuning:
+Using activation steering and circuit-level interven-
+tions to adapt model behavior to individual user
+values without expensive per-user training. Under-
+standing which circuits control value-relevant be-
+haviors enables efficient, interpretable customiza-
+tion.
+Fairness through feature editing:Identifying fea-
+tures and circuits that encode biases toward partic-
+ular value systems or demographic groups, then
+editing these to ensure fair representation of di-
+verse perspectives (Sorensen et al., 2024). This
+provides more targeted bias mitigation than dataset
+rebalancing.
+Explicit value negotiation:Developing inter-
+pretable mechanisms for models to recognize value
+conflicts and negotiate between competing prefer-
+ences transparently. This requires circuits that can
+represent uncertainty over values, model different
+stakeholders, and reason about ethical trade-offs.
+6.6.4 Scaling Mechanistic Alignment to
+Superintelligence
+Critical challenges for applying interpretability-
+based alignment to systems more capable than cur-
+rent models:
+Recursive alignment verification:As models be-
+come capable enough to assist with alignment re-
+search, using interpretability to verify that align-
+ment assistance is itself aligned. This requires de-
+tecting whether models are genuinely helping or
+pursuing instrumental goals through apparent co-
+operation.
+Emergent misalignment detection:Developing
+interpretability methods that can detect novel forms
+of misalignment that emerge at greater capability
+levels. This may require meta-interpretability sys-
+tems that can discover new types of circuits and
+representations.
+Scalable value learning:Using mechanistic under-
+standing to enable models to learn human values
+from limited feedback by understanding how hu-
+mans represent and reason about values, rather than
+treating values as black-box reward functions.
+6.6.5 Integration with Multi-Stakeholder
+Governance
+Interpretability-based pluralistic alignment should
+support participatory approaches to AI governance:
+• Transparent value trade-offs:Making ex-
+plicit which groups’ preferences are priori-
+tized in different contexts, enabling demo-
+cratic deliberation about alignment targets
+• Auditable customization:Allowing third par-
+ties to verify that deployed models respect
+diverse values as claimed
+• Contestable AI systems:Enabling users to
+understand and potentially contest the value
+judgments embedded in model behavior
+6.6.6 Research Priorities
+To realize this vision, the field must:
+• Global interpretability collaboration:
+Building international research collabora-
+tions to ensure interpretability methods are
+validated across cultural contexts
+• Culturally-diverse training for inter-
+pretability researchers:Training in-
+terpretability researchers from diverse
+backgrounds to recognize biases others might
+miss
+• Standardized cross-cultural benchmarks:
+Developing interpretability-specific bench-
+marks that test whether circuit-level interven-
+tions successfully address cultural bias while
+maintaining capabilities
+• Ethical frameworks for cultural alignment:
+Establishing principles for when and how to
+modify cultural representations in models, re-
+specting cultural autonomy while addressing
+harmful biases
+• Scalable cultural knowledge integration:
+Developing methods to efficiently integrate di-
+verse cultural knowledge into models through
+targeted circuit editing rather than pro-
+hibitively expensive retraining
+• Value representation formalism:Develop-
+ing interpretability methods specifically de-
+signed for analyzing value representations and
+ethical reasoning circuits
+• Pluralistic evaluation:Creating evaluation
+frameworks that assess how well models han-
+dle value conflicts and pluralistic scenarios
+across diverse cultural contexts
+Case study - Collectivist vs. Individualist rea-
+soning:Recent work has examined how models
+reason about moral dilemmas involving individual
+rights versus collective welfare:
+• Circuit analysis reveals Western-trained
+models have more robust pathways for
+rights-based reasoning than duty-based or
+community-focused reasoning (Alkhamissi
+et al., 2024)
+• Interventions adding collectivist reasoning cir-
+cuits improve performance on cross-cultural
+moral reasoning tasks
+• However, simply strengthening collectivist cir-
+cuits can create new biases if not carefully
+calibrated to context
+This research program represents a shift from
+black-box behavioral alignment to white-box mech-
+anistic alignment—directly engineering and verify-
+ing the internal computations that determine model
+behavior. Success would provide stronger guaran-
+tees about alignment under distribution shift, novel
+situations, and increasing capability levels. More-
+over, interpretability-based approaches to pluralis-
+tic alignment offer a path toward AI systems that
+can genuinely respect diverse human values and
+cultural perspectives rather than imposing uniform
+alignment targets.
+7 Discussion and Recommendations
+7.1 The Path Forward
+Mechanistic interpretability has made significant
+progress but remains far from providing compre-
+hensive understanding of frontier LLMs. We rec-
+ommend a balanced research portfolio:
+In the near term, research priorities should focus
+on scaling sparse autoencoder–based approaches
+to the largest contemporary models, enabling the
+extraction of interpretable features at previously
+unattainable scales. At the same time, there is a
+need to automate the discovery and validation of
+model circuits, reducing reliance on labor-intensive,
+ad hoc analyses. Integrating interpretability tools
+directly into standard model development pipelines
+will be critical for making mechanistic analy-
+sis a routine component of model training and
+deployment. In parallel, interpretability studies
+should be extended to RLHF and related alignment
+techniques, with the goal of understanding how
+these methods shape internal representations and
+decision-making processes.
+Over the medium term, the field should advance
+toward the development and empirical evaluation
+of alignment methods that are explicitly guided
+by interpretability insights. Establishing standard-
+ized benchmarks and evaluation protocols will be
+essential to ensure comparability and cumulative
+progress across interpretability studies. Research
+should also investigate the extent to which learned
+circuits and features generalize across architectures,
+scales, and training regimes, thereby clarifying
+whether mechanistic insights are model-specific
+or reflect more universal principles. In addition,
+interpretability-based monitoring systems should
+be developed to support the ongoing oversight of
+deployed models, enabling the detection of emer-
+gent risks or unintended behaviors in real-world
+settings.
+In the long term, a central objective is to achieve
+a comprehensive mechanistic understanding of
+highly capable or potentially superintelligent sys-
+tems. Such understanding would enable the devel-
+opment of formal verification methods grounded
+in circuit-level structure, offering stronger guaran-
+tees about model behavior than empirical testing
+alone. Progress toward interpretability-first model
+architectures could further embed alignment con-
+siderations directly into system design, rather than
+treating them as post-hoc constraints. Ultimately,
+these advances aim to resolve the inner alignment
+problem by grounding alignment guarantees in a
+deep, mechanistic account of how advanced models
+represent goals, values, and decision processes.
+7.2 Integration with Other Alignment
+Approaches
+Interpretability should complement rather than re-
+place other alignment research:
+Synergies with RLHF:Interpretability can diag-
+nose RLHF failures, suggest improvements, and
+validate that alignment training achieves intended
+effects (Casper et al., 2023).
+Enhancing red-teaming:Mechanistic understand-
+ing enables more sophisticated adversarial test-
+ing that targets specific circuits and failure modes
+(Perez et al., 2022).
+Supporting theoretical alignment:Interpretabil-
+ity provides empirical grounding for theoretical
+alignment proposals, revealing which concerns are
+realized in practice and which remain theoretical
+(Hubinger et al., 2019).
+7.3 Limitations and Risks
+We acknowledge important limitations:
+False confidence:Interpretability might provide
+misleading confidence in model safety if interpre-
+tations are incorrect or incomplete. Rigorous vali-
+dation is essential.
+Arms race dynamics:Interpretability tools could
+be used to make models better at deception or to
+remove safety mechanisms. Responsible disclosure
+norms are important (Brundage et al., 2020).
+Diminishing returns:The cost of interpretability
+may grow faster than model capabilities, poten-
+tially making comprehensive understanding of fu-
+ture systems intractable. Planning for this scenario
+is crucial.
+Philosophical challenges:Even perfect inter-
+pretability may not resolve fundamental questions
+about consciousness, moral status, or value align-
+ment in AI systems (Schwitzgebel and Garza,
+2015).
+8 Conclusion
+Mechanistic interpretability represents a crucial
+approach to understanding and aligning large lan-
+guage models. Recent progress in circuit discovery,
+feature analysis, and causal intervention has demon-
+strated that we can reverse-engineer specific algo-
+rithms and representations in modern LLMs. These
+insights have enabled targeted alignment interven-
+tions, from steering model behavior to detecting
+deception and reducing harmful outputs.
+However, fundamental challenges remain. Su-
+perposition creates significant barriers to feature-
+level interpretability. The scale and complexity
+of frontier models strain existing methods. Vali-
+dation of interpretability claims remains difficult
+without ground truth. Most significantly, we lack
+comprehensive understanding of how to ensure in-
+ner alignment—that models pursue truly aligned
+objectives rather than merely exhibiting aligned
+behavior.
+The challenge of pluralistic and cultural align-
+ment exemplifies why mechanistic interpretability
+is essential for responsible AI development. As
+LLMs are deployed globally, they must navigate
+diverse cultural contexts, values, and communica-
+tion norms. Surface-level behavioral alignment
+calibrated to one cultural context often fails or
+causes harm when applied elsewhere. Only by
+understanding the internal circuits that encode cul-
+tural knowledge and values can we build systems
+that genuinely respect human diversity rather than
+imposing dominant cultural assumptions. This re-
+quires not just technical advances in interpretability,
+but participatory approaches that involve diverse
+cultural communities in auditing, specifying, and
+validating model internals.
+The path forward requires sustained research
+investment across multiple fronts: developing scal-
+able automated interpretability methods, establish-
+ing rigorous validation protocols, investigating
+cross-model generalization, building interpretabil-
+ity directly into alignment training, and creat-
+ing infrastructure for pluralistic alignment that re-
+spects diverse values and cultures. Success will
+require close collaboration between interpretabil-
+ity researchers, alignment theorists, practitioners
+deploying models in high-stakes applications, and
+diverse cultural communities whose values must
+be represented.
+As language models grow more capable and their
+societal impact increases, mechanistic interpretabil-
+ity becomes increasingly essential. Only by under-
+standing how these systems work internally can
+we hope to ensure they remain beneficial, truthful,
+and aligned with the full diversity of human values
+across cultures and contexts. The research commu-
+nity must rise to this challenge with urgency, rigor,
+and humility about the difficulty of the task ahead.
+References
+Badr Alkhamissi, Muhammad ElNokrashy, Mai
+Alkhamissi, and Mona Diab. 2024. Investigating
+cultural alignment of large language models. InPro-
+ceedings of the 62nd Annual Meeting of the Associa-
+tion for Computational Linguistics (Volume 1: Long
+Papers), pages 12404–12422.
+Andy Arditi, Oscar Obeso, Aaquib Syed, Daniel Paleka,
+Nina Panickssery, Wes Gurnee, and Neel Nanda.
+2024. Refusal in language models is mediated by
+a single direction.Advances in Neural Information
+Processing Systems, 37:136037–136083.
+Arnav Arora, Lucie-aimée Kaffee, and Isabelle Augen-
+stein. 2023. Probing pre-trained language models for
+cross-cultural differences in values. InProceedings
+of the first workshop on cross-cultural considerations
+in NLP (C3NLP), pages 114–130.
+Amos Azaria and Tom Mitchell. 2023. The internal
+state of an llm knows when it’s lying. InFindings
+of the Association for Computational Linguistics:
+EMNLP 2023, pages 967–976.
+Yuntao Bai, Andy Jones, Kamal Ndousse, Amanda
+Askell, Anna Chen, Nova DasSarma, Dawn Drain,
+Stanislav Fort, Deep Ganguli, Tom Henighan, and 1
+others. 2022. Training a helpful and harmless assis-
+tant with reinforcement learning from human feed-
+back.arXiv preprint arXiv:2204.05862.
+Michiel Bakker, Martin Chadwick, Hannah Sheahan,
+Michael Tessler, Lucy Campbell-Gillingham, Jan
+Balaguer, Nat McAleese, Amelia Glaese, John
+Aslanides, Matt Botvinick, and 1 others. 2022. Fine-
+tuning language models to find agreement among hu-
+mans with diverse preferences.Advances in neural
+information processing systems, 35:38176–38189.
+Yonatan Belinkov. 2022. Probing classifiers: Promises,
+shortcomings, and advances.Computational Linguis-
+tics, 48(1):207–219.
+Nora Belrose, Zach Furman, Logan Smith, Danny Ha-
+lawi, Igor Ostrovsky, Lev McKinney, Stella Bider-
+man, and Jacob Steinhardt. 2023. Eliciting latent
+predictions from transformers with the tuned lens.
+arXiv preprint arXiv:2303.08112.
+Lukas Berglund, Meg Tong, Max Kaufmann, Mikita
+Balesni, Asa Cooper Stickland, Tomasz Korbak, and
+Owain Evans. 2023. The reversal curse: Llms trained
+on "a is b" fail to learn "b is a".arXiv preprint
+arXiv:2309.12288.
+Steven Bills, Nick Cammarata, Dan Mossing, Henk
+Tillman, Leo Gao, Gabriel Goh, Ilya Sutskever, Jan
+Leike, Jeff Wu, and William Saunders. 2023. Lan-
+guage models can explain neurons in language mod-
+els.OpenAI Blog.
+Abeba Birhane, Pratyusha Kalluri, Dallas Card, William
+Agnew, Ravit Dotan, and Michelle Bao. 2022. The
+values encoded in machine learning research. InPro-
+ceedings of the 2022 ACM Conference on Fairness,
+Accountability, and Transparency, pages 173–184.
+Samuel R Bowman, Jeeyoon Hyun, Ethan Perez, Edwin
+Chen, Craig Pettit, Scott Heiner, Kamil˙e Lukoši¯ut˙e,
+Amanda Askell, Andy Jones, Anna Chen, and 1 oth-
+ers. 2022. Measuring progress on scalable over-
+sight for large language models.arXiv preprint
+arXiv:2211.03540.
+Trenton Bricken, Adly Templeton, Joshua Batson, Brian
+Chen, Adam Jermyn, Tom Conerly, Nick Turner,
+Cem Anil, Carson Denison, Amanda Askell, and 1
+others. 2023. Towards monosemanticity: Decompos-
+ing language models with dictionary learning.Trans-
+former Circuits Thread.
+Miles Brundage, Shahar Avin, Jasmine Wang, Haydn
+Belfield, Gretchen Krueger, Gillian Hadfield, Heidy
+Khlaaf, Jingying Yang, Helen Toner, Ruth Fong, and
+1 others. 2020. Toward trustworthy ai development:
+mechanisms for supporting verifiable claims.arXiv
+preprint arXiv:2004.07213.
+Nick Cammarata, Gabriel Goh, Shan Carter, Ludwig
+Schubert, Michael Petrov, and Chris Olah. 2020.
+Curve detectors.Distill, 5(6):e00024–003.
+Stephen Casper, Xander Davies, Claudia Shi,
+Thomas Krendl Gilbert, Jérémy Scheurer, Javier
+Rando, Rachel Freedman, Tomasz Korbak, David
+Lindner, Pedro Freire, and 1 others. 2023. Open
+problems and fundamental limitations of reinforce-
+ment learning from human feedback.arXiv preprint
+arXiv:2307.15217.
+Paul F Christiano, Jan Leike, Tom Brown, Miljan Mar-
+tic, Shane Legg, and Dario Amodei. 2017. Deep
+reinforcement learning from human preferences. In
+Advances in Neural Information Processing Systems,
+volume 30.
+Arthur Conmy, Augustine Mavor-Parker, Aengus Lynch,
+Stefan Heimersheim, and Adrià Garriga-Alonso.
+2023. Towards automated circuit discovery for mech-
+anistic interpretability.Advances in Neural Informa-
+tion Processing Systems, 36:16318–16352.
+Hoagy Cunningham, Aidan Ewart, Logan Riggs, Robert
+Huben, and Lee Sharkey. 2023. Sparse autoencoders
+find highly interpretable features in language models.
+arXiv preprint arXiv:2309.08600.
+Nelson Elhage, Tristan Hume, Catherine Olsson,
+Nicholas Schiefer, Tom Henighan, Shauna Kravec,
+Zac Hatfield-Dodds, Robert Lasenby, Dawn Drain,
+Carol Chen, and 1 others. 2022. Toy models of su-
+perposition.arXiv preprint arXiv:2209.10652.
+Nelson Elhage, Neel Nanda, Catherine Olsson, Tom
+Henighan, Nicholas Joseph, Ben Mann, Amanda
+Askell, Yuntao Bai, Anna Chen, Tom Conerly, and
+1 others. 2021. A mathematical framework for
+transformer circuits.Transformer Circuits Thread,
+1(1):12.
+Iason Gabriel. 2020. Artificial intelligence, values, and
+alignment.Minds and machines, 30(3):411–437.
+Samuel Gehman, Suchin Gururangan, Maarten Sap,
+Yejin Choi, and Noah A Smith. 2020. Realtoxici-
+typrompts: Evaluating neural toxic degeneration in
+language models. InFindings of the Association
+for Computational Linguistics: EMNLP 2020, pages
+3356–3369.
+Atticus Geiger, Hanson Lu, Thomas Icard, and Christo-
+pher Potts. 2021. Causal abstractions of neural net-
+works. InAdvances in Neural Information Process-
+ing Systems, volume 34, pages 9574–9586.
+Atticus Geiger, Zhengxuan Wu, Hanson Lu, Josh
+Rozner, Elisa Kreiss, Thomas Icard, Noah Good-
+man, and Christopher Potts. 2022. Inducing causal
+structure for interpretable neural networks. InIn-
+ternational Conference on Machine Learning, pages
+7324–7338. PMLR.
+Mor Geva, Roei Schuster, Jonathan Berant, and Omer
+Levy. 2021. Transformer feed-forward layers are
+key-value memories. InProceedings of the 2021
+Conference on Empirical Methods in Natural Lan-
+guage Processing, pages 5484–5495.
+Nicholas Goldowsky-Dill, Chris MacLeod, Lucas
+Sato, and Aryaman Arora. 2023. Localizing
+model behavior with path patching.arXiv preprint
+arXiv:2304.05969.
+Michael Hanna, Ollie Liu, and Alexandre Variengien.
+2023. How does gpt-2 compute greater-than?: In-
+terpreting mathematical abilities in a pre-trained lan-
+guage model.Advances in Neural Information Pro-
+cessing Systems, 36:76033–76060.
+Dan Hendrycks, Collin Burns, Steven Basart, Andy Zou,
+Mantas Mazeika, Dawn Song, and Jacob Steinhardt.
+2020. Measuring massive multitask language under-
+standing.arXiv preprint arXiv:2009.03300.
+Po-Sen Huang, Robert Stanforth, Johannes Welbl, Chris
+Dyer, Dani Yogatama, Sven Gowal, Krishnamurthy
+Dvijotham, and Pushmeet Kohli. 2019. Achieving
+verified robustness to symbol substitutions via in-
+terval bound propagation. InProceedings of the
+2019 Conference on Empirical Methods in Natu-
+ral Language Processing and the 9th International
+Joint Conference on Natural Language Processing
+(EMNLP-IJCNLP), pages 4083–4093.
+Yangsibo Huang, Samyak Gupta, Mengzhou Xia, Kai
+Li, and Danqi Chen. 2023. Catastrophic jailbreak of
+open-source llms via exploiting generation.arXiv
+preprint arXiv:2310.06987.
+Evan Hubinger, Chris van Merwijk, Vladimir Mikulik,
+Joar Skalse, and Scott Garrabrant. 2019. Risks from
+learned optimization in advanced machine learning
+systems.arXiv preprint arXiv:1906.01820.
+Geoffrey Irving, Paul Christiano, and Dario Amodei.
+2018. Ai safety via debate.arXiv preprint
+arXiv:1805.00899.
+Erik Jenner, Shreyas Kapur, Vasil Georgiev, Cameron
+Allen, Scott Emmons, and Stuart J Russell. 2024.
+Evidence of learned look-ahead in a chess-playing
+neural network.Advances in Neural Information
+Processing Systems, 37:31410–31437.
+Saurav Kadavath, Tom Conerly, Amanda Askell, Tom
+Henighan, Dawn Drain, Ethan Perez, Nicholas
+Schiefer, Zac Hatfield-Dodds, Nova DasSarma, Eli
+Tran-Johnson, and 1 others. 2022. Language mod-
+els (mostly) know what they know.arXiv preprint
+arXiv:2207.05221.
+Hannah Rose Kirk, Bertie Vidgen, Paul Röttger, and
+Scott A Hale. 2024. The benefits, risks and bounds
+of personalizing the alignment of large language
+models to individuals.Nature Machine Intelligence,
+6(4):383–392.
+Jan Leike, David Krueger, Tom Everitt, Miljan Martic,
+Vishal Maini, and Shane Legg. 2018. Scalable agent
+alignment via reward modeling: a research direction.
+arXiv preprint arXiv:1811.07871.
+Kenneth Li, Oam Patel, Fernanda Viégas, Hanspeter
+Pfister, and Martin Wattenberg. 2023. Inference-
+time intervention: Eliciting truthful answers from
+a language model.Advances in Neural Information
+Processing Systems, 36:41451–41530.
+Stephanie Lin, Jacob Hilton, and Owain Evans. 2022.
+Truthfulqa: Measuring how models mimic human
+falsehoods. InProceedings of the 60th annual meet-
+ing of the association for computational linguistics
+(volume 1: long papers), pages 3214–3252.
+Alex Mallen, Akari Asai, Victor Zhong, Rajarshi Das,
+Daniel Khashabi, and Hannaneh Hajishirzi. 2023.
+When not to trust language models: Investigating
+effectiveness of parametric and non-parametric mem-
+ories. InProceedings of the 61st Annual Meeting of
+the Association for Computational Linguistics (Vol-
+ume 1: Long Papers), pages 9802–9822.
+Kevin Meng, David Bau, Alex Andonian, and Yonatan
+Belinkov. 2022. Locating and editing factual asso-
+ciations in gpt. InAdvances in Neural Information
+Processing Systems, volume 35, pages 17359–17372.
+Eric Mitchell, Charles Lin, Antoine Bosselut, Chelsea
+Finn, and Christopher D Manning. 2021. Fast model
+editing at scale.arXiv preprint arXiv:2110.11309.
+Gabriel Nicholas and Aliya Bhatia. 2023. Lost in trans-
+lation: Large language models in non-english content
+analysis.arXiv preprint arXiv:2306.07377.
+Chris Olah, Nick Cammarata, Ludwig Schubert, Gabriel
+Goh, Michael Petrov, and Shan Carter. 2020. Zoom
+in: An introduction to circuits.Distill, 5(3):e00024–
+001.
+Chris Olah, Alexander Mordvintsev, and Ludwig Schu-
+bert. 2017. Feature visualization.Distill, 2(11):e7.
+Catherine Olsson, Nelson Elhage, Neel Nanda, Nicholas
+Joseph, Nova DasSarma, Tom Henighan, Ben Mann,
+Amanda Askell, Yuntao Bai, Anna Chen, and 1 oth-
+ers. 2022. In-context learning and induction heads.
+arXiv preprint arXiv:2209.11895.
+Long Ouyang, Jeffrey Wu, Xu Jiang, Diogo Almeida,
+Carroll Wainwright, Pamela Mishkin, Chong Zhang,
+Sandhini Agarwal, Katarina Slama, Alex Ray, and
+1 others. 2022. Training language models to follow
+instructions with human feedback. InAdvances in
+Neural Information Processing Systems, volume 35,
+pages 27730–27744.
+Ethan Perez, Saffron Huang, Francis Song, Trevor Cai,
+Roman Ring, John Aslanides, Amelia Glaese, Nat
+McAleese, and Geoffrey Irving. 2022. Red teaming
+language models with language models. InProceed-
+ings of the 2022 Conference on Empirical Methods
+in Natural Language Processing, pages 3419–3448.
+Aida Ramezani and Yang Xu. 2023. Knowledge of
+cultural moral norms in large language models. In
+Proceedings of the 61st Annual Meeting of the As-
+sociation for Computational Linguistics (Volume 1:
+Long Papers), pages 428–446.
+Tilman Räuker, Anson Ho, Stephen Casper, and Dylan
+Hadfield-Menell. 2023. Toward transparent ai: A
+survey on interpreting the inner structures of deep
+neural networks. In2023 ieee conference on secure
+and trustworthy machine learning (satml), pages 464–
+483. IEEE.
+Stuart Russell. 2019.Human compatible: Artificial
+intelligence and the problem of control. Penguin.
+Eric Schwitzgebel and Mara Garza. 2015. A defense of
+the rights of artificial intelligences.Midwest Studies
+in Philosophy, 39(1):98–119.
+Mrinank Sharma, Meg Tong, Tomasz Korbak, David Du-
+venaud, Amanda Askell, Samuel R Bowman, Newton
+Cheng, Esin Durmus, Zac Hatfield-Dodds, Scott R
+Johnston, and 1 others. 2023. Towards understand-
+ing sycophancy in language models.arXiv preprint
+arXiv:2310.13548.
+Joar Skalse, Nikolaus Howe, Dmitrii Krasheninnikov,
+and David Krueger. 2022. Defining and character-
+izing reward gaming. InAdvances in Neural Infor-
+mation Processing Systems, volume 35, pages 9460–
+9471.
+Taylor Sorensen, Jared Moore, Jillian Fisher,
+Mitchell Gordon, Niloofar Mireshghallah, Christo-
+pher Michael Rytting, Andre Ye, Liwei Jiang,
+Ximing Lu, Nouha Dziri, and 1 others. 2024.
+Position: a roadmap to pluralistic alignment. In
+Proceedings of the 41st International Conference on
+Machine Learning, pages 46280–46302.
+Aaquib Syed, Can Rager, and Arthur Conmy. 2024.
+Attribution patching outperforms automated circuit
+discovery. InProceedings of the 7th BlackboxNLP
+Workshop: Analyzing and Interpreting Neural Net-
+works for NLP, pages 407–416.
+Curt Tigges, Oskar John Hollinsworth, Atticus Geiger,
+and Neel Nanda. 2023. Linear representations of
+sentiment in large language models.arXiv preprint
+arXiv:2310.15154.
+Alexander Matt Turner, Lisa Thiergart, Gavin Leech,
+David Udell, Ulisse Mini, and Monte MacDiarmid.
+2024. Activation addition: Steering language models
+without optimization.
+Miles Turpin, Julian Michael, Ethan Perez, and Samuel
+Bowman. 2023. Language models don’t always say
+what they think: Unfaithful explanations in chain-of-
+thought prompting.Advances in Neural Information
+Processing Systems, 36:74952–74965.
+Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob
+Uszkoreit, Llion Jones, Aidan N Gomez, Łukasz
+Kaiser, and Illia Polosukhin. 2017. Attention is all
+you need.Advances in neural information processing
+systems, 30.
+Jesse Vig, Sebastian Gehrmann, Yonatan Belinkov,
+Sharon Qian, Daniel Nevo, Yaron Singer, and Stuart
+Shieber. 2020. Investigating gender bias in language
+models using causal mediation analysis.Advances
+in neural information processing systems, 33:12388–
+12401.
+Kevin Wang, Alexandre Variengien, Arthur Conmy,
+Buck Shlegeris, and Jacob Steinhardt. 2022. In-
+terpretability in the wild: a circuit for indirect ob-
+ject identification in gpt-2 small.arXiv preprint
+arXiv:2211.00593.
+Xuezhi Wang, Jason Wei, Dale Schuurmans, Quoc Le,
+Ed Chi, Sharan Narang, Aakanksha Chowdhery, and
+Denny Zhou. 2023. Self-consistency improves chain
+of thought reasoning in language models.arXiv
+preprint arXiv:2203.11171.
+Jason Wei, Yi Tay, Rishi Bommasani, Colin Raffel,
+Barret Zoph, Sebastian Borgeaud, Dani Yogatama,
+Maarten Bosma, Denny Zhou, Donald Metzler, and
+1 others. 2022. Emergent abilities of large language
+models.arXiv preprint arXiv:2206.07682.
+Chris Wendler, Veniamin Veselovsky, Giovanni Monea,
+and Robert West. 2024. Do llamas work in english?
+on the latent language of multilingual transformers.
+InProceedings of the 62nd Annual Meeting of the
+Association for Computational Linguistics (Volume
+1: Long Papers), pages 15366–15394.
+Andy Zou, Long Phan, Sarah Chen, James Campbell,
+Phillip Guo, Richard Ren, Alexander Pan, Xuwang
+Yin, Mantas Mazeika, Ann-Kathrin Dombrowski,
+and 1 others. 2023. Representation engineering: A
+top-down approach to ai transparency.arXiv preprint
+arXiv:2310.01405.

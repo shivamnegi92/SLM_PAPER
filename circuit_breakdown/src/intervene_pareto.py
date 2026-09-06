@@ -31,6 +31,15 @@ Builds directly on `intervene_margin.py`. Three composable upgrades:
    vectors, so rank is capped at n_train+1 regardless of the requested value.
    The realized rank is recorded as `subspace_rank_actual`.
 
+NOTE ON CROSS-ARCHITECTURE BUDGETS: residual-stream norms differ enormously
+between model families (measured at the entity position, mid-depth window:
+Llama-3.2-3B ~23.6, Nemotron-Mini-4B ~126.4, Phi-3.5-mini ~177.4 -- a 7.5x
+spread). An absolute norm budget is therefore NOT comparable across models: a
+budget of 4.0 is a 17% perturbation on Llama but only 2.3% on Phi. Use
+--rel-budget to specify the budget as a fraction of the measured mean residual
+norm at the target position; this is the scale-invariant setting and is what
+should be used for any cross-architecture claim.
+
 All methods are inference-time only. No weight updates.
 """
 from __future__ import annotations
@@ -358,6 +367,16 @@ def build_cfg(args):
     }
 
 
+def measure_resid_norm(h: Harness, recs: list[PairRec], layers, max_samples: int = 8):
+    """Mean residual-stream norm at the entity position over the target layers."""
+    vals = []
+    for r in recs[:max_samples]:
+        outs = h.cache_layer_outputs(r.corrupt_ids)
+        for L in layers:
+            vals.append(outs[L][0, r.dpos].norm().item())
+    return float(np.mean(vals)) if vals else 1.0
+
+
 def run(args):
     device = pick_device(args.device)
     h = Harness(args.model, device)
@@ -367,6 +386,16 @@ def run(args):
     tr, dv, te = split_records(recs, args.seed)
     layers = make_layers(len(h.layers)) if not args.layers else sorted(set(args.layers))
     ctrl_ids, ctrl_base = get_control_baseline(h)
+
+    resid_norm = measure_resid_norm(h, tr, layers)
+    if args.rel_budget is not None:
+        args.norm_budget = args.rel_budget * resid_norm
+        print(f"resid norm at entity pos = {resid_norm:.2f}  |  "
+              f"rel_budget {args.rel_budget:.3f} -> norm_budget {args.norm_budget:.2f}")
+    else:
+        print(f"resid norm at entity pos = {resid_norm:.2f}  |  "
+              f"norm_budget {args.norm_budget:.2f} "
+              f"(= {args.norm_budget / resid_norm:.1%} relative)")
 
     method_bits = []
     if args.two_stage:
@@ -429,6 +458,8 @@ def run(args):
         "split": {"train": len(tr), "dev": len(dv), "test": len(te)},
         "layers": layers,
         "cfg": cfg,
+        "resid_norm": resid_norm,
+        "rel_budget": (args.norm_budget / resid_norm) if resid_norm else None,
         "subspace_rank": args.subspace_rank,
         "subspace_rank_actual": rank_actual,
         "subspace_complement": bool(args.subspace_complement),
@@ -484,6 +515,13 @@ def main():
     ap.add_argument("--keep-frac", type=float, default=0.3)
     # guards
     ap.add_argument("--norm-budget", type=float, default=4.0)
+    ap.add_argument(
+        "--rel-budget",
+        type=float,
+        default=None,
+        help="norm budget as a FRACTION of mean residual norm at the target "
+             "position; overrides --norm-budget. Use for cross-architecture runs.",
+    )
     ap.add_argument("--max-control-drop", type=float, default=0.20)
     ap.add_argument("--guard-every", type=int, default=4)
     # misc

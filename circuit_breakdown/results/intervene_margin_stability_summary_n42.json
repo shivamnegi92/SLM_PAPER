@@ -1,0 +1,50 @@
+{
+  "balanced": {
+    "name": "balanced_n42_seed0-2",
+    "files": [
+      "results/intervene_margin_llama-3.2-3b_intermediate_hardened_balanced_n42_s0.json",
+      "results/intervene_margin_llama-3.2-3b_intermediate_hardened_balanced_n42_s1.json",
+      "results/intervene_margin_llama-3.2-3b_intermediate_hardened_balanced_n42_s2.json"
+    ],
+    "n_runs": 3,
+    "n_test_total": 27,
+    "steer": 0.5185185074806213,
+    "steer_ci": [
+      0.3333333432674408,
+      0.7037037014961243
+    ],
+    "break": 0.18518517911434174,
+    "break_ci": [
+      0.03703703731298447,
+      0.3333333432674408
+    ],
+    "delta_logit_clean_mean": 7.133983453114827,
+    "delta_logit_clean_std": 1.0220628691541385,
+    "control_drop_mean": 0.037037037037037035,
+    "control_drop_std": 0.0302406141084343
+  },
+  "preserve": {
+    "name": "preserve_n42_seed0-2",
+    "files": [
+      "results/intervene_margin_llama-3.2-3b_intermediate_hardened_preserve_n42_s0.json",
+      "results/intervene_margin_llama-3.2-3b_intermediate_hardened_preserve_n42_s1.json",
+      "results/intervene_margin_llama-3.2-3b_intermediate_hardened_preserve_n42_s2.json"
+    ],
+    "n_runs": 3,
+    "n_test_total": 27,
+    "steer": 0.6296296119689941,
+    "steer_ci": [
+      0.4444444477558136,
+      0.8148148059844971
+    ],
+    "break": 0.2222222238779068,
+    "break_ci": [
+      0.07407407462596893,
+      0.37037035822868347
+    ],
+    "delta_logit_clean_mean": 9.227846693109582,
+    "delta_logit_clean_std": 1.373305090404221,
+    "control_drop_mean": 0.07407407407407407,
+    "control_drop_std": 0.0302406141084343
+  }
+}

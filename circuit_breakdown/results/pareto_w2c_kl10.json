@@ -1,0 +1,73 @@
+{
+  "model": "../llama-3.2-3b",
+  "task": "intermediate",
+  "method": "kl10",
+  "n": 42,
+  "split": {
+    "train": 25,
+    "dev": 8,
+    "test": 9
+  },
+  "layers": [
+    18,
+    20,
+    22,
+    24
+  ],
+  "cfg": {
+    "lr": 0.05,
+    "lr_b": 0.05,
+    "stage_a_steps": 8,
+    "stage_b_steps": 0,
+    "two_stage": false,
+    "l2": 0.001,
+    "lam_kl": 10.0,
+    "lam_kl_b": 10.0,
+    "norm_budget": 4.0,
+    "max_control_drop": 0.2,
+    "guard_every": 4,
+    "margin_floor": 0.5,
+    "keep_frac": 0.3,
+    "w_norm": 0.001,
+    "w_hinge": 10.0
+  },
+  "subspace_rank": 0,
+  "seed": 0,
+  "test": {
+    "steer": 0.4444444477558136,
+    "break": 0.0,
+    "delta_logit_clean": 7.2087357309129505,
+    "control_drop": 0.07407407407407407,
+    "edit_norm_mean": 14.39999951256646,
+    "steer_flags": [
+      0,
+      0,
+      1,
+      0,
+      1,
+      0,
+      1,
+      0,
+      1
+    ],
+    "break_flags": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "steer_ci": [
+      0.1111111119389534,
+      0.7777777910232544
+    ],
+    "break_ci": [
+      0.0,
+      0.0
+    ]
+  }
+}

@@ -106,6 +106,26 @@ to redirect the corrupt one. Meanwhile the complement barely perturbs anything
 (5.1% BREAK, +0.0001 d p2way), confirming it is a genuinely inert control rather
 than a differently-damaging one.
 
+
+## Result 5 — Direction, not dimensionality (rank sweep)
+
+The obvious reviewer objection is that the tracking/complement gap reflects
+subspace *dimensionality* or conditioning rather than *which* directions are
+used. A sweep over r ∈ {1,4,8,16,26} refutes this — see
+`RANK_SWEEP_RESULTS.md`.
+
+The gap does not converge as r grows; it **widens monotonically**, 18.5× → 381×
+(5/5 ranks p<0.0001). Log-log fits give `track ~ r^1.58` vs `comp ~ r^0.63`, so
+the ratio itself scales as `r^0.95` — under the dimensionality hypothesis that
+exponent would be ≈0. Per-dimension efficiency moves in opposite directions
+(tracking 6.4× up, complement 3.2× down), and a *single* tracking direction
+beats a 26-dimensional random subspace (+0.00083 vs +0.00036).
+
+Top-1 STEER is 0.0% in all ten cells; BREAK correlates with rank at +0.965 for
+tracking vs +0.166 for complement. Engaging more of the tracking subspace buys
+monotonically more decision-variable movement *and* more collateral damage, and
+still never crosses the decision boundary.
+
 ---
 
 ## Reproduction
@@ -124,6 +144,7 @@ Artifacts: `results/diss_{full,kl10,track8,comp8}_s{0,1,2}.json`,
 |---|---:|---|
 | Localization ≠ control (subspace fails, full space works) | 78 | **Confirmed, p < 0.0001** |
 | Continuous metric separates what top-1 cannot | 78 | **Confirmed, p < 0.0001** |
+| Gap is direction, not dimensionality (r sweep) | 52-78 | **Confirmed, 5/5 ranks p < 0.0001** |
 | KL trust region reduces BREAK | 78 | **Falsified** (p = 0.63; costs 20.5 pts STEER, p = 0.012) |
 | Two-stage Stage B shrinks edits when unclamped | 9 | Preliminary (−28% \|edit\|, single seed) |
 

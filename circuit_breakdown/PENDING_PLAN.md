@@ -36,11 +36,13 @@ equivalence (p=1.0) at 0.17 and 0.50 — not weak, genuinely absent. This is a
 real architecture difference, not a hyperparameter artifact. Reframe C6
 accordingly (see `BUDGET_CONTROL_RESULTS.md` for the exact wording).
 
-### P0.1b Nemotron at matched budget  *(NEXT — closes the triangle)*
-Nemotron showed a significant gap (+21.2%, p<0.0001) but at 30%/16-step
-settings only, not the full 0.17/0.30/0.50 sweep. Running it at matched budgets
-places it on the same axis as Llama and Phi and tells us whether it patterns
-with Llama (subspace matters) or Phi (subspace doesn't). 6 runs, ~55 min.
+### P0.1b Nemotron at matched budget  *(IN PROGRESS — 3/6 done)*
+Early signal: Nemotron **patterns with Llama, not Phi**.
+- rel=0.17: full 26.9% vs track8 **3.8%** — large gap, same shape as Llama.
+- rel=0.30: full 30.8% vs track8 (running).
+If this holds through 0.50, the split becomes **2-of-3 architectures show the
+dissociation, 1 doesn't** — a real, reportable variance pattern rather than an
+unresolved contradiction. ~25 min remaining.
 
 ### P0.2 Seed 2 for cross-architecture AND for the budget-matched sweep
 All budget-control cells above are seed 0 only (n=26 each). Given how clean the
@@ -51,6 +53,23 @@ this becomes a headline claim. ~2h.
 ### P0.3 Rewrite the C6 claim to match whatever P0.1 shows
 No new compute. Update `DISSOCIATION_RESULTS.md` §Result 1 and the abstract
 framing. **Do not let the Llama-only phrasing survive into the draft.**
+
+### P0.4 Self-repair / backup-head validity check  *(NEW — from PLAN.md §4, never done)*
+PLAN.md explicitly names this "our main threat to validity": ablating one head
+can be silently compensated by a backup head (the Hydra effect, McGrath/Wang),
+which corrupts importance estimates from `heads.py`'s AtP + real-patching
+pipeline. **No test for this exists anywhere in the repo.** Needs: path patching
+on the top-k heads, or at minimum an explicit check that ablating a top head
+doesn't get silently absorbed by a next-layer head. This is a paper-shaped gap,
+not a compute-shaped one — a reviewer who knows the literature will ask for it
+by name.
+
+### P0.5 ARC-Easy / MMLU-subset capability run  *(NEW — PLAN.md §4.1 gate never fully closed)*
+`RESULTS.md` itself flags this as pending (lines 169, 240, 253) and PLAN.md's
+G3 gate specifically named ARC-Easy/MMLU, not HellaSwag. `capability_deployed.py`
+already has the harness shape (baseline/deployed/global/random, bootstrap CIs) —
+swapping in an MMLU-subset loader is the same script, new data loader. Needed to
+formally close G3 rather than leave it hedged on a proxy benchmark.
 
 ---
 
@@ -104,6 +123,14 @@ headline; currently BREAK is reported as an honest cost, so not blocking.
 - **P3.3** Frontier figure: STEER vs BREAK scatter, all methods/archs, CI ellipses.
 - **P3.4** Consolidate the five results markdown files into one paper-shaped
   narrative.
+- **P3.5** Fix stale cross-model references. `PLAN.md` and `README.md` still say
+  "Llama vs Gemma-2-2B"; `RESULTS.md:5` admits Gemma is blocked (gated HF
+  download) and never happened. What actually ran — Phi-3.5-mini +
+  Nemotron-Mini-4B, 3 families total — is stronger than the original plan, but
+  the docs don't say so. 5-minute fix, prevents a reader chasing nonexistent
+  Gemma results.
+- **P3.6** Pick a venue. `PLAN.md` assumes ICLR; the original blueprint said
+  ICML. Unresolved, blocks final formatting.
 
 ---
 
@@ -115,8 +142,10 @@ P0.1 (running) ──> P0.3 ──> P0.2 ──┐
 P2.1, P2.3 (fill idle compute) ────┘
 ```
 
-**Next 24h of compute:** finish P0.1, run P0.2 and P2.1 back-to-back, then start
-P1.1 harness work while those run.
+**Next 24h of compute:** finish P0.1b (Nemotron, ~25min left), run P0.2 and P2.1
+back-to-back, then start P1.1 harness work while those run. P0.4/P0.5 are
+documentation/harness work, not compute-bound — can happen in parallel with
+anything.
 
 **The one thing that matters most:** P0.1's outcome determines whether the paper
 claims "prevents override" or "requires disproportionate budget." Everything

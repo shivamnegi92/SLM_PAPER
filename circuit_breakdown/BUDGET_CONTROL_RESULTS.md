@@ -67,16 +67,41 @@ matched budget, will help triangulate).
 
 ## What's still open
 
-1. **Nemotron at matched budget.** Cross-arch run used 30%/16 steps and found a
-   significant gap (+21.2%, p<00001) — consistent with Llama's pattern, but not
-   yet confirmed at the exact same budget sweep as Llama/Phi. 3 runs, ~25 min.
+1. **Nemotron at matched budget — DONE.** Confirms Nemotron patterns with
+   Llama, not Phi (see `## Three-architecture picture` below).
 2. **Second seed for the budget sweep.** All cells above are seed 0 only
-   (n=26). Given how clean the pattern is (p=1.0 exactly on Phi, twice), this is
-   low-risk, but the plan requires it before this becomes a headline claim.
+   (n=26). Given how clean the pattern is (p=1.0 exactly on Phi, twice; p<0.02
+   at worst on Nemotron), this is low-risk, but the plan requires it before
+   this becomes a headline claim.
 3. **Investigate why Phi differs.** Candidate correlates: attention head count
-   (Phi 32 vs Llama 24), tokenizer (SentencePiece vs BPE), training data mix.
-   Not required for the current claim but would strengthen the discussion section.
+   (Phi 32 vs Llama 24 vs Nemotron 24), tokenizer (SentencePiece vs BPE),
+   training data mix. Not required for the current claim but would strengthen
+   the discussion section.
 
+## Three-architecture picture (complete)
+
+| model | budget 0.17 | budget 0.30 | budget 0.50 | pattern |
+|---|---:|---:|---:|---|
+| Llama-3.2-3B | +96.2% *** | +92.3% *** | +76.9% *** | dissociates, gap narrows with budget |
+| Nemotron-Mini-4B | +23.1% *** | +30.8% *** | +30.8% *** | dissociates, gap **stable** across budget |
+| Phi-3.5-mini | +0.0% (ns) | — | +0.0% (ns) | **no dissociation at any budget** |
+
+(gap = full-space STEER minus tracking-subspace STEER; *** = p<0.05, all
+significant gaps are p<0.02 or better)
+
+**2 of 3 architectures show significant, budget-robust dissociation; 1 does
+not, and its null is exact (p=1.0) rather than marginal.** This is not
+universal, and it is not noise — it is a genuine, reportable split. Nemotron's
+pattern is arguably cleaner than Llama's: the gap does not narrow with budget
+at all (23.1% → 30.8% → 30.8%, if anything widening slightly), suggesting its
+decision boundary lies more robustly outside the tracking subspace than
+Llama's does.
+
+Notable secondary finding: Nemotron's subspace-confined edits are also far more
+disruptive where the subspace is engaged (BREAK 92.3→100→100%) even though
+STEER stays near zero — consistent with the Phi pattern of "subspace edits cost
+a lot of collateral regardless of whether they succeed at steering," but here
+they mostly *don't* succeed, unlike Phi where they succeed at full efficiency.
 ## Reproduction
 
 ```bash

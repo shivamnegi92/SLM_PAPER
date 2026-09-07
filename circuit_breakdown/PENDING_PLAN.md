@@ -19,11 +19,11 @@ by effort. Items in P0 can invalidate published claims; P3 items are polish.
 | C3 | Deployed intervention costs ~0 general capability | HellaSwag/ppl identical, n=240 | **SOLID** (1 model) |
 | C4 | Metric ladder is load-bearing | 10/10 cells null on top-1, all separated continuously | **SOLID** |
 | C5 | KL trust region reduces BREAK | n=78, p=0.63 | **FALSIFIED** — reported as negative |
-| C6 | Subspace decision-sufficiency is **architecture-dependent** | Llama: gap 76.9-96.2pts, p<0.0001 at budgets 0.17/0.30/0.50. Phi: p=1.0 (exact match) at budgets 0.17/0.50 | **RESOLVED — reframed, stronger** |
+| C6 | Subspace decision-sufficiency is **architecture-dependent** | Llama: gap 76.9-96.2pts p<0.0001 @ 3 budgets. Nemotron: gap 23.1-30.8pts p≤0.019 @ 3 budgets. Phi: p=1.0 (exact) @ 2 budgets | **RESOLVED — 2-of-3 dissociate** |
 | C7 | Absolute norm budgets don't transfer across archs | 7.5× resid spread; Phi 0%→66.7% | **SOLID** (methods contribution) |
 
-**C6 is the paper's headline and it currently fails on 1 of 3 architectures.**
-Everything in P0 exists to resolve C6.
+**C6 is resolved with a clean 2-of-3 architecture split.** Remaining P0 work is
+replication (seeds) and two validity gaps surfaced from re-reading PLAN.md.
 
 ---
 
@@ -36,13 +36,14 @@ equivalence (p=1.0) at 0.17 and 0.50 — not weak, genuinely absent. This is a
 real architecture difference, not a hyperparameter artifact. Reframe C6
 accordingly (see `BUDGET_CONTROL_RESULTS.md` for the exact wording).
 
-### P0.1b Nemotron at matched budget  *(IN PROGRESS — 3/6 done)*
-Early signal: Nemotron **patterns with Llama, not Phi**.
-- rel=0.17: full 26.9% vs track8 **3.8%** — large gap, same shape as Llama.
-- rel=0.30: full 30.8% vs track8 (running).
-If this holds through 0.50, the split becomes **2-of-3 architectures show the
-dissociation, 1 doesn't** — a real, reportable variance pattern rather than an
-unresolved contradiction. ~25 min remaining.
+### P0.1b Nemotron at matched budget  *(DONE)*
+Nemotron **patterns with Llama, not Phi**, and its pattern is arguably cleaner:
+gap is significant at all three budgets (+23.1%/+30.8%/+30.8%, p≤0.019) and
+does not narrow with budget the way Llama's does — if anything it widens
+slightly. **Final triangle: 2 of 3 architectures dissociate (Llama, Nemotron),
+1 does not (Phi), and Phi's null is exact (p=1.0) rather than marginal.** This
+is a genuine, reportable variance pattern — see `BUDGET_CONTROL_RESULTS.md`
+§Three-architecture picture.
 
 ### P0.2 Seed 2 for cross-architecture AND for the budget-matched sweep
 All budget-control cells above are seed 0 only (n=26 each). Given how clean the

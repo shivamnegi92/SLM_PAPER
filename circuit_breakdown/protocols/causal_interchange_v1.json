@@ -1,0 +1,28 @@
+{
+  "version": "causal_interchange_v1",
+  "scope": "development_only_diagnostic_not_confirmatory",
+  "model": "llama-3.2-3b",
+  "task": "transfer",
+  "manifest": "data/validated_manifest_v1.json",
+  "training_seed": 1,
+  "development_seed": 1,
+  "development_indices": [0, 1, 2, 3, 4, 5, 6, 7],
+  "layers": [18, 20, 22, 24],
+  "rank": 32,
+  "n_items": 32,
+  "item_seed": 7,
+  "rounds": 2,
+  "output": "results/causal_interchange_v1",
+  "rank_selection_rationale": "rank 32 chosen from predictive_vs_causal_subspace_v2: tracking=5/8, pca=6/8, learned_causal=6/8, gradient_coordinate=5/8, projection of v_full=0/8 for every basis at every rank -- the sweet spot where several structured bases succeed under fresh optimization without one basis dominating (unlike rank 64, where gradient_coordinate reaches 8/8 and would distort the comparison).",
+  "position_note": "Interchange patches at the FINAL (pre-answer) token position, not the mid-sentence recipient-name position used for exploratory position-finding. Empirically validated before running: oracle (full-space) interchange scored 0/8 at the recipient-name position and 6/8 at the final position, with the same 4-layer set. This is a genuine methodological finding, not a free parameter tuned on this run's results -- it was fixed before generating the 32 held-out items scored below.",
+  "controls": {
+    "random_donor": "full derangement pairing every receiver with a different item's donor",
+    "same_answer": "donor and receiver reach the same Z via different reasoning paths and different names/objects"
+  },
+  "limitations": [
+    "Development-only diagnostic; not a confirmatory test.",
+    "Single model, single task, single rank, single layer set.",
+    "learned_causal is fit on only 8 training examples and may be undertrained.",
+    "IIA measures whether the top-1 token flips to the donor's answer; it does not yet test secondary probes (original holder, transfer count) or lexical/structural generalization -- those are the next milestones, not yet implemented."
+  ]
+}

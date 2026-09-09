@@ -39,7 +39,7 @@ import json
 from pathlib import Path
 import random
 
-from dataset import OBJECTS, PEOPLE
+import dataset
 
 
 @dataclass
@@ -90,8 +90,8 @@ def _draw_problem(rng, people_pool, objects_pool, rounds):
 
 def make_disjoint_item(rng, rounds):
     """Donor and receiver with fully disjoint names and objects, Z_A != Z_B."""
-    people = rng.sample(PEOPLE, 2 * (2 + 2 * rounds))
-    objects = rng.sample(OBJECTS, 4)
+    people = rng.sample(dataset.PEOPLE, 2 * (2 + 2 * rounds))
+    objects = rng.sample(dataset.OBJECTS, 4)
     half = len(people) // 2
     donor = _draw_problem(rng, people[:half], objects[:2], rounds)
     receiver = _draw_problem(rng, people[half:], objects[2:], rounds)
@@ -112,8 +112,8 @@ def make_same_answer_item(rng, rounds):
     Answer identity is held constant, so an intervention that only manipulates
     the output token has nothing to transfer. Every other name is disjoint.
     """
-    people = rng.sample(PEOPLE, 2 * (2 + 2 * rounds) + 1)
-    objects = rng.sample(OBJECTS, 4)
+    people = rng.sample(dataset.PEOPLE, 2 * (2 + 2 * rounds) + 1)
+    objects = rng.sample(dataset.OBJECTS, 4)
     shared = people[-1]
     remaining = people[:-1]
     half = len(remaining) // 2
@@ -141,7 +141,20 @@ def make_same_answer_item(rng, rounds):
 _MAKERS = {"disjoint": make_disjoint_item, "same_answer": make_same_answer_item}
 
 
-def generate(kind, n, seed=0, rounds=2, attempts_per_item=200):
+def _tokenizer_aligned(item, tokenizer):
+    """Validate token-length alignment and single-token answers against the
+    ACTUAL rendered prompt (not a generic 'the <name>' proxy), since
+    sentence-initial position and surrounding punctuation can tokenize a name
+    differently than mid-sentence occurrences do."""
+    donor_ids = tokenizer(item.donor_prompt, add_special_tokens=False)["input_ids"]
+    receiver_ids = tokenizer(item.receiver_prompt, add_special_tokens=False)["input_ids"]
+    donor_answer_ids = tokenizer(" " + item.donor_answer, add_special_tokens=False)["input_ids"]
+    receiver_answer_ids = tokenizer(" " + item.receiver_answer, add_special_tokens=False)["input_ids"]
+    return (len(donor_ids) == len(receiver_ids)
+            and len(donor_answer_ids) == 1 and len(receiver_answer_ids) == 1)
+
+
+def generate(kind, n, seed=0, rounds=2, attempts_per_item=200, tokenizer=None):
     if kind not in _MAKERS:
         raise ValueError(f"Unknown interchange item kind {kind!r}")
     rng = random.Random(seed)
@@ -156,6 +169,8 @@ def generate(kind, n, seed=0, rounds=2, attempts_per_item=200):
             continue
         key = (item.donor_prompt, item.receiver_prompt)
         if key in seen:
+            continue
+        if tokenizer is not None and not _tokenizer_aligned(item, tokenizer):
             continue
         seen.add(key)
         items.append(item)
@@ -217,11 +232,11 @@ def main():
     parser.add_argument("--self-check", action="store_true")
     args = parser.parse_args()
 
-    items = generate(args.kind, args.n, args.seed, args.rounds)
     tokenizer = None
     if args.tokenizer:
         from transformers import AutoTokenizer
         tokenizer = AutoTokenizer.from_pretrained(args.tokenizer)
+    items = generate(args.kind, args.n, args.seed, args.rounds, tokenizer=tokenizer)
     if args.self_check or tokenizer is not None:
         self_check(items, tokenizer=tokenizer)
 

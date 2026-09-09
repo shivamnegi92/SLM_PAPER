@@ -158,6 +158,83 @@ Pre-declared outcome readings, recorded before results were seen:
 Sequencing: Nemotron runs only if Llama reproduces `pca ~ tracking >> random`.
 Development sample grows beyond eight only after that, for confirmation.
 
+### v2 Pilot Outcome (Llama, complete)
+
+Completed 2026-09-09. Fresh-optimization raw counts:
+
+| rank | full | tracking | pca | random | gradient-coordinate | learned_causal |
+|---|---:|---:|---:|---:|---:|---:|
+| 8 | 8/8 | 1/8 | 0/8 | 0/8 | 0/8 | 2/8 |
+| 16 | 8/8 | 4/8 | 6/8 | 0/8 | 2/8 | 5/8 |
+| 32 | 8/8 | 5/8 | 6/8 | 0/8 | 5/8 | 6/8 |
+| 64 | 8/8 | 6/8 | 4/8 | 0/8 | 8/8 | 5/8 |
+
+Projection of v_full is 0/8 at every one of the 20 basis-by-rank cells, with
+no exception -- a cleaner replication than v1's occasional nonzero projection
+success. Random stays 0/8 at every rank in a second architecture. Ranking
+stability holds: `full >> structured >> random`, `pca ~ tracking` through
+rank 32. `learned_causal` never separates cleanly from tracking/PCA at any
+rank -- leaning toward "nothing special about the clean-vs-corrupt contrast,
+high-variance geometry dominates" rather than "a properly optimized causal
+subspace closes the gap." Honest surprise not to be buried: `gradient_coordinate`
+reaches 8/8 at rank 64, beating every other basis including learned_causal;
+the rename to a weaker-comparator framing does not fully survive this cell.
+
+Degeneracy diagnostics on double-success cases: cosine(v_full, v_basis) stays
+flat around 0.08-0.15 REGARDLESS OF RANK (e.g. tracking: 0.090 at k=16, 0.083
+at k=32, 0.086 at k=64) while KL(full || basis) generally falls with rank
+(tracking: 0.22 -> 0.08 -> 0.18). Geometric divergence with behavioral
+convergence -- multiple very different-looking edits produce similar output
+distributions. This is the empirical basis for treating intervention
+non-uniqueness as a real phenomenon, not a projection artifact.
+
+### Causal Interchange Pilot v1 (Llama, rank 32, in progress)
+
+Launched 2026-09-09 against
+[causal_interchange_v1.json](protocols/causal_interchange_v1.json) via
+[the interchange runner](src/run_causal_interchange.py), using the new
+[interchange dataset generator](src/interchange_dataset.py) and
+[interchange mechanism](src/causal_interchange.py). Motivation: the steering
+result can be dismissed as "the optimizer was told the answer." An interchange
+intervention is determined entirely by a DONOR example's activations, with no
+objective that knows the receiver's target -- a substantially harder test of
+whether a subspace carries a reusable causal state rather than merely
+supporting an optimizer that finds some way to the receiver's own answer.
+
+Design: donor/receiver transfer-task pairs with fully disjoint names and
+objects (so a correctly patched receiver emits a token absent from its own
+context -- unambiguous), plus a same-answer/different-reasoning-path control
+(donor and receiver reach the same holder via different chains, so there is
+no answer to flip and the informative quantity is raw-state cosine
+similarity). v = P_S(h_donor - h_receiver) reuses the existing additive hook
+mechanism exactly; S = full space is an exact replacement (the oracle).
+
+**Two real bugs caught by smoke-testing before the full run, both fixed:**
+
+1. Interchange items were sampled from the raw PEOPLE/OBJECTS pools without
+   single-Llama-token restriction, and `from dataset import PEOPLE` bound a
+   stale reference that `dataset.restrict_to_single_token`'s mutation
+   couldn't reach. Fixed to `import dataset` + `dataset.PEOPLE` at call
+   sites, plus a tokenizer-verified generation filter (`generate(...,
+   tokenizer=...)`) that validates the ACTUAL rendered prompt rather than a
+   generic proxy context.
+2. No few-shot prefix was prepended, so the base model could not solve the
+   task zero-shot (baseline receiver accuracy 0/8). Fixed by threading the
+   same manifest few-shot prefix used everywhere else in this project.
+
+**One genuine methodological finding from smoke-testing, not a tuned
+parameter:** patching at the mid-sentence recipient-name position gave oracle
+(full-space) interchange 0/8 even with a healthy baseline. Patching at the
+FINAL (pre-answer) token position, same 4-layer set, gave oracle 6/8. This was
+fixed BEFORE generating the 32 held-out items now being scored, and is
+recorded in the protocol's `position_note` for auditability.
+
+Early signal (n=4 smoke, not to be trusted quantitatively): oracle 4/4,
+random-donor 3/4, and EVERY basis-restricted interchange (tracking, pca,
+random, gradient_coordinate, learned_causal) at 0/4 -- consistent with the
+steering pilot's projection failure at every rank. The real n=32 run is in
+progress.
+
 ### Earlier G1 Evidence - Convergence, Basis and Capacity
 
 **Evidence.** The original optimizer used 32 Adam steps and selected a base

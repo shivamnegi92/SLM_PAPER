@@ -53,6 +53,7 @@ import torch
 import torch.nn.functional as F
 
 import dataset as ds
+from experiment_metrics import prediction_outcome, summarize_predictions, rate_ci
 from localize import Harness, pick_device
 from intervene_margin import (
     CONTROL_PROMPTS,
@@ -102,10 +103,13 @@ class EditParams:
 
     @torch.no_grad()
     def clamp_norm(self, budget: float):
-        for v, p in zip(self.vectors(), self._p):
+        budgets = [budget] * len(self._p) if np.isscalar(budget) else list(budget)
+        if len(budgets) != len(self._p) or any(value <= 0 or not np.isfinite(value) for value in budgets):
+            raise ValueError("Positive finite per-layer budgets are required")
+        for v, p, limit in zip(self.vectors(), self._p, budgets):
             n = v.norm().item() + 1e-9
-            if n > budget:
-                p.mul_(budget / n)
+            if n > limit:
+                p.mul_(limit / n)
 
     @torch.no_grad()
     def detached(self):
@@ -116,7 +120,42 @@ class EditParams:
         return float(sum(v.norm().item() for v in self.vectors()))
 
 
-def fit_subspace_bases(h: Harness, train: list[PairRec], layers, rank: int, complement: bool = False, comp_dim: int = 0):
+def basis_from_differences(matrix, rank, complement=False, comp_dim=0, seed=0):
+    if matrix.ndim != 2 or not torch.isfinite(matrix).all().item() or rank < 1:
+        raise ValueError("Finite difference matrix and positive rank required")
+    matrix = matrix.detach().cpu().double()
+    mean = matrix.mean(0, keepdim=True)
+    centered = torch.cat([mean, matrix - mean], 0)
+    _, singular, right = torch.linalg.svd(centered, full_matrices=False)
+    tolerance = max(centered.shape) * torch.finfo(torch.float32).eps * singular[0].item()
+    numerical_rank = int((singular > tolerance).sum().item())
+    actual = min(rank, numerical_rank)
+    if actual < 1:
+        raise ValueError("Difference matrix has no nonzero tracking directions")
+    tracking = right[:actual]
+    basis = tracking
+    if complement:
+        dimension = comp_dim or actual
+        if dimension > matrix.shape[1] - actual:
+            raise ValueError("Requested control exceeds orthogonal complement dimension")
+        generator = torch.Generator().manual_seed(seed)
+        random = torch.randn(dimension, matrix.shape[1], generator=generator, dtype=torch.float64)
+        random -= (random @ tracking.T) @ tracking
+        orthonormal, _ = torch.linalg.qr(random.T)
+        basis = orthonormal.T[:dimension]
+    information = {
+        "requested_rank": rank, "tracking_rank": actual, "basis_rank": len(basis),
+        "numerical_rank": numerical_rank, "tolerance": tolerance,
+        "explained_energy": float((singular[:actual] ** 2).sum() / (singular ** 2).sum()),
+        "orthonormal_error": float((basis @ basis.T - torch.eye(len(basis))).abs().max()),
+        "tracking_overlap": float((basis @ tracking.T).abs().max()),
+        "control_seed": seed if complement else None,
+    }
+    return basis.float(), information
+
+
+def fit_subspace_bases(h: Harness, train: list[PairRec], layers, rank: int, complement: bool = False,
+                       comp_dim: int = 0, basis_seed=0, return_info=False):
     """Rank-r basis per layer from clean-corrupt entity-position differences.
 
     If complement=True, returns instead an orthonormal basis for a random
@@ -132,30 +171,13 @@ def fit_subspace_bases(h: Harness, train: list[PairRec], layers, rank: int, comp
             d = clean_out[L][0, r.dpos] - corr_out[L][0, r.dpos]
             diffs[L].append(d.detach().float().cpu())
 
-    bases = []
+    bases, information = [], []
     for L in layers:
         X = torch.stack(diffs[L], 0)  # [n, hidden]
-        # center so the basis captures variation, not just the mean direction
-        mu = X.mean(0, keepdim=True)
-        Xc = torch.cat([mu, X - mu], 0)
-        _, _, Vh = torch.linalg.svd(Xc, full_matrices=False)
-        rk = int(min(rank, Vh.shape[0]))
-        B = Vh[:rk]
-
-        if complement:
-            hidden = X.shape[1]
-            k = comp_dim if comp_dim > 0 else rk
-            g = torch.Generator().manual_seed(1234 + L)
-            R = torch.randn(k, hidden, generator=g)
-            # remove any component lying in the difference subspace
-            R = R - (R @ B.T) @ B
-            # orthonormalize the remainder
-            Q, _ = torch.linalg.qr(R.T)
-            B = Q.T[:k]
-
-        B = B / (B.norm(dim=1, keepdim=True) + 1e-9)
+        B, info = basis_from_differences(X, rank, complement, comp_dim, 1234 + L + basis_seed)
         bases.append(B.to(h.device))
-    return bases
+        information.append({"layer": L, **info})
+    return (bases, information) if return_info else bases
 
 
 # ------------------------------------------------------------------- hooking
@@ -166,7 +188,7 @@ def hooks_for(h: Harness, layers, vecs, pos):
 
     def mk(v):
         def hook(m, i, o):
-            t = o[0] if isinstance(o, tuple) else o
+            t = (o[0] if isinstance(o, tuple) else o).clone()
             p = pos if pos >= 0 else t.shape[1] + pos
             t[:, p, :] = t[:, p, :] + v.to(t.dtype)
             return (t,) + tuple(o[1:]) if isinstance(o, tuple) else t
@@ -207,10 +229,20 @@ def kl_nontarget(logits, base_logits, cid, kid):
 # -------------------------------------------------------------- optimization
 
 
+def target_margin(logits, target):
+    competitors = logits.clone()
+    competitors[target] = -torch.inf
+    return logits[target] - competitors.max()
+
+
 def optimize_sample(h, r, layers, ctrl_ids, ctrl_base, bases, cfg):
     hidden = h.model.config.hidden_size
     ep = EditParams(layers, hidden, h.device, bases=bases)
+    ep.trace = []
     opt = torch.optim.Adam(ep.parameters(), lr=cfg["lr"])
+    objective = cfg.get("objective", "two_way_margin")
+    if objective not in ("two_way_margin", "cross_entropy"):
+        raise ValueError("Unknown intervention objective")
 
     with torch.no_grad():
         base_logits = h.model(r.corrupt_ids).logits[0, -1].detach()
@@ -222,11 +254,18 @@ def optimize_sample(h, r, layers, ctrl_ids, ctrl_base, bases, cfg):
     margin_a = None
     for step in range(cfg["stage_a_steps"]):
         logits = forward_logits(h, r.corrupt_ids, layers, ep.vectors(), r.dpos)
-        margin = logits[r.cid] - logits[r.kid]
-        loss = -margin
+        margin = target_margin(logits, r.cid) if objective == "cross_entropy" else logits[r.cid] - logits[r.kid]
+        loss = (-F.log_softmax(logits.float(), dim=0)[r.cid]
+            if objective == "cross_entropy" else -margin)
         if lam_kl > 0:
             loss = loss + lam_kl * kl_nontarget(logits, base_logits, r.cid, r.kid)
         loss = loss + cfg["l2"] * sum((v.float() ** 2).mean() for v in ep.vectors())
+        if not torch.isfinite(loss).item():
+            raise ValueError("Non-finite optimization loss")
+        ep.trace.append({"stage": "A", "step": step, "before_update": True,
+                         "target_margin": float(target_margin(logits, r.cid).detach()),
+                         "target_success": int(logits.argmax().item() == r.cid),
+                         "edit_norm": ep.total_norm()})
 
         opt.zero_grad(set_to_none=True)
         loss.backward()
@@ -241,11 +280,15 @@ def optimize_sample(h, r, layers, ctrl_ids, ctrl_base, bases, cfg):
 
     # ---- Stage B: keep the flip, shrink the damage ------------------------
     if cfg["two_stage"] and cfg["stage_b_steps"] > 0:
+        with torch.no_grad():
+            final_a = forward_logits(h, r.corrupt_ids, layers, ep.vectors(), r.dpos)
+            margin_a = float(target_margin(final_a, r.cid) if objective == "cross_entropy"
+                             else final_a[r.cid] - final_a[r.kid])
         floor = max(cfg["margin_floor"], cfg["keep_frac"] * max(margin_a or 0.0, 0.0))
         opt_b = torch.optim.Adam(ep.parameters(), lr=cfg["lr_b"])
         for step in range(cfg["stage_b_steps"]):
             logits = forward_logits(h, r.corrupt_ids, layers, ep.vectors(), r.dpos)
-            margin = logits[r.cid] - logits[r.kid]
+            margin = target_margin(logits, r.cid) if objective == "cross_entropy" else logits[r.cid] - logits[r.kid]
 
             vecs = ep.vectors()
             norm_pen = sum((v.float() ** 2).sum() for v in vecs)
@@ -268,7 +311,102 @@ def optimize_sample(h, r, layers, ctrl_ids, ctrl_base, bases, cfg):
                 if drop > cfg["max_control_drop"]:
                     ep.scale(0.7)
 
+    with torch.no_grad():
+        final_logits = forward_logits(h, r.corrupt_ids, layers, ep.vectors(), r.dpos)
+        ep.trace.append({"stage": "final", "step": cfg["stage_a_steps"] + (
+            cfg["stage_b_steps"] if cfg["two_stage"] else 0), "before_update": False,
+            "target_margin": float(target_margin(final_logits, r.cid)),
+            "target_success": int(final_logits.argmax().item() == r.cid),
+            "edit_norm": ep.total_norm()})
     return ep
+
+
+def optimize_sample_converged(h, r, layers, ctrl_ids, ctrl_base, bases, cfg):
+    """Single-stage optimizer with convergence-based stopping instead of a
+    fixed step count.
+
+    Motivated by reviewer Gap G1: comparing bases at a FIXED step budget
+    confounds representational capacity with ease-of-optimization. A
+    rank-constrained edit may need more steps (or a different effective
+    learning rate) to reach the same loss as an unconstrained edit; stopping
+    everyone at the same step count can make a basis look causally
+    insufficient when it is merely slower to optimize.
+
+    Stops when the loss changes by less than convergence_eps for
+    convergence_patience consecutive steps, or after max_steps, whichever
+    comes first. Returns (EditParams, diagnostics) where diagnostics records
+    whether convergence was reached and how many steps were used, so a
+    reviewer can audit whether ranks were compared under equal-effort
+    optimization rather than equal step count.
+    """
+    hidden = h.model.config.hidden_size
+    ep = EditParams(layers, hidden, h.device, bases=bases)
+    ep.trace = []
+    opt = torch.optim.Adam(ep.parameters(), lr=cfg["lr"])
+    objective = cfg.get("objective", "cross_entropy")
+    if objective not in ("two_way_margin", "cross_entropy"):
+        raise ValueError("Unknown intervention objective")
+
+    with torch.no_grad():
+        base_logits = h.model(r.corrupt_ids).logits[0, -1].detach()
+
+    lam_kl = cfg.get("lam_kl", 0.0)
+    guard_every = max(1, int(cfg.get("guard_every", 4)))
+    eps = cfg["convergence_eps"]
+    patience = int(cfg["convergence_patience"])
+    max_steps = int(cfg["max_steps"])
+    if eps <= 0 or patience < 1 or max_steps < 1:
+        raise ValueError("convergence_eps, convergence_patience, max_steps must be positive")
+
+    prev_loss = None
+    stable_steps = 0
+    converged = False
+    steps_taken = 0
+
+    for step in range(max_steps):
+        logits = forward_logits(h, r.corrupt_ids, layers, ep.vectors(), r.dpos)
+        margin = target_margin(logits, r.cid) if objective == "cross_entropy" else logits[r.cid] - logits[r.kid]
+        loss = (-F.log_softmax(logits.float(), dim=0)[r.cid]
+                if objective == "cross_entropy" else -margin)
+        if lam_kl > 0:
+            loss = loss + lam_kl * kl_nontarget(logits, base_logits, r.cid, r.kid)
+        loss = loss + cfg["l2"] * sum((v.float() ** 2).mean() for v in ep.vectors())
+        if not torch.isfinite(loss).item():
+            raise ValueError("Non-finite optimization loss")
+
+        loss_value = float(loss.detach().item())
+        ep.trace.append({"step": step, "loss": loss_value,
+                          "target_margin": float(target_margin(logits, r.cid).detach()),
+                          "target_success": int(logits.argmax().item() == r.cid),
+                          "edit_norm": ep.total_norm()})
+
+        opt.zero_grad(set_to_none=True)
+        loss.backward()
+        opt.step()
+        ep.clamp_norm(cfg["norm_budget"])
+        steps_taken = step + 1
+
+        if (step + 1) % guard_every == 0:
+            drop = control_degradation(h, layers, ep.detached(), ctrl_ids, ctrl_base)
+            if drop > cfg["max_control_drop"]:
+                ep.scale(0.7)
+
+        if prev_loss is not None and abs(prev_loss - loss_value) < eps:
+            stable_steps += 1
+            if stable_steps >= patience:
+                converged = True
+                break
+        else:
+            stable_steps = 0
+        prev_loss = loss_value
+
+    with torch.no_grad():
+        final_logits = forward_logits(h, r.corrupt_ids, layers, ep.vectors(), r.dpos)
+    diagnostics = {"converged": converged, "steps_taken": steps_taken, "max_steps": max_steps,
+                   "final_loss": prev_loss,
+                   "final_target_margin": float(target_margin(final_logits, r.cid)),
+                   "final_target_success": int(final_logits.argmax().item() == r.cid)}
+    return ep, diagnostics
 
 
 # -------------------------------------------------------------- evaluation
@@ -293,6 +431,7 @@ def eval_set(h, recs, layers, bases, cfg, ctrl_ids, ctrl_base):
     """
     steer, brk, dlog, drops, norms = [], [], [], [], []
     steer2, dp2, pred_corrupt = [], [], []
+    records = []
 
     for r in recs:
         ep = optimize_sample(h, r, layers, ctrl_ids, ctrl_base, bases, cfg)
@@ -300,6 +439,8 @@ def eval_set(h, recs, layers, bases, cfg, ctrl_ids, ctrl_base):
 
         with torch.no_grad():
             base_logits = h.model(r.corrupt_ids).logits[0, -1]
+            base_clean_pred = int(h.model(r.clean_ids).logits[0, -1].argmax().item())
+            base_corrupt_pred = int(base_logits.argmax().item())
             base_clean = base_logits[r.cid].item()
             base_p2 = float(
                 torch.softmax(
@@ -326,12 +467,25 @@ def eval_set(h, recs, layers, bases, cfg, ctrl_ids, ctrl_base):
                 forward_logits(h, r.clean_ids, layers, neg, r.dpos).argmax().item()
             )
             brk.append(int(pb != r.cid))
+            positive_clean = int(forward_logits(h, r.clean_ids, layers, vecs, r.dpos).argmax().item())
+            outcome = prediction_outcome(r.cid, r.kid, base_clean_pred, base_corrupt_pred,
+                                         pred, positive_clean, pb)
+            outcome.update({
+                "sample_id": r.sample_id, "input_hash": r.input_hash,
+                "delta_p2way": p2 - base_p2, "steer_2way": int(p2 > 0.5),
+                "delta_logit": dlog[-1], "edit_norms": [float(vector.norm().item()) for vector in vecs],
+                "target_probability": float(torch.softmax(logits.float(), 0)[r.cid].item()),
+                "target_margin": float(target_margin(logits, r.cid)),
+                "optimization_trace": getattr(ep, "trace", []),
+            })
+            records.append(outcome)
 
         drops.append(control_degradation(h, layers, vecs, ctrl_ids, ctrl_base))
         norms.append(ep.total_norm())
 
     m = lambda x: float(np.mean(x)) if x else 0.0
     return {
+        **summarize_predictions(records),
         "steer": m(steer),
         "steer_2way": m(steer2),
         "break": m(brk),
@@ -344,6 +498,8 @@ def eval_set(h, recs, layers, bases, cfg, ctrl_ids, ctrl_base):
         "steer2_flags": steer2,
         "break_flags": brk,
         "delta_p2way_all": dp2,
+        "records": records,
+        "break_semantics": "legacy_unconditional_negative_edit_error; use negative_edit_disruption",
     }
 
 
@@ -432,9 +588,9 @@ def run(args):
             print(f"lr autoscaled x{scale:.1f} -> stage_a lr={cfg['lr']:.4f} (step-matched to full space)")
     mt = eval_set(h, te, layers, bases, cfg, ctrl_ids, ctrl_base)
 
-    s_mean, s_ci = bootstrap_rate(mt["steer_flags"], iters=args.bootstrap_iters, seed=args.seed)
-    b_mean, b_ci = bootstrap_rate(mt["break_flags"], iters=args.bootstrap_iters, seed=args.seed + 1)
-    s2_mean, s2_ci = bootstrap_rate(mt["steer2_flags"], iters=args.bootstrap_iters, seed=args.seed + 2)
+    s_mean, s_ci = rate_ci(mt["steer_flags"])
+    b_mean, b_ci = rate_ci(mt["break_flags"])
+    s2_mean, s2_ci = rate_ci(mt["steer2_flags"])
 
     print("\n=== PARETO RESULT (TEST) ===")
     print(

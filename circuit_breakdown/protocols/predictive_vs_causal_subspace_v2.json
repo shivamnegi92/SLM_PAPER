@@ -1,0 +1,48 @@
+{
+  "version": "predictive_vs_causal_subspace_v2",
+  "scope": "development_only_diagnostic_not_confirmatory",
+  "model": "llama-3.2-3b",
+  "task": "transfer",
+  "manifest": "data/validated_manifest_v1.json",
+  "manifest_sha256": "62ff44d5085823e828e08e4a58a7906632bf6d7e72210d1d923954181ccc2ca5",
+  "training_seed": 1,
+  "development_seed": 1,
+  "development_indices": [0, 1, 2, 3, 4, 5, 6, 7],
+  "ranks": [8, 16, 32, 64],
+  "layers": [18, 20, 22, 24],
+  "relative_budget": 0.30,
+  "base_learning_rate": 0.05,
+  "convergence_eps": 1e-4,
+  "convergence_patience": 5,
+  "max_steps": 80,
+  "gradient_coordinate_examples": 12,
+  "learned_causal_lr": 0.02,
+  "learned_causal_examples": 8,
+  "learned_causal_convergence_eps": 1e-3,
+  "learned_causal_convergence_patience": 5,
+  "learned_causal_max_steps": 50,
+  "output": "results/predictive_vs_causal_subspace_v2",
+  "subspaces": {
+    "tracking": "clean_minus_corrupt_entity_position_svd_on_training_split",
+    "pca": "activation_pca_on_training_entity_positions",
+    "random": "random_orthonormal_basis_with_declared_seed",
+    "gradient_coordinate": "raw_dimensions_selected_by_gradient_sensitivity_renamed_from_causal",
+    "learned_causal": "das_lite_shared_orthonormal_rotation_optimized_jointly_against_behavioral_objective"
+  },
+  "decision_rule": {
+    "tracking_approx_pca_gg_random": "high_variance_geometry_drives_control_not_the_clean_vs_corrupt_contrast_specifically",
+    "learned_causal_gg_tracking_and_pca": "predictive_and_variance_aligned_subspaces_are_poor_approximations_to_intervention_optimized_subspaces",
+    "tracking_approx_pca_approx_learned_causal": "no_special_status_for_clean_vs_corrupt_representation_high_variance_geometry_dominates",
+    "tracking_greater_than_pca_greater_than_learned_causal": "the_causal_optimization_method_itself_is_weak_do_not_draw_a_mechanistic_conclusion",
+    "projection_fails_but_fresh_optimization_succeeds": "intervention_degeneracy_multiple_geometrically_distinct_solutions_not_subspace_insufficiency"
+  },
+  "limitations": [
+    "This is a development-only diagnostic until confirmed on untouched examples.",
+    "Convergence-based stopping bounds optimization effort but does not prove a converged global optimum was reached.",
+    "Only eight development examples from a single seed block on a single task.",
+    "learned_causal is fit jointly on a small training batch (eight examples) and may itself be undertrained; a null result for it must be treated cautiously, not as proof no learned rotation can work.",
+    "gradient_coordinate tests raw-coordinate sensitivity only, not distributed causal directions; it is not a strong causal baseline and must not be described as one.",
+    "Degeneracy diagnostics are computed only for the subset of examples where both full-space and fresh-in-basis optimization succeed; this subset can be small or empty at low ranks.",
+    "Causal-subspace and evaluation-protocol choices are fixed before this run; no data-dependent rank or metric selection after seeing outcomes."
+  ]
+}

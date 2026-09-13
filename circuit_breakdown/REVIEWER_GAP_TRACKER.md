@@ -235,6 +235,84 @@ random, gradient_coordinate, learned_causal) at 0/4 -- consistent with the
 steering pilot's projection failure at every rank. The real n=32 run is in
 progress.
 
+### Interchange Audit: a measurement error of mine, found and corrected
+
+The completed n=32 run produced correct-donor IIA 24/32 (75%) and
+random-donor IIA 23/32 (72%), which I initially read as "no donor
+specificity -- the protocol is hijacking the tail computation
+ indiscriminately." **That reading was wrong, and the error was in my
+control, not in the protocol.**
+
+What I audited first, and ruled out:
+- **Label collision.** The original derangement enforced
+  `random_donor_answer != receiver_answer` but NOT
+  `random_donor_answer != correct_donor_answer`; with a 24-name pool and 32
+  items, 2/32 items collided. Fixed with a collision-free derangement
+  ([audit_interchange.py](src/audit_interchange.py)). Result essentially
+  unchanged (23/32). Not the driver.
+- **Broken patch mechanism.** A true no-op (self-patch, zero delta) scored
+  32/32 identical-to-baseline. Mechanism is sound.
+- **Baseline conditioning.** Conditioned on the receiver already being
+  correct (n=24): correct 17/24, random 19/24. Still no apparent gap.
+
+**The actual error:** comparing `patch D -> P(Y_D)` against
+`patch R -> P(Y_R)` is not a specificity test. Both are legitimate
+interchange interventions with different donors, and the high-level causal
+model predicts BOTH should succeed. Two separate forward passes each hitting
+their own target is evidence the intervention WORKS, not that it is
+indiscriminate. A "random" donor is not a control that ought to fail.
+
+Donor specificity has to be measured as a CROSS-TERM within a SINGLE patched
+pass ([test_cross_term_specificity.py](src/test_cross_term_specificity.py)),
+n=16, position -1, layers [18,20,22,24]:
+
+| quantity | baseline | after do(D) |
+|---|---:|---:|
+| P(Y_donor), the injected answer | 0.000 | **0.718** |
+| P(Y_other), a donor NOT injected | 0.066 | **0.000** |
+| P(Y_receiver), receiver's own answer | 0.604 | **0.000** |
+
+`DS_cross = +0.718`. Top-1 is the injected donor 13/16; top-1 is a
+non-injected donor 0/16. The intervention installs the donor's specific
+answer, fully suppresses the receiver's own tracked state, and does not leak
+toward arbitrary other names.
+
+**Magnitude sweep** ([sweep_interchange_magnitude.py](src/sweep_interchange_magnitude.py)),
+alpha in {0, .125, .25, .5, .75, 1}, n=16: a clean dose-response
+(delta_donor = .005 -> .201 -> .601 -> .653 -> .718) with a threshold near
+alpha~0.25. My earlier "binary hijack" reading from the position sweep was
+also wrong -- the effect is smoothly graded in magnitude.
+
+**Norm-matched random direction control** (a Gaussian direction rescaled to
+EXACTLY the donor delta's combined norm): **+0.000 at every alpha.** Same
+magnitude, no semantic direction, zero effect. This rules out generic
+perturbation-magnitude disruption decisively -- the effect requires a real
+model-state direction and tracks precisely which one.
+
+### Open question the validated protocol does NOT yet settle
+
+Specificity is established, but "transports the REASONING STATE" is not yet
+distinguished from "transports an already-compressed ANSWER TOKEN." The tell
+is the position sweep ([sweep_interchange_position.py](src/sweep_interchange_position.py)),
+n=12, layers [18,20,22,24]: position -1 gives correct 9/12, but positions
+-2 through -7 give **0/12 for both correct and random donors**. If layers
+18-24 carried a distributed "current holder" variable, patching one token
+earlier should do something. That it does nothing is consistent with the
+final-token residual having already collapsed the computation into a
+near-linearly-decodable answer encoding.
+
+This distinction decides what the compact-basis nulls mean:
+- reasoning-state transport => "compact predictive subspaces cannot carry
+  the causal state" is a strong claim.
+- answer-token transport => the nulls only say compact bases cannot carry a
+  late answer encoding, which is much weaker.
+
+Decisive next test: **secondary probes.** Transport the donor state, then ask
+a DIFFERENT question of the same patched pass ("who ORIGINALLY had the
+object?", "how many transfers?"). If the donor's answers to those also
+transport, it is a genuine reasoning state; if only "current holder" moves,
+it is answer compression. Not yet run.
+
 ### Earlier G1 Evidence - Convergence, Basis and Capacity
 
 **Evidence.** The original optimizer used 32 Adam steps and selected a base

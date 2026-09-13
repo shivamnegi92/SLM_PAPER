@@ -313,6 +313,62 @@ object?", "how many transfers?"). If the donor's answers to those also
 transport, it is a genuine reasoning state; if only "current holder" moves,
 it is answer compression. Not yet run.
 
+### RESOLVED: it is answer compression, not state transport
+
+Run via [test_secondary_probes.py](src/test_secondary_probes.py), Llama,
+n=24, position -1, layers [18,20,22,24], full space, mixed few-shot prefix
+containing BOTH question forms so priming is identical across conditions.
+
+The transfer program exposes two variables over the same body text:
+`Z_curr = queried_chain[-1]` (current holder) and
+`Z_orig = queried_chain[0]` (original holder).
+
+Unpatched baselines: "Who has the X?" 18/24; "Who originally had the X?"
+24/24 (the original-holder probe is easier -- it needs no tracking -- which
+makes the donor signal in Test B especially clean).
+
+**TEST A (matched question, both sides asked "originally"):** donor's
+original holder transported 24/24, receiver unmoved 0/24. The mechanism is
+not brittle or specific to one question form.
+
+**TEST B (cross-question, decisive).** Donor asked "who ORIGINALLY had the
+X?", receiver asked "who HAS the X?", patch donor -> receiver:
+
+| outcome | count | meaning |
+|---|---:|---|
+| donor's ORIGINAL holder | **24/24** | carried the literal answer to the DONOR's own question |
+| donor's CURRENT holder | **0/24** | would have meant a state the receiver's question queried |
+| receiver's own answer | 0/24 | no effect |
+| other | 0/24 | -- |
+
+If the residual held a reasoning state, the receiver's question ("who has it
+NOW?") would have interrogated the transplanted state and returned the
+donor's CURRENT holder. It did so zero times out of twenty-four, returning
+instead the answer to a question the receiver never asked. Perfect
+separation.
+
+**Consequences, applied:**
+
+1. The interchange line is retired as a causal-state-transport experiment,
+   per the preregistered decision rule. The transported object is not a
+   variable; it is a literal answer string.
+2. The compact-basis 0/32 nulls MUST NOT be read mechanistically. They
+   establish only that compact bases cannot carry a LATE ANSWER ENCODING --
+   a substantially weaker claim than "compact subspaces cannot represent the
+   causal state," which is NOT supported and must not be written.
+3. NOT established: that the model lacks a reasoning state. It plausibly has
+   one distributed over earlier positions; the position sweep's zeros at -2
+   and earlier mean a single-position additive patch cannot move it. The
+   defensible claim is narrow: the final-token residual under test is an
+   answer encoding, not a queryable state.
+
+This also reframes the steering results. Full-space steering succeeding while
+every compact basis fails, combined with a final-token intervention that
+provably transports answers rather than states, points at a paper about
+OUTPUT CONTROL versus CAUSAL STATE CONTROL -- the intervention literature's
+standard success criterion (did the answer flip?) is satisfied here by a
+mechanism that demonstrably does not carry the reasoning variable.
+
 ### Earlier G1 Evidence - Convergence, Basis and Capacity
 
 **Evidence.** The original optimizer used 32 Adam steps and selected a base

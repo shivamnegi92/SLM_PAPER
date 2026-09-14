@@ -369,6 +369,63 @@ OUTPUT CONTROL versus CAUSAL STATE CONTROL -- the intervention literature's
 standard success criterion (did the answer flip?) is satisfied here by a
 mechanism that demonstrably does not carry the reasoning variable.
 
+### Cross-question panel: selectivity collapses (Llama)
+
+Run via [test_cross_question_panel.py](src/test_cross_question_panel.py),
+n=24, position -1, layers [18,20,22,24], full space. The donor is ALWAYS
+asked the canonical "Who has the {object}?", so its final-token residual
+corresponds to do(Z_curr := z'_D); that one donor state is patched into
+receivers asked five DIFFERENT probes. A five-form few-shot prefix covers
+every probe so none is disadvantaged by unfamiliar formatting.
+
+| probe | should change? | -> donor | -> receiver | -> other | verdict |
+|---|---|---:|---:|---:|---|
+| current_holder | YES | 13/24 | 0/24 | 11/24 | COMPLETE |
+| last_recipient | YES | 12/24 | 0/24 | 12/24 | incomplete |
+| original_holder | NO | **14/24** | 0/24 | 10/24 | **SELECTIVITY FAILURE** |
+| object_identity | NO | **12/24** | 0/24 | 12/24 | **SELECTIVITY FAILURE** |
+| transfer_count | NO | 13/24 | 0/24 | 11/24 | excluded (25% baseline) |
+
+**COMPLETENESS 25/48. SELECTIVITY 0/48. LEAKAGE 26/48.** The receiver's own
+value survives in ZERO cases across every should-not-change probe.
+
+The `object_identity` row is the single cleanest piece of evidence in the
+project: unpatched competence is 24/24 (the model answers "what object did X
+have at the start?" perfectly), yet after the patch it answers a PERSON'S
+NAME 12/24 times. A genuine do(Z_curr := z'_D) cannot change which OBJECT was
+transferred. The intervention is not editing a variable; it is overwriting
+whatever the answer position reads from, with no regard for the question's
+type.
+
+Two corrections to earlier readings, recorded so they are not repeated:
+- `current_holder` is 13/24 here, not the 24/24 reported by
+  test_secondary_probes.py. That earlier run used a 2-form prefix; this uses
+  a 5-form prefix. 13/24 is the honest number under the harder panel.
+- "Completeness 25/48" is NOT partial success. With selectivity at 0/48 the
+  donor value overwrites everything, so it lands on the right answer exactly
+  when the right answer happens to be the donor's name.
+
+### Claim discipline (agreed positioning)
+
+Do NOT write "standard metrics score this as a success, it isn't one" or any
+variant implying IIA is generally invalid. MIB uses IIA deliberately to align
+features with SPECIFIED causal variables, and Sutter et al. already
+established that unrestricted alignment maps can drive IIA to 100% even on
+randomly initialized models. That territory is taken.
+
+The defensible claim is narrower and is what this evidence supports:
+
+> An intervention can be behaviorally effective, donor-specific,
+> norm-controlled, and dose-graded, yet manipulate the ANSWER REPRESENTATION
+> rather than the REASONING VARIABLE -- detectable only by testing the
+> predicted consequence pattern across multiple probes, not the single answer
+> that defined the counterfactual.
+
+Formally: E(I) and S(I) do not imply F(I), where E = behavioral
+effectiveness, S = intervention specificity, F = semantic causal fidelity.
+Completeness and selectivity must be reported separately; selectivity is what
+fails here, and it fails totally.
+
 ### Earlier G1 Evidence - Convergence, Basis and Capacity
 
 **Evidence.** The original optimizer used 32 Adam steps and selected a base

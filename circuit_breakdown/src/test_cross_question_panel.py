@@ -36,6 +36,7 @@ first, and probes below a competence floor are excluded from the verdict.
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
 import sys
 
@@ -46,6 +47,7 @@ import random as pyrandom
 import torch
 
 from localize import Harness, pick_device
+from experiment_metrics import rate_ci
 import dataset
 import causal_interchange as ci
 from interchange_dataset import _draw_problem
@@ -178,90 +180,154 @@ def predict_pair(harness, donor_text, receiver_text):
     return baseline, patched
 
 
-def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--model", default="llama-3.2-3b")
-    parser.add_argument("--n", type=int, default=24)
-    parser.add_argument("--seed", type=int, default=21)
-    parser.add_argument("--prefix-seed", type=int, default=99)
-    parser.add_argument("--fewshot-per-probe", type=int, default=2)
-    parser.add_argument("--device", default="auto")
-    args = parser.parse_args()
+def run_one_seed(harness, n, item_seed, prefix_seed, fewshot_per_probe, verbose=True):
+    """One independent replicate: its own sampled pairs AND its own sampled
+    few-shot prefix. The intervention itself is deterministic (no optimizer,
+    eval mode, patch = h_donor - h_receiver), so pairs and prefix are the ONLY
+    stochastic components -- and the prefix is a real confound worth varying.
+    Returns per-pair binary outcomes so Wilson intervals can be computed over
+    INDEPENDENT PAIRS rather than over probe-outcomes.
+    """
+    prefix = build_prefix(harness, prefix_seed, ROUNDS, fewshot_per_probe)
+    pairs = build_pairs(harness, n, item_seed, ROUNDS)
 
-    project = Path(__file__).resolve().parents[1]
-    harness = Harness(str(project.parent / args.model), pick_device(args.device))
-    harness.model.requires_grad_(False)
-    dataset.restrict_to_single_token(harness.tok)
-    print(f"model={args.model}  layers={LAYERS}  position={POSITION}  n={args.n}\n")
-
-    prefix = build_prefix(harness, args.prefix_seed, ROUNDS, args.fewshot_per_probe)
-    pairs = build_pairs(harness, args.n, args.seed, ROUNDS)
-
-    # ---------- per-probe unpatched competence ----------
-    print("=== unpatched baseline competence (gates interpretation) ===")
     competence = {}
     for probe, (template, _, _) in PROBES.items():
-        correct = 0
+        flags = []
         for _, receiver in pairs:
             expected = unpatched_answer(receiver, probe, ROUNDS)
             ids = harness.encode(prefix + render(receiver, template))
             state = ci.extract_activations(harness, LAYERS, ids, POSITION)
             prediction = ci.predict(harness, LAYERS, ids, POSITION,
                                     [torch.zeros_like(v) for v in state])["prediction"]
-            correct += int(prediction == harness.first_id(expected))
-        competence[probe] = correct / len(pairs)
-        flag = "" if competence[probe] >= COMPETENCE_FLOOR else "   <- BELOW FLOOR, excluded"
-        print(f"  {probe:>16}: {correct}/{len(pairs)} ({competence[probe]:.0%}){flag}")
+            flags.append(int(prediction == harness.first_id(expected)))
+        competence[probe] = flags
 
-    # ---------- cross-question panel ----------
-    print(f"\n=== cross-question panel: donor asked '{CANONICAL_QUESTION}', "
-          f"patched into receivers asked each probe ===")
-    print(f"  {'probe':>16} {'should change?':>14} {'-> donor value':>15} "
-          f"{'-> receiver value':>18} {'-> other':>9}  verdict")
-
-    results = {}
-    for probe, (template, _, should_change) in PROBES.items():
-        to_donor = to_receiver = to_other = 0
+    outcomes = {}
+    for probe, (template, _, _) in PROBES.items():
+        to_donor, to_receiver = [], []
         for donor, receiver in pairs:
             donor_text = prefix + render(donor, CANONICAL_QUESTION)
             receiver_text = prefix + render(receiver, template)
             _, patched = predict_pair(harness, donor_text, receiver_text)
             prediction = patched["prediction"]
-
             donor_value = donor["queried_chain"][-1]
             receiver_value = unpatched_answer(receiver, probe, ROUNDS)
-            if prediction == harness.first_id(donor_value):
-                to_donor += 1
-            elif prediction == harness.first_id(receiver_value):
-                to_receiver += 1
-            else:
-                to_other += 1
+            to_donor.append(int(prediction == harness.first_id(donor_value)))
+            to_receiver.append(int(prediction == harness.first_id(receiver_value)))
+        outcomes[probe] = {"to_donor": to_donor, "to_receiver": to_receiver}
+        if verbose:
+            print(f"    {probe:>16}: ->donor {sum(to_donor):>3}/{len(pairs)}  "
+                  f"->receiver {sum(to_receiver):>3}/{len(pairs)}  "
+                  f"(baseline {sum(competence[probe])}/{len(pairs)})", flush=True)
+    return {"n_pairs": len(pairs), "competence": competence, "outcomes": outcomes}
 
-        n = len(pairs)
-        results[probe] = {"to_donor": to_donor, "to_receiver": to_receiver, "to_other": to_other}
-        if competence[probe] < COMPETENCE_FLOOR:
-            verdict = "(excluded)"
-        elif should_change:
-            verdict = "COMPLETE" if to_donor > n / 2 else "incomplete"
-        else:
-            verdict = "SELECTIVE" if to_receiver > n / 2 else "SELECTIVITY FAILURE"
-        print(f"  {probe:>16} {str(should_change):>14} {to_donor:>10}/{n:<4} "
-              f"{to_receiver:>13}/{n:<4} {to_other:>4}/{n:<4}  {verdict}")
 
-    # ---------- headline ----------
-    graded = [p for p in PROBES if competence[p] >= COMPETENCE_FLOOR]
-    changers = [p for p in graded if PROBES[p][2]]
-    keepers = [p for p in graded if not PROBES[p][2]]
-    n = len(pairs)
-    complete = sum(results[p]["to_donor"] for p in changers)
-    selective = sum(results[p]["to_receiver"] for p in keepers)
-    print(f"\n  COMPLETENESS (should-change probes moved to donor): "
-          f"{complete}/{len(changers) * n}" if changers else "  COMPLETENESS: no gradeable probes")
-    print(f"  SELECTIVITY (should-NOT-change probes held receiver value): "
-          f"{selective}/{len(keepers) * n}" if keepers else "  SELECTIVITY: no gradeable probes")
-    leaked = sum(results[p]["to_donor"] for p in keepers)
-    print(f"  leakage (should-NOT-change probes overwritten by donor value): "
-          f"{leaked}/{len(keepers) * n}")
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--model", default="llama-3.2-3b")
+    parser.add_argument("--n", type=int, default=40, help="independent pairs PER SEED")
+    parser.add_argument("--seeds", default="21,22,23",
+                        help="comma-separated; each varies BOTH pairs and prefix")
+    parser.add_argument("--fewshot-per-probe", type=int, default=2)
+    parser.add_argument("--device", default="auto")
+    parser.add_argument("--out", type=Path, default=None,
+                        help="optional JSON path for the headline figure")
+    args = parser.parse_args()
+
+    project = Path(__file__).resolve().parents[1]
+    harness = Harness(str(project.parent / args.model), pick_device(args.device))
+    harness.model.requires_grad_(False)
+    dataset.restrict_to_single_token(harness.tok)
+    seeds = [int(s) for s in args.seeds.split(",")]
+    print(f"model={args.model}  layers={LAYERS}  position={POSITION}")
+    print(f"seeds={seeds}  pairs_per_seed={args.n}  "
+          f"total_independent_pairs={len(seeds) * args.n}\n", flush=True)
+
+    replicates = []
+    for seed in seeds:
+        print(f"  --- seed {seed} (pairs and prefix both resampled) ---", flush=True)
+        replicates.append(run_one_seed(harness, args.n, seed, seed * 7 + 1,
+                                       args.fewshot_per_probe))
+
+    # ---------- pooled across seeds, per MODEL only (never across models) ----------
+    total_pairs = sum(r["n_pairs"] for r in replicates)
+    print(f"\n=== {args.model}: pooled over {len(seeds)} seeds, "
+          f"{total_pairs} INDEPENDENT PAIRS ===")
+    print("(Wilson 95% intervals over independent pairs, not over probe-outcomes)\n")
+
+    competence_rates = {}
+    print(f"  {'probe':>16} {'baseline competence':>28}")
+    for probe in PROBES:
+        flags = [f for r in replicates for f in r["competence"][probe]]
+        rate, (low, high) = rate_ci(flags)
+        competence_rates[probe] = rate
+        flag = "" if rate >= COMPETENCE_FLOOR else "  <- EXCLUDED"
+        print(f"  {probe:>16} {sum(flags):>4}/{len(flags):<4} "
+              f"{rate:>6.1%} [{low:.1%}, {high:.1%}]{flag}")
+
+    print(f"\n  {'probe':>16} {'change?':>8} {'-> donor value':>26} {'-> receiver value':>26}")
+    graded = []
+    for probe, (_, _, should_change) in PROBES.items():
+        donor_flags = [f for r in replicates for f in r["outcomes"][probe]["to_donor"]]
+        receiver_flags = [f for r in replicates for f in r["outcomes"][probe]["to_receiver"]]
+        d_rate, (d_low, d_high) = rate_ci(donor_flags)
+        r_rate, (r_low, r_high) = rate_ci(receiver_flags)
+        excluded = competence_rates[probe] < COMPETENCE_FLOOR
+        if not excluded:
+            graded.append((probe, should_change, donor_flags, receiver_flags))
+        mark = " (excl.)" if excluded else ""
+        print(f"  {probe:>16} {str(should_change):>8} "
+              f"{sum(donor_flags):>4}/{len(donor_flags):<4} {d_rate:>5.1%} [{d_low:.1%},{d_high:.1%}] "
+              f"{sum(receiver_flags):>4}/{len(receiver_flags):<4} {r_rate:>5.1%} [{r_low:.1%},{r_high:.1%}]{mark}")
+
+    print(f"\n  --- per-seed stability (selectivity-relevant probes) ---")
+    for probe, should_change, _, _ in graded:
+        if should_change:
+            continue
+        per_seed = [f"{sum(r['outcomes'][probe]['to_receiver'])}/{r['n_pairs']}"
+                    for r in replicates]
+        print(f"    {probe:>16} -> receiver value by seed: {', '.join(per_seed)}")
+
+    changers = [g for g in graded if g[1]]
+    keepers = [g for g in graded if not g[1]]
+    if keepers:
+        selectivity_flags = [f for _, _, _, rf in keepers for f in rf]
+        rate, (low, high) = rate_ci(selectivity_flags)
+        print(f"\n  SELECTIVITY (should-NOT-change probes holding receiver value): "
+              f"{sum(selectivity_flags)}/{len(selectivity_flags)} = {rate:.1%} [{low:.1%}, {high:.1%}]")
+    if changers:
+        completeness_flags = [f for _, _, df, _ in changers for f in df]
+        rate, (low, high) = rate_ci(completeness_flags)
+        print(f"  COMPLETENESS (should-change probes moving to donor): "
+              f"{sum(completeness_flags)}/{len(completeness_flags)} = {rate:.1%} [{low:.1%}, {high:.1%}]")
+    print(f"\n  REPORTING NOTE: independent reasoning pairs = {total_pairs}; "
+          f"graded probes = {len(graded)}; "
+          f"probe-outcomes = {total_pairs * len(graded)}. "
+          f"Intervals above are over PAIRS within each probe.")
+
+    if args.out:
+        summary = {"models": {}}
+        if args.out.exists():  # merge, so both models land in one file
+            with args.out.open() as stream:
+                summary = json.load(stream)
+        entry = {"n_independent_pairs": total_pairs, "seeds": seeds,
+                 "graded_probes": [g[0] for g in graded]}
+        if keepers:
+            flags = [f for _, _, _, rf in keepers for f in rf]
+            rate, interval = rate_ci(flags)
+            entry["selectivity"] = {"successes": int(sum(flags)), "n": len(flags),
+                                    "rate": rate, "ci": list(interval)}
+        if changers:
+            flags = [f for _, _, df, _ in changers for f in df]
+            rate, interval = rate_ci(flags)
+            entry["completeness"] = {"successes": int(sum(flags)), "n": len(flags),
+                                     "rate": rate, "ci": list(interval)}
+        summary["models"][args.model] = entry
+        args.out.parent.mkdir(parents=True, exist_ok=True)
+        with args.out.open("w") as stream:
+            json.dump(summary, stream, indent=2)
+        print(f"  wrote {args.out}")
 
 
 if __name__ == "__main__":

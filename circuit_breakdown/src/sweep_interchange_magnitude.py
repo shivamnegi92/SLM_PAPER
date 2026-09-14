@@ -29,6 +29,9 @@ the donor's specific direction.
 """
 from __future__ import annotations
 
+import argparse
+import json
+from pathlib import Path
 import sys
 sys.path.insert(0, "src")
 
@@ -77,6 +80,12 @@ def norm_matched_random(reference_vectors, seed):
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--out", type=Path, default=None,
+                        help="optional JSON path so the headline figure reads "
+                             "these exact numbers rather than recomputing them")
+    args = parser.parse_args()
+
     h = Harness("../llama-3.2-3b", pick_device("auto"))
     h.model.requires_grad_(False)
     dataset.restrict_to_single_token(h.tok)
@@ -116,6 +125,10 @@ def main():
     print(f"{'alpha':>6} {'baseline_ok':>11} {'IIA_correct':>11} {'IIA_random':>10} "
           f"{'d_donor':>8} {'d_random':>9} {'DS':>7} {'d_matched':>10} {'dir_spec':>9}")
 
+    record = {"model": "llama-3.2-3b", "layers": LAYERS, "position": POSITION,
+              "n_items": N_ITEMS, "alphas": [], "p_donor_real": [],
+              "p_donor_norm_matched": [], "donor_specificity": []}
+
     for alpha in ALPHAS:
         baseline_ok = iia_correct = iia_random = 0
         p_donor_baseline, p_donor_patched = [], []
@@ -152,6 +165,20 @@ def main():
         print(f"{alpha:>6.3f} {baseline_ok:>7}/{N_ITEMS:<3} {iia_correct:>7}/{N_ITEMS:<3} "
               f"{iia_random:>6}/{N_ITEMS:<3} {delta_donor:>+8.3f} {delta_random:>+9.3f} "
               f"{ds:>+7.3f} {delta_matched:>+10.3f} {direction_specificity:>+9.3f}")
+
+        # Absolute probabilities (not deltas) so the figure shows the curve the
+        # reader expects: P(Y_donor) rising with alpha for the real direction
+        # while the norm-matched control stays flat.
+        record["alphas"].append(alpha)
+        record["p_donor_real"].append(float(np.mean(p_donor_patched)))
+        record["p_donor_norm_matched"].append(float(np.mean(p_donor_matched_patched)))
+        record["donor_specificity"].append(ds)
+
+    if args.out:
+        args.out.parent.mkdir(parents=True, exist_ok=True)
+        with args.out.open("w") as stream:
+            json.dump(record, stream, indent=2)
+        print(f"\nwrote {args.out}")
 
 
 if __name__ == "__main__":

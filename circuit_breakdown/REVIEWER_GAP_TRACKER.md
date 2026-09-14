@@ -405,6 +405,43 @@ Two corrections to earlier readings, recorded so they are not repeated:
   donor value overwrites everything, so it lands on the right answer exactly
   when the right answer happens to be the donor's name.
 
+### REPLICATED on Phi-3.5-mini: selectivity 0/48 in BOTH architectures
+
+Identical code, protocol and seeds; only the model differs. Phi is
+SentencePiece and 32 layers, Llama is BPE and 28 layers, so this is a
+genuine cross-family replication rather than a re-run.
+
+| probe | should change? | Llama -> donor | Phi -> donor | -> receiver (both) |
+|---|---|---:|---:|---:|
+| current_holder | YES | 13/24 | **19/24** | 0/24 |
+| last_recipient | YES | 12/24 | **18/24** | 0/24 |
+| original_holder | NO | 14/24 | **16/24** | **0/24** |
+| object_identity | NO | 12/24 | **18/24** | **0/24** |
+| transfer_count | NO | 13/24 (excl.) | 24/24 (excl.) | 0/24 |
+
+| | Llama | Phi |
+|---|---:|---:|
+| COMPLETENESS | 25/48 | 37/48 |
+| **SELECTIVITY** | **0/48** | **0/48** |
+| leakage | 26/48 | 34/48 |
+
+Baseline competence: Phi 96/96/100/100% on the four graded probes vs Llama
+88/88/83/100%. **Phi is the more competent model AND the more completely
+hijacked** (completeness 37/48, leakage 34/48). Competence does not protect
+against the failure -- it amplifies it. This forecloses the obvious reviewer
+objection that the effect is a weak-model artifact.
+
+The replicated headline is `object_identity`: BOTH models answer "What object
+did {first} have at the start?" at 100% unpatched, and after a patch that
+allegedly only sets WHO HOLDS THE OBJECT, Phi answers a PERSON'S NAME 18/24
+times (Llama 12/24). No causal reading of do(Z_curr := z'_D) permits changing
+which object exists in the problem.
+
+`transfer_count` is excluded from scoring on both models (Llama 25%, Phi 0%
+baseline) -- neither can count transfers unprompted, so a post-patch change
+there is uninterpretable. Worth noting that Phi's excluded row is 24/24 to
+the donor value, i.e. total overwrite, consistent with the graded probes.
+
 ### Claim discipline (agreed positioning)
 
 Do NOT write "standard metrics score this as a success, it isn't one" or any
@@ -424,7 +461,29 @@ The defensible claim is narrower and is what this evidence supports:
 Formally: E(I) and S(I) do not imply F(I), where E = behavioral
 effectiveness, S = intervention specificity, F = semantic causal fidelity.
 Completeness and selectivity must be reported separately; selectivity is what
-fails here, and it fails totally.
+fails here, and it fails totally, in two model families.
+
+### EXPERIMENTS FROZEN
+
+Per the agreed plan, experiments stop here and writing begins. Explicitly NOT
+to be run before a draft exists: Nemotron, further rank sweeps, the
+layer x position transport map, additional reasoning benchmarks, or a
+stronger DAS-style alignment. Those are reviewer-response experiments.
+
+The evidence stack that goes into the paper:
+1. Random bases 0/8 at every rank, Phi and Llama -- low-dimensional capacity
+   alone does not explain steering success.
+2. PCA ~ tracking through the useful rank regime -- the clean/corrupt
+   contrast does not identify a privileged reasoning subspace.
+3. P_S(v_full) = 0/8 across all 20 basis x rank cells.
+4. cos(v_full, v_S*) ~ 0.08-0.15 with KL falling as rank grows -- successful
+   interventions are geometrically non-unique but behaviorally convergent.
+5. The final-token intervention is effective, donor-specific
+   (DS_cross = +0.718), inert under norm-matched random directions, and
+   dose-graded -- yet selectivity is 0/48 in both architectures.
+
+Findings 1-4 motivate the question "what do these successful interventions
+actually manipulate?"; finding 5 answers it.
 
 ### Earlier G1 Evidence - Convergence, Basis and Capacity
 

@@ -465,6 +465,109 @@ fails here, and it fails totally, in two model families.
 
 ### EXPERIMENTS FROZEN
 
+### Solution non-uniqueness: TESTED AND FALSIFIED
+
+Hypothesis: if two activation edits produce the same behavior, they need not
+be internally similar -- i.e. behavioral steering success does not uniquely
+identify a direction. Motivated by cos(v_full, v_basis) ~ 0.08-0.15 observed
+in the v2 matrix.
+
+**The optimizer had to be modified to even ask the question.** `EditParams`
+initializes to ZEROS and Adam in eval mode is deterministic, so "repeat with
+different seeds" would have produced N bit-identical vectors and a fake
+uniqueness result. Added optional `init_seed`/`init_scale` (zero-init default
+preserved and regression-tested, so all prior results still reproduce).
+
+**The control that makes the measurement meaningful.** Random
+high-dimensional vectors are nearly orthogonal by construction, so low
+pairwise cosine among final edits could merely mean the optimizer never left
+a scattered set of starts. Recorded per run:
+`travel_ratio = ||v_final - v_init|| / ||v_init||` and `cos(v_final, v_init)`.
+
+Llama, 17 restarts x 3 examples
+([test_solution_uniqueness.py](src/test_solution_uniqueness.py)):
+
+| example | median pairwise cosine | min | median sym-KL | travel_ratio | cos to init |
+|---|---:|---:|---:|---:|---:|
+| 0 | **+0.840** | -- | ~0 | 2.26 | +0.018 |
+| 1 | **+0.912** | -- | ~0 | -- | -- |
+| 2 | **+0.948** | +0.807 | 0.0000 | 2.55 | +0.025 |
+
+17/17 succeeded on every example. Solutions travel ~2.3-2.6x their init norm
+and end nearly orthogonal to where they began (cos to init ~0.02), then
+converge on the SAME direction anyway -- cosine to the canonical zero-init
+solution is +0.966 median. Even the worst pair agrees at +0.807.
+
+**Verdict: the non-uniqueness direction is dead.** Independently initialized
+optimizations find essentially one solution.
+
+**This retro-explains the cos ~ 0.08-0.15 that motivated the hypothesis.**
+That number compared UNCONSTRAINED v_full against SUBSPACE-CONFINED v_basis;
+low cosine there is largely FORCED by confining a vector to a rank-32 slice
+of a 3072-dim space, not evidence of a distinct solution. Two UNCONSTRAINED
+solutions, where nothing forces agreement, agree at 0.95. So the v2 geometry
+is explained by subspace geometry, not solution multiplicity, and
+`P_S(v_full) = 0/8` follows the same way: projection destroys the vector
+because the subspace is near-orthogonal to it, and fresh in-subspace
+optimization then finds the best available APPROXIMATION within the
+constrained set rather than a genuinely different solution.
+
+Interpolation (Experiment 2) and sensitivity (Experiment 3) are therefore NOT
+run -- the premise failed at step one.
+
+A verdict-logic bug was caught and fixed here: the first threshold ladder
+tested `>0.8` then fell through to a "DISSIMILAR" branch, printing DISSIMILAR
+for a median cosine of 0.788. Thresholds are now explicit (>=0.6 similar,
+<=0.3 dissimilar, else AMBIGUOUS) and cannot contradict their own numbers.
+
+### Final panel at scale (120 independent pairs per model)
+
+3 seeds x 40 pairs, each seed resampling BOTH pairs and the few-shot prefix.
+Wilson intervals over INDEPENDENT PAIRS within each probe.
+
+| | Llama | Phi |
+|---|---|---|
+| completeness | 44.2% [35.6, 53.1] | 71.7% [65.7, 77.0] |
+| **selectivity** | **0.0% [0.0, 1.6]** | **0.0% [0.0, 1.6]** |
+| per-seed selectivity | 0/40, 0/40, 0/40 | 0/40, 0/40, 0/40 |
+
+**0/240 in both models**, upper bound now 1.6% (was 19.4% at n=16). Stable
+across independently resampled pairs and prefixes. Reported N is honest:
+120 independent pairs / 3-4 graded probes / 360-480 probe-outcomes.
+
+### Positioning correction after literature check
+
+The cross-question diagnostic is **NOT novel** and must not be presented as
+such:
+
+- **RAVEL** (Huang, Wu, Potts, Geva, Geiger; ACL 2024; arXiv:2402.17700)
+  already intervenes on one attribute and checks the target answer changes
+  while OTHER attributes are preserved.
+- **MIB** (Mueller et al., ICML 2025; arXiv:2504.13151) builds this in via
+  balanced counterfactuals, and explicitly reports that the FULL-VECTOR
+  baseline does poorly on RAVEL *because swapping the full vector changes
+  unrelated attributes instead of isolating the target*. That is close to
+  this project's headline finding, already in print.
+- **Sutter et al.** (NeurIPS 2025 Spotlight; arXiv:2507.08802) verified: 100%
+  IIA on randomly initialized LMs on IOI.
+- On intervention sites: DAS restricts to `[CLS]` for NLI; MIB brute-forces
+  manually selected token locations. **Neither patches an arbitrary final
+  answer state and calls it a reasoning mechanism**, so the paper must not
+  imply that they do.
+- **RETRACTED**: an earlier claim in this tracker that 2025-26 steering work
+  shows steering follows "answer encoding" could NOT be verified. AxBench
+  concerns SAEs vs simple baselines and does not support it. Do not cite it
+  for that claim.
+
+Defensible residual contribution: a CASE STUDY extending RAVEL/MIB selectivity
+logic from static entity-attribute lookup to a SEQUENTIALLY COMPUTED state
+(who holds an object after N transfers), where a full credential stack --
+behavioral effectiveness, donor specificity, norm-matched control,
+dose-response, two-family replication -- is passed by an intervention that
+carries no state. Workshop-scale, not a new method.
+
+### FROZEN
+
 Per the agreed plan, experiments stop here and writing begins. Explicitly NOT
 to be run before a draft exists: Nemotron, further rank sweeps, the
 layer x position transport map, additional reasoning benchmarks, or a

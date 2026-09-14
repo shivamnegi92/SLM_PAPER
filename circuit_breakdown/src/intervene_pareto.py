@@ -71,21 +71,34 @@ from intervene_margin import (
 
 
 class EditParams:
-    """Learnable per-layer edit vectors, optionally confined to a subspace."""
+    """Learnable per-layer edit vectors, optionally confined to a subspace.
 
-    def __init__(self, layers, hidden, device, bases=None):
+    Default initialization is ZEROS and the optimizer is otherwise
+    deterministic, so repeated runs are bit-identical. `init_seed`/`init_scale`
+    optionally randomize the starting point, which is required to ask whether
+    a behavioral objective admits MANY distinct solutions rather than one.
+    Callers doing that must also record the initialization to separate
+    "optimizer found a genuinely different solution" from "different random
+    starts that barely moved" -- random high-dimensional vectors are nearly
+    orthogonal by construction.
+    """
+
+    def __init__(self, layers, hidden, device, bases=None, init_seed=None, init_scale=0.0):
         self.layers = layers
         self.bases = bases  # list of [rank, hidden] or None
-        if bases is None:
-            self._p = [
-                torch.zeros((1, hidden), device=device, requires_grad=True)
-                for _ in layers
-            ]
+        shapes = ([(1, hidden)] * len(layers) if bases is None
+                  else [(1, b.shape[0]) for b in bases])
+        if init_seed is None or init_scale == 0.0:
+            self._p = [torch.zeros(shape, device=device, requires_grad=True)
+                       for shape in shapes]
         else:
-            self._p = [
-                torch.zeros((1, b.shape[0]), device=device, requires_grad=True)
-                for b in bases
-            ]
+            generator = torch.Generator().manual_seed(int(init_seed))
+            self._p = []
+            for shape in shapes:
+                start = (torch.randn(shape, generator=generator, dtype=torch.float64)
+                         .float().to(device) * init_scale)
+                self._p.append(start.detach().clone().requires_grad_(True))
+        self.init_vectors = [v.detach().clone() for v in self.vectors()]
 
     def vectors(self):
         """Differentiable list of [1, hidden] edit vectors."""
@@ -340,7 +353,8 @@ def optimize_sample_converged(h, r, layers, ctrl_ids, ctrl_base, bases, cfg):
     optimization rather than equal step count.
     """
     hidden = h.model.config.hidden_size
-    ep = EditParams(layers, hidden, h.device, bases=bases)
+    ep = EditParams(layers, hidden, h.device, bases=bases,
+                    init_seed=cfg.get("init_seed"), init_scale=cfg.get("init_scale", 0.0))
     ep.trace = []
     opt = torch.optim.Adam(ep.parameters(), lr=cfg["lr"])
     objective = cfg.get("objective", "cross_entropy")

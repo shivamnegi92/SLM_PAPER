@@ -1,0 +1,76 @@
+/* Print-oriented styling for the rendered paper. Kept deliberately plain:
+   this is a reading/reviewing artifact, not a venue template. */
+html { font-size: 100%; }
+body {
+    max-width: 46rem;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 5rem;
+    font-family: "Charter", "Georgia", "Times New Roman", serif;
+    font-size: 1.02rem;
+    line-height: 1.62;
+    color: #1a1a1a;
+    background: #ffffff;
+}
+h1 { font-size: 1.85rem; line-height: 1.25; margin-bottom: 0.4rem; }
+h2 { font-size: 1.28rem; margin-top: 2.4rem; border-bottom: 1px solid #ddd; padding-bottom: 0.25rem; }
+h3 { font-size: 1.08rem; margin-top: 1.7rem; }
+p.author, .subtitle { color: #555; }
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1.2rem 0;
+    font-size: 0.9rem;
+    font-family: "Helvetica Neue", Arial, sans-serif;
+}
+th, td { border: 1px solid #d5d5d5; padding: 0.4rem 0.6rem; text-align: left; }
+th { background: #f2f2f2; font-weight: 600; }
+td:not(:first-child) { text-align: right; }
+code {
+    background: #f4f4f4;
+    padding: 0.1rem 0.3rem;
+    border-radius: 3px;
+    font-size: 0.87em;
+}
+pre {
+    background: #f7f7f7;
+    border-left: 3px solid #bbb;
+    padding: 0.8rem 1rem;
+    overflow-x: auto;
+    font-size: 0.85rem;
+}
+pre code { background: none; padding: 0; }
+blockquote {
+    border-left: 3px solid #c8b560;
+    background: #fffdf3;
+    margin: 1.2rem 0;
+    padding: 0.7rem 1.1rem;
+    color: #3a3a3a;
+}
+figure { margin: 2rem 0; text-align: center; }
+figure img {
+    max-width: 100%;
+    border: 1px solid #e2e2e2;
+    border-radius: 4px;
+}
+figcaption {
+    font-size: 0.86rem;
+    color: #555;
+    margin-top: 0.6rem;
+    text-align: left;
+    font-family: "Helvetica Neue", Arial, sans-serif;
+}
+#TOC {
+    background: #fafafa;
+    border: 1px solid #e5e5e5;
+    border-radius: 4px;
+    padding: 0.8rem 1.2rem;
+    font-size: 0.9rem;
+    font-family: "Helvetica Neue", Arial, sans-serif;
+}
+#TOC ul { margin: 0.2rem 0; padding-left: 1.1rem; }
+hr { border: none; border-top: 1px solid #e0e0e0; margin: 2.2rem 0; }
+@media print {
+    body { max-width: none; font-size: 10.5pt; padding: 0; }
+    h2 { page-break-after: avoid; }
+    figure, table { page-break-inside: avoid; }
+}

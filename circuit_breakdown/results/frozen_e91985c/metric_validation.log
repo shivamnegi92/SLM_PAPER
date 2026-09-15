@@ -1,0 +1,28 @@
+########## phi-3.5-mini ##########
+model=phi-3.5-mini  n=40  layers=[18, 20, 22, 24]  position=-1
+
+Probing the two 'should NOT change' probes that carry the headline.
+
+  original_holder
+    zero patch  -> receiver value :  40/40   (metric fires when nothing is changed)
+    donor patch -> receiver value :   0/40   (selectivity: survives the intervention)
+    donor patch -> donor value    :  21/40   (leakage: answers the donor's question instead)
+
+  object_identity
+    zero patch  -> receiver value :  40/40   (metric fires when nothing is changed)
+    donor patch -> receiver value :   0/40   (selectivity: survives the intervention)
+    donor patch -> donor value    :  26/40   (leakage: answers the donor's question instead)
+
+==================================================================
+  metric fires under zero patch : 80/80
+  metric fires under real patch : 0/80
+==================================================================
+
+  VALID: the counter demonstrably fires (80/80 with no
+  intervention) and is driven to zero by the intervention alone.
+  The 0/240 result measures the intervention, not a broken metric.
+########## llama-3.2-3b ##########
+model=llama-3.2-3b  n=40  layers=[18, 20, 22, 24]  position=-1
+
+Probing the two 'should NOT change' probes that carry the headline.
+

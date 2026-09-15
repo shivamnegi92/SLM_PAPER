@@ -95,7 +95,10 @@ Before testing selectivity we establish that the intervention is worth taking se
 
 **Dose response.** P(Y_donor) rises smoothly with α — 0.005, 0.201, 0.601, 0.653, 0.718 at α = 0.125, 0.25, 0.5, 0.75, 1.0 — with a threshold near α ≈ 0.25. The effect is graded, not an unstable all-or-nothing flip.
 
-*(Figure 1: the control stack and the dose-response curve with the flat norm-matched control.)*
+<figure>
+<img src="figures/fig1_control_stack.png" alt="Control stack: effectiveness, donor specificity, norm control and dose response all pass; selectivity fails. Beside it, P(Y_donor) rises with alpha for the real donor direction while a norm-matched random direction stays flat at zero.">
+<figcaption><strong>Figure 1.</strong> Left: each credential in the control stack, in the order applied. Right: the intervention is graded in magnitude, while a direction with identical norm produces no effect at any magnitude.</figcaption>
+</figure>
 
 ---
 
@@ -155,16 +158,19 @@ competence : prediction == first_id(unpatched_answer(receiver, probe))   # zero 
 to_receiver: prediction == first_id(unpatched_answer(receiver, probe))   # donor patch
 ```
 
-So the 100% baseline competence on `original_holder` and `object_identity` already demonstrates that the selectivity check fires at ceiling when nothing is patched. We confirm this empirically in a single process on identical items (`src/validate_selectivity_metric.py`, Phi, n=12 per probe):
+So the 100% baseline competence on `original_holder` and `object_identity` already demonstrates that the selectivity check fires at ceiling when nothing is patched. We confirm this empirically in a single process on identical items (`src/validate_selectivity_metric.py`, Phi, n=40 per probe):
 
 | condition | receiver's value retained |
 |---|---:|
-| zero patch (no intervention) | **24/24** |
-| donor patch | **0/24** |
+| zero patch (no intervention) | **80/80** |
+| donor patch | **0/80** |
 
-Only the patch differs. The metric is live, and the intervention alone drives it to zero. The same run shows where the probability mass goes: the model answers with the *donor's* value on 5/12 `original_holder` and 7/12 `object_identity` items.
+Only the patch differs. The metric is live, and the intervention alone drives it to zero. The same run shows where the probability mass goes: the model answers with the *donor's* value on 21/40 `original_holder` and 26/40 `object_identity` items.
 
-*(Figure 4 shows this comparison concretely.)*
+<figure>
+<img src="figures/fig4_what_selectivity_means.png" alt="A receiver problem about a map and a donor problem about a lamp. With no patch the model answers 'map' 24 out of 24 times; with the donor state patched in it answers 'Kai', a person, 0 out of 24.">
+<figcaption><strong>Figure 4.</strong> What the selectivity counter counts. The identical comparison scores 24/24 with no intervention and 0/24 with the donor patch; only the patch differs, so the zero reflects the intervention rather than a metric that cannot fire.</figcaption>
+</figure>
 
 ### 5.4 The concrete failure
 
@@ -172,7 +178,15 @@ Both models answer *"What object did {first} have at the start?"* with **100% ac
 
 This is difficult to attribute to misunderstanding the question: the model answered it perfectly moments earlier. The intervention destroyed the semantic isolation between the targeted answer state and unrelated information.
 
-*(Figure 2: the two-question before/after comparison. Figure 3: per-model replication with Wilson intervals. Figure 4: what the selectivity counter measures, and proof that it fires.)*
+<figure>
+<img src="figures/fig2_semantic_failure.png" alt="Before intervention the model answers 'Who has the map?' with Ruby and 'Which object moved?' with map, both correct. After the donor intervention it answers Ethan to both, the second being a person where an object was asked for.">
+<figcaption><strong>Figure 2.</strong> One intervention, two questions. The object-identity question is answered perfectly unintervened and with a person's name afterwards. Percentages are measured; names and object are an illustrative instantiation of the item template.</figcaption>
+</figure>
+
+<figure>
+<img src="figures/fig3_replication.png" alt="Bar chart. Completeness is 71.7 percent for Phi and 44.2 percent for Llama with Wilson intervals. Selectivity is 0 out of 240 for both models.">
+<figcaption><strong>Figure 3.</strong> Replication across two model families, Wilson 95% intervals over independent pairs. The completeness bars are <em>not</em> comparable across models: Llama graded three probes to Phi's four, because Llama's current-holder probe fell below the competence gate.</figcaption>
+</figure>
 
 ---
 

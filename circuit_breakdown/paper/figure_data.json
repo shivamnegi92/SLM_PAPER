@@ -1,0 +1,44 @@
+{
+  "_provenance": "Transcribed BY HAND from results/frozen_e91985c/ logs (commit e91985c). The panel runs predate the --out flag and CANNOT be regenerated: each seed resamples both pairs and the few-shot prefix. Do not overwrite by re-running; verify against the logs instead.",
+  "magnitude": {
+    "_source": "sweep_interchange_magnitude.py, Llama, n=16, layers [18,20,22,24], position -1",
+    "alphas": [0.0, 0.125, 0.25, 0.5, 0.75, 1.0],
+    "p_donor_real": [0.0, 0.005, 0.201, 0.601, 0.653, 0.718],
+    "p_donor_norm_matched": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+  },
+  "models": {
+    "phi-3.5-mini": {
+      "_role": "PRIMARY: 97-100% baseline competence on all four graded probes",
+      "n_independent_pairs": 120,
+      "graded_probes": 4,
+      "completeness": {"successes": 172, "n": 240, "rate": 0.717, "ci": [0.657, 0.770]},
+      "selectivity": {"successes": 0, "n": 240, "rate": 0.0, "ci": [0.0, 0.016]},
+      "probes": {
+        "current_holder":  {"should_change": true,  "competence": 0.992, "to_donor": 0.742, "to_receiver": 0.0},
+        "last_recipient":  {"should_change": true,  "competence": 0.975, "to_donor": 0.692, "to_receiver": 0.0},
+        "original_holder": {"should_change": false, "competence": 1.000, "to_donor": 0.600, "to_receiver": 0.0},
+        "object_identity": {"should_change": false, "competence": 1.000, "to_donor": 0.717, "to_receiver": 0.0}
+      }
+    },
+    "llama-3.2-3b": {
+      "_role": "CORROBORATES SELECTIVITY ONLY: current_holder competence 46.7%, gate-excluded, so completeness is on a DIFFERENT probe set and is not comparable to Phi's",
+      "n_independent_pairs": 120,
+      "graded_probes": 3,
+      "completeness": {"successes": 53, "n": 120, "rate": 0.442, "ci": [0.356, 0.531]},
+      "selectivity": {"successes": 0, "n": 240, "rate": 0.0, "ci": [0.0, 0.016]},
+      "probes": {
+        "last_recipient":  {"should_change": true,  "competence": 0.733, "to_donor": 0.442, "to_receiver": 0.0},
+        "original_holder": {"should_change": false, "competence": 1.000, "to_donor": 0.467, "to_receiver": 0.0},
+        "object_identity": {"should_change": false, "competence": 1.000, "to_donor": 0.492, "to_receiver": 0.0}
+      }
+    }
+  },
+  "control_stack": {
+    "_source": "test_cross_term_specificity.py (n=16) and sweep_interchange_magnitude.py (n=16)",
+    "donor_specificity_cross": 0.718,
+    "p_other_after_patch": 0.000,
+    "p_receiver_before": 0.604,
+    "p_receiver_after": 0.000,
+    "norm_matched_effect_all_alphas": 0.000
+  }
+}

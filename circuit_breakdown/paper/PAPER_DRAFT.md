@@ -144,13 +144,35 @@ The donor state is patched into receivers asked each of five probes. The causal 
 
 **Llama's completeness is not comparable to Phi's**, and we do not present it as such. Llama graded three probes; Phi graded four, because Llama's current-holder probe fell below the competence gate at 46.7%. Llama cannot reliably perform the primary task at this sample size, so it supports the *selectivity* claim — where both its graded should-not-change probes have 100% baseline competence — and not the completeness claim.
 
-### 5.3 The concrete failure
+### 5.3 Is the metric capable of firing?
+
+A counter that always reads zero is indistinguishable from a broken counter, so we verify the instrument directly.
+
+The selectivity check and the baseline competence check are **the same comparison against the same target token**, differing only in whether the patch is applied:
+
+```
+competence : prediction == first_id(unpatched_answer(receiver, probe))   # zero patch
+to_receiver: prediction == first_id(unpatched_answer(receiver, probe))   # donor patch
+```
+
+So the 100% baseline competence on `original_holder` and `object_identity` already demonstrates that the selectivity check fires at ceiling when nothing is patched. We confirm this empirically in a single process on identical items (`src/validate_selectivity_metric.py`, Phi, n=12 per probe):
+
+| condition | receiver's value retained |
+|---|---:|
+| zero patch (no intervention) | **24/24** |
+| donor patch | **0/24** |
+
+Only the patch differs. The metric is live, and the intervention alone drives it to zero. The same run shows where the probability mass goes: the model answers with the *donor's* value on 5/12 `original_holder` and 7/12 `object_identity` items.
+
+*(Figure 4 shows this comparison concretely.)*
+
+### 5.4 The concrete failure
 
 Both models answer *"What object did {first} have at the start?"* with **100% accuracy unintervened**. After an intervention that, by construction, sets only who currently holds the object, Phi answers with a **person's name** on 71.7% of items. No reading of `do(Z_curr := z'_D)` permits changing which object exists in the problem.
 
 This is difficult to attribute to misunderstanding the question: the model answered it perfectly moments earlier. The intervention destroyed the semantic isolation between the targeted answer state and unrelated information.
 
-*(Figure 2: the two-question before/after comparison. Figure 3: per-model replication with Wilson intervals.)*
+*(Figure 2: the two-question before/after comparison. Figure 3: per-model replication with Wilson intervals. Figure 4: what the selectivity counter measures, and proof that it fires.)*
 
 ---
 
@@ -216,6 +238,8 @@ The sharp dependence on intervention position — full effect at the final token
 | magnitude sweep | `src/sweep_interchange_magnitude.py` |
 | position sweep | `src/sweep_interchange_position.py` |
 | uniqueness falsification | `src/test_solution_uniqueness.py` |
-| figures | `src/make_paper_figures.py` |
+| selectivity metric validation | `src/validate_selectivity_metric.py` |
+| figures 1-3 | `src/make_paper_figures.py` |
+| figure 4 | `src/make_selectivity_explainer.py` |
 
 Frozen outputs: `results/frozen_e91985c/`. The panel runs predate the `--out` flag and cannot be regenerated, since each seed resamples both pairs and prefix; `paper/figure_data.json` is a hand transcription of those logs and figures are built from it.

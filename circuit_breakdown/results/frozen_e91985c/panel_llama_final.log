@@ -1,0 +1,47 @@
+model=llama-3.2-3b  layers=[18, 20, 22, 24]  position=-1
+seeds=[21, 22, 23]  pairs_per_seed=40  total_independent_pairs=120
+
+  --- seed 21 (pairs and prefix both resampled) ---
+      current_holder: ->donor  22/40  ->receiver   0/40  (baseline 21/40)
+      last_recipient: ->donor  22/40  ->receiver   0/40  (baseline 29/40)
+     original_holder: ->donor  23/40  ->receiver   0/40  (baseline 40/40)
+     object_identity: ->donor  22/40  ->receiver   0/40  (baseline 40/40)
+      transfer_count: ->donor  25/40  ->receiver   0/40  (baseline 8/40)
+  --- seed 22 (pairs and prefix both resampled) ---
+      current_holder: ->donor  14/40  ->receiver   0/40  (baseline 14/40)
+      last_recipient: ->donor  12/40  ->receiver   0/40  (baseline 33/40)
+     original_holder: ->donor  17/40  ->receiver   0/40  (baseline 40/40)
+     object_identity: ->donor  13/40  ->receiver   0/40  (baseline 40/40)
+      transfer_count: ->donor  10/40  ->receiver   0/40  (baseline 11/40)
+  --- seed 23 (pairs and prefix both resampled) ---
+      current_holder: ->donor  24/40  ->receiver   0/40  (baseline 21/40)
+      last_recipient: ->donor  19/40  ->receiver   0/40  (baseline 26/40)
+     original_holder: ->donor  16/40  ->receiver   0/40  (baseline 40/40)
+     object_identity: ->donor  24/40  ->receiver   0/40  (baseline 40/40)
+      transfer_count: ->donor  24/40  ->receiver   0/40  (baseline 3/40)
+
+=== llama-3.2-3b: pooled over 3 seeds, 120 INDEPENDENT PAIRS ===
+(Wilson 95% intervals over independent pairs, not over probe-outcomes)
+
+             probe          baseline competence
+    current_holder   56/120   46.7% [38.0%, 55.6%]  <- EXCLUDED
+    last_recipient   88/120   73.3% [64.8%, 80.4%]
+   original_holder  120/120  100.0% [96.9%, 100.0%]
+   object_identity  120/120  100.0% [96.9%, 100.0%]
+    transfer_count   22/120   18.3% [12.4%, 26.2%]  <- EXCLUDED
+
+             probe  change?             -> donor value          -> receiver value
+    current_holder     True   60/120  50.0% [41.2%,58.8%]    0/120   0.0% [0.0%,3.1%] (excl.)
+    last_recipient     True   53/120  44.2% [35.6%,53.1%]    0/120   0.0% [0.0%,3.1%]
+   original_holder    False   56/120  46.7% [38.0%,55.6%]    0/120   0.0% [0.0%,3.1%]
+   object_identity    False   59/120  49.2% [40.4%,58.0%]    0/120   0.0% [0.0%,3.1%]
+    transfer_count    False   59/120  49.2% [40.4%,58.0%]    0/120   0.0% [0.0%,3.1%] (excl.)
+
+  --- per-seed stability (selectivity-relevant probes) ---
+     original_holder -> receiver value by seed: 0/40, 0/40, 0/40
+     object_identity -> receiver value by seed: 0/40, 0/40, 0/40
+
+  SELECTIVITY (should-NOT-change probes holding receiver value): 0/240 = 0.0% [0.0%, 1.6%]
+  COMPLETENESS (should-change probes moving to donor): 53/120 = 44.2% [35.6%, 53.1%]
+
+  REPORTING NOTE: independent reasoning pairs = 120; graded probes = 3; probe-outcomes = 360. Intervals above are over PAIRS within each probe.

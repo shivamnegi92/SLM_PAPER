@@ -1,0 +1,123 @@
+model=llama-3.2-3b layers=[18, 20, 22, 24] restarts=16 init_scale=0.05
+example=0 target=' Mason'
+
+       zero-init (reference): success=1 norm= 12.718 travel= 12.718 travel_ratio=     inf cos_to_init=+0.000 steps=54
+       random-init seed 1001: success=1 norm=  9.759 travel= 11.173 travel_ratio=    2.04 cos_to_init=+0.005 steps=68
+       random-init seed 1002: success=1 norm= 12.143 travel= 12.950 travel_ratio=    2.33 cos_to_init=+0.078 steps=32
+       random-init seed 1003: success=1 norm= 12.200 travel= 13.229 travel_ratio=    2.38 cos_to_init=+0.035 steps=53
+       random-init seed 1004: success=1 norm= 12.811 travel= 13.885 travel_ratio=    2.51 cos_to_init=+0.014 steps=53
+       random-init seed 1005: success=1 norm=  6.650 travel=  8.596 travel_ratio=    1.56 cos_to_init=+0.011 steps=68
+       random-init seed 1006: success=1 norm= 10.558 travel= 11.841 travel_ratio=    2.15 cos_to_init=+0.013 steps=60
+       random-init seed 1007: success=1 norm= 10.050 travel= 11.464 travel_ratio=    2.09 cos_to_init=-0.002 steps=60
+       random-init seed 1008: success=1 norm= 14.423 travel= 15.115 travel_ratio=    2.67 cos_to_init=+0.071 steps=41
+       random-init seed 1009: success=1 norm=  6.489 travel=  8.507 travel_ratio=    1.52 cos_to_init=+0.013 steps=72
+       random-init seed 1010: success=1 norm= 10.967 travel= 12.193 travel_ratio=    2.19 cos_to_init=+0.021 steps=61
+       random-init seed 1011: success=1 norm= 17.442 travel= 17.874 travel_ratio=    3.22 cos_to_init=+0.080 steps=32
+       random-init seed 1012: success=1 norm= 12.186 travel= 12.962 travel_ratio=    2.34 cos_to_init=+0.082 steps=32
+       random-init seed 1013: success=1 norm= 12.421 travel= 13.442 travel_ratio=    2.39 cos_to_init=+0.038 steps=53
+       random-init seed 1014: success=1 norm= 10.329 travel= 11.654 travel_ratio=    2.10 cos_to_init=+0.013 steps=64
+       random-init seed 1015: success=1 norm= 13.208 travel= 14.208 travel_ratio=    2.57 cos_to_init=+0.021 steps=50
+       random-init seed 1016: success=1 norm= 10.106 travel= 11.513 travel_ratio=    2.09 cos_to_init=-0.002 steps=64
+
+=== 17/17 restarts succeeded ===
+
+--- CONTROL: did the optimizer actually move? ---
+  travel_ratio ||v_final - v_init|| / ||v_init||: median 2.26, min 1.52, max 3.22
+  cos(v_final, v_init): median +0.018, max +0.082
+  Solutions moved far from their starting points, so pairwise geometry
+  below reflects where the optimizer went, not where it began.
+
+--- pairwise geometry among 17 SUCCESSFUL edits (136 pairs) ---
+  cosine:        median +0.840  min +0.452  max +0.985
+  symmetric KL:  median 0.0001  min 0.0000  max 0.0120
+  cosine to the canonical zero-init solution: median +0.899, max +0.982
+
+--- verdict ---
+  SIMILAR (median cosine +0.840). Independently initialized
+  runs converge to substantially the SAME direction, so successful edits
+  look close to unique on this example. This does NOT support the
+  non-uniqueness story; do not run the interpolation test on this basis.
+
+wrote results/uniqueness/ex0.json
+model=llama-3.2-3b layers=[18, 20, 22, 24] restarts=16 init_scale=0.05
+example=1 target=' Jack'
+
+       zero-init (reference): success=1 norm= 11.682 travel= 11.682 travel_ratio=     inf cos_to_init=+0.000 steps=41
+       random-init seed 1001: success=1 norm= 10.600 travel= 11.780 travel_ratio=    2.15 cos_to_init=+0.032 steps=41
+       random-init seed 1002: success=1 norm= 10.347 travel= 11.589 travel_ratio=    2.09 cos_to_init=+0.031 steps=47
+       random-init seed 1003: success=1 norm=  8.824 travel= 10.277 travel_ratio=    1.85 cos_to_init=+0.032 steps=40
+       random-init seed 1004: success=1 norm= 11.382 travel= 12.478 travel_ratio=    2.25 cos_to_init=+0.036 steps=41
+       random-init seed 1005: success=1 norm= 11.175 travel= 12.301 travel_ratio=    2.23 cos_to_init=+0.033 steps=46
+       random-init seed 1006: success=1 norm= 10.566 travel= 11.761 travel_ratio=    2.14 cos_to_init=+0.031 steps=48
+       random-init seed 1007: success=1 norm= 10.550 travel= 11.795 travel_ratio=    2.15 cos_to_init=+0.021 steps=47
+       random-init seed 1008: success=1 norm= 11.164 travel= 12.304 travel_ratio=    2.18 cos_to_init=+0.041 steps=46
+       random-init seed 1009: success=1 norm=  8.936 travel= 10.236 travel_ratio=    1.83 cos_to_init=+0.063 steps=40
+       random-init seed 1010: success=1 norm=  8.190 travel=  9.772 travel_ratio=    1.75 cos_to_init=+0.029 steps=53
+       random-init seed 1011: success=1 norm= 11.058 travel= 12.241 travel_ratio=    2.21 cos_to_init=+0.026 steps=46
+       random-init seed 1012: success=1 norm= 12.198 travel= 13.072 travel_ratio=    2.36 cos_to_init=+0.063 steps=35
+       random-init seed 1013: success=1 norm= 13.694 travel= 14.555 travel_ratio=    2.58 cos_to_init=+0.048 steps=40
+       random-init seed 1014: success=1 norm=  9.889 travel= 11.119 travel_ratio=    2.01 cos_to_init=+0.044 steps=51
+       random-init seed 1015: success=1 norm= 10.982 travel= 12.085 travel_ratio=    2.19 cos_to_init=+0.042 steps=41
+       random-init seed 1016: success=1 norm=  9.755 travel= 11.030 travel_ratio=    2.01 cos_to_init=+0.035 steps=48
+
+=== 17/17 restarts succeeded ===
+
+--- CONTROL: did the optimizer actually move? ---
+  travel_ratio ||v_final - v_init|| / ||v_init||: median 2.15, min 1.75, max 2.58
+  cos(v_final, v_init): median +0.034, max +0.063
+  Solutions moved far from their starting points, so pairwise geometry
+  below reflects where the optimizer went, not where it began.
+
+--- pairwise geometry among 17 SUCCESSFUL edits (136 pairs) ---
+  cosine:        median +0.912  min +0.751  max +0.979
+  symmetric KL:  median 0.0001  min 0.0000  max 0.0016
+  cosine to the canonical zero-init solution: median +0.953, max +0.979
+
+--- verdict ---
+  SIMILAR (median cosine +0.912). Independently initialized
+  runs converge to substantially the SAME direction, so successful edits
+  look close to unique on this example. This does NOT support the
+  non-uniqueness story; do not run the interpolation test on this basis.
+
+wrote results/uniqueness/ex1.json
+model=llama-3.2-3b layers=[18, 20, 22, 24] restarts=16 init_scale=0.05
+example=2 target=' Mason'
+
+       zero-init (reference): success=1 norm= 13.514 travel= 13.514 travel_ratio=     inf cos_to_init=+0.000 steps=38
+       random-init seed 1001: success=1 norm=  8.472 travel=  9.986 travel_ratio=    1.82 cos_to_init=+0.024 steps=44
+       random-init seed 1002: success=1 norm= 11.040 travel= 12.196 travel_ratio=    2.20 cos_to_init=+0.032 steps=45
+       random-init seed 1003: success=1 norm= 13.033 travel= 13.988 travel_ratio=    2.52 cos_to_init=+0.035 steps=38
+       random-init seed 1004: success=1 norm= 13.345 travel= 14.340 travel_ratio=    2.59 cos_to_init=+0.021 steps=38
+       random-init seed 1005: success=1 norm= 11.577 travel= 12.709 travel_ratio=    2.30 cos_to_init=+0.023 steps=45
+       random-init seed 1006: success=1 norm= 13.181 travel= 14.185 travel_ratio=    2.58 cos_to_init=+0.019 steps=41
+       random-init seed 1007: success=1 norm= 13.398 travel= 14.419 travel_ratio=    2.62 cos_to_init=+0.012 steps=39
+       random-init seed 1008: success=1 norm= 13.119 travel= 14.147 travel_ratio=    2.50 cos_to_init=+0.026 steps=38
+       random-init seed 1009: success=1 norm= 13.215 travel= 14.113 travel_ratio=    2.53 cos_to_init=+0.045 steps=38
+       random-init seed 1010: success=1 norm= 13.280 travel= 14.306 travel_ratio=    2.57 cos_to_init=+0.018 steps=41
+       random-init seed 1011: success=1 norm= 13.130 travel= 13.995 travel_ratio=    2.52 cos_to_init=+0.050 steps=39
+       random-init seed 1012: success=1 norm= 13.345 travel= 14.256 travel_ratio=    2.58 cos_to_init=+0.037 steps=38
+       random-init seed 1013: success=1 norm= 13.510 travel= 14.421 travel_ratio=    2.56 cos_to_init=+0.041 steps=38
+       random-init seed 1014: success=1 norm= 13.925 travel= 14.888 travel_ratio=    2.69 cos_to_init=+0.019 steps=38
+       random-init seed 1015: success=1 norm= 13.210 travel= 14.050 travel_ratio=    2.54 cos_to_init=+0.052 steps=38
+       random-init seed 1016: success=1 norm= 13.421 travel= 14.398 travel_ratio=    2.62 cos_to_init=+0.020 steps=41
+
+=== 17/17 restarts succeeded ===
+
+--- CONTROL: did the optimizer actually move? ---
+  travel_ratio ||v_final - v_init|| / ||v_init||: median 2.55, min 1.82, max 2.69
+  cos(v_final, v_init): median +0.025, max +0.052
+  Solutions moved far from their starting points, so pairwise geometry
+  below reflects where the optimizer went, not where it began.
+
+--- pairwise geometry among 17 SUCCESSFUL edits (136 pairs) ---
+  cosine:        median +0.948  min +0.807  max +0.981
+  symmetric KL:  median 0.0000  min 0.0000  max 0.0056
+  cosine to the canonical zero-init solution: median +0.966, max +0.981
+
+--- verdict ---
+  SIMILAR (median cosine +0.948). Independently initialized
+  runs converge to substantially the SAME direction, so successful edits
+  look close to unique on this example. This does NOT support the
+  non-uniqueness story; do not run the interpolation test on this basis.
+
+wrote results/uniqueness/ex2.json

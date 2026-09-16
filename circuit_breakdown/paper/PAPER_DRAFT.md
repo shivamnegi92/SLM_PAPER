@@ -12,17 +12,19 @@ Interpretability research increasingly validates activation interventions by sho
 
 ## 1. Introduction
 
-An activation intervention is usually validated by its effect on a single output: patch a representation, observe that the model now produces the counterfactually correct answer, conclude that the representation carried the variable of interest. Interchange-intervention accuracy formalizes this as agreement between the network's output and a high-level causal model's output under corresponding interventions.
+Activation interventions are usually validated by a single output: patch a representation, observe the counterfactually correct answer, conclude the representation carried the variable of interest. Interchange-intervention accuracy formalizes this as output agreement with a high-level causal model.
 
-This criterion has a known limitation. **RAVEL** (Huang et al., ACL 2024) showed that for static entity attributes, changing the target answer is only half of what a faithful intervention must do: intervening on a city's continent should change the answer to a continent question *and leave the language question alone*. **MIB** (Mueller et al., ICML 2025) incorporates this logic through balanced counterfactuals and reports that full-vector baselines perform poorly on RAVEL precisely because swapping a whole vector perturbs unrelated attributes rather than isolating the target.
+**RAVEL** (Huang et al., ACL 2024) showed this is only half the requirement, at least for static entity attributes: intervening on a city's continent should change the continent answer *and leave the language answer alone*. **MIB** (Mueller et al., ICML 2025) builds this into a benchmark and reports that full-vector baselines do poorly on RAVEL precisely because swapping a whole vector disturbs unrelated attributes.
 
-Both results concern **attributes that the model retrieves**: a city's continent is a static property, present in the representation because the entity was mentioned. We ask whether the effectiveness/selectivity distinction behaves the same way when the target is a **state the model must compute** — a value that does not exist in any single token of the input and is only defined after several reasoning steps.
+Both concern attributes the model *retrieves* — a city's continent is static, present because the entity was mentioned. We ask whether the same distinction holds when the target is a state the model must *compute*: a value in no single input token, defined only after several reasoning steps.
 
 Our contribution is an extension, not a new method or a new diagnostic:
 
-> RAVEL's effectiveness/selectivity distinction survives the move from static attributes to sequentially computed state, and an intervention that passes a substantially stronger control battery than "the answer changed" still fails it completely.
+> RAVEL's effectiveness/selectivity distinction survives the move from static attributes to sequentially computed state, and an intervention passing a control battery substantially stronger than "the answer changed" still fails it completely.
 
-We do not claim that selective interventions on reasoning state are impossible, that interchange-intervention accuracy is invalid, or that existing methods patch representations carelessly. DAS restricts its NLI interventions to the `[CLS]` representation; MIB brute-forces over manually selected token locations. Our result is a counterexample in a controlled setting, and it is bounded accordingly in §7.
+We do not claim selective interventions on reasoning state are impossible, that interchange-intervention accuracy is invalid, or that existing methods choose sites carelessly — DAS restricts NLI interventions to `[CLS]`; MIB brute-forces manually selected locations. This is a counterexample in a controlled setting, bounded accordingly in §6.
+
+**Relation to activation steering.** A parallel literature adds learned directions to hidden states to control behavior, and validates them behaviorally. Our result bears directly on that practice: a direction can produce graded, specific, norm-controlled behavioral change while leaving the intended semantic variable untouched, so behavioral validation alone does not license a semantic interpretation of the direction.
 
 ---
 
@@ -158,14 +160,14 @@ competence : prediction == first_id(unpatched_answer(receiver, probe))   # zero 
 to_receiver: prediction == first_id(unpatched_answer(receiver, probe))   # donor patch
 ```
 
-So the 100% baseline competence on `original_holder` and `object_identity` already demonstrates that the selectivity check fires at ceiling when nothing is patched. We confirm this empirically in a single process on identical items (`src/validate_selectivity_metric.py`, Phi, n=40 per probe):
+So the 100% baseline competence on `original_holder` and `object_identity` already demonstrates that the selectivity check fires at ceiling when nothing is patched. We confirm this empirically in a single process on identical items (`src/validate_selectivity_metric.py`, n=40 per probe, both models):
 
-| condition | receiver's value retained |
-|---|---:|
-| zero patch (no intervention) | **80/80** |
-| donor patch | **0/80** |
+| model | zero patch | donor patch |
+|---|---:|---:|
+| Phi-3.5-mini | **80/80** | **0/80** |
+| Llama-3.2-3B | **80/80** | **0/80** |
 
-Only the patch differs. The metric is live, and the intervention alone drives it to zero. The same run shows where the probability mass goes: the model answers with the *donor's* value on 21/40 `original_holder` and 26/40 `object_identity` items.
+Only the patch differs. The metric is live in both models, and the intervention alone drives it to zero. The same runs show where the probability mass goes: the model answers with the *donor's* value on 21/40 and 26/40 items (Phi), 19/40 and 21/40 (Llama), for `original_holder` and `object_identity` respectively.
 
 <figure>
 <img src="figures/fig4_what_selectivity_means.png" alt="A receiver problem about a map and a donor problem about a lamp. With no patch the model answers 'map' 24 out of 24 times; with the donor state patched in it answers 'Kai', a person, 0 out of 24.">
@@ -190,42 +192,36 @@ This is difficult to attribute to misunderstanding the question: the model answe
 
 ---
 
-## 6. Supporting observations
+### 5.5 Supporting observations
 
-These support the interpretation but are not independent contributions.
-
-**The effect is confined to the answer boundary.** Patching at positions −2 through −7 (the queried object, "the", "has", "Who", the sentence-final period, the recipient name) produces **0/12** transport for both correct and random donors, while position −1 produces 9/12. There is no intermediate regime in which the effect is present but weaker.
-
-**Compact subspaces do not carry it either.** At rank 32, projected interchange through tracking, PCA, random, gradient-coordinate and learned-causal bases all produce 0/32, while the full-space oracle produces 24/32. Random bases fail at every rank in both architectures, and PCA performs comparably to a clean-minus-corrupt tracking basis through the useful rank regime — evidence that the tracking contrast does not identify a privileged reasoning subspace.
-
-**Successful edits are not geometrically diverse.** We tested whether behaviorally equivalent edits must be internally similar, since a negative answer would have offered an alternative explanation for our results. Across 17 restarts × 3 examples with randomized initialization, median pairwise cosine between successful edits is +0.840, +0.912, +0.948. Solutions travel ~2.5× their initialization norm and end nearly orthogonal to their starting points (cos ≈ 0.02), then converge on the same direction regardless. Independently initialized optimizations find essentially one solution, so intervention non-uniqueness does not explain the selectivity failure. *(This also accounts for the low cosine ≈ 0.08–0.15 observed between unconstrained and subspace-confined edits: that is forced by confining a vector to a rank-32 slice of a 3072-dimensional space, not evidence of distinct solutions.)*
+Three observations support the interpretation without being independent contributions, reported in full in Appendix B: the effect is confined to the answer boundary (0/12 transport at positions −2 through −7 versus 9/12 at −1); compact subspaces do not carry it (0/32 at rank 32 for every basis tested, against 24/32 full-space); and successful edits are not geometrically diverse, so intervention non-uniqueness does not explain the failure.
 
 ---
 
-## 7. Discussion
+## 6. Discussion
 
 **What the experiment establishes.** In this setting, an intervention can satisfy effectiveness, donor specificity, norm control, and dose-response while exercising no selective control over the reasoning variable it appears to manipulate. The four credentials are jointly insufficient. A two-probe consequence check detects this at negligible cost.
 
 **What it does not establish.** It does not show that interchange-intervention accuracy is invalid — MIB uses it deliberately to align features with *specified* variables, and Sutter et al. (NeurIPS 2025) already demonstrate a sharper limitation, obtaining 100% IIA on randomly initialized language models with sufficiently powerful alignment maps. Nor does it show that selective interventions on reasoning state are impossible; we tested one intervention family at one site.
 
-**The obvious objection, conceded.** A reader may respond: you patched the final pre-answer token, so of course you manipulated an answer representation. We agree, and the position sweep is our evidence *for* that reading rather than against it — effects appear only where answer information becomes directly actionable and propagate from nowhere earlier. The finding is not that a carelessly chosen site gives a careless result. It is that an intervention at this site passes four escalating credentials that a practitioner would reasonably accept, and the site is therefore part of the finding rather than an excuse for it. Established methods do not select sites this way, which is precisely why the credential stack, not the site, is the object of study.
+**The obvious objection, conceded.** One may respond: you patched the final pre-answer token, so of course you manipulated an answer representation. We agree, and the position sweep is evidence *for* that reading — effects appear only where answer information becomes directly actionable. The point is not that a poorly chosen site gives a poor result. It is that an intervention at this site passes four escalating credentials a practitioner would reasonably accept. The credential stack, not the site, is the object of study.
 
 **Relation to prior work.** RAVEL contributes the effectiveness/selectivity distinction; MIB contributes its benchmark operationalization and the observation that full-vector interventions fail it for entity attributes. Our addition is narrow: the same failure occurs for a *computed* state, and it survives a control battery considerably stronger than answer-change alone.
 
 ---
 
-## 8. Limitations
+## 7. Limitations
 
 1. **One task family.** A single transfer-chain task with one causal program. We make no claim of universality.
 2. **Selectivity rests on two probes per model.** `transfer_count` was excluded in both models (20.8% and 18.3% competence): neither can count transfers unprompted, so post-intervention changes there are uninterpretable.
 3. **Llama supports only part of the claim.** Its current-holder competence is 46.7% at n=120, so its completeness figure is computed on a different probe set and is not comparable to Phi's.
-4. **One intervention site and one layer set.** Layers [18, 20, 22, 24] at the final pre-answer position. Other sites may behave differently — indeed §6 shows they behave *very* differently.
+4. **One intervention site and one layer set.** Layers [18, 20, 22, 24] at the final pre-answer position. Other sites may behave differently — indeed Appendix B shows they behave *very* differently.
 5. **Competence is not shown to drive the effect.** Phi has both higher baseline accuracy and stronger intervention takeover, but two models cannot establish a relationship between competence and selectivity failure. The defensible statement is narrower: **the selectivity failure cannot be explained by poor baseline task competence, since it persists in Phi at 99–100% baseline accuracy on all graded probes.**
 6. **Small-sample estimates were optimistic.** At n=24 Llama's current-holder competence appeared to be 88%; at n=120 with freshly resampled items it is 46.7%. Early-stage numbers in this literature, including our own, should be treated with caution.
 
 ---
 
-## 9. Future work
+## 8. Future work
 
 The sharp dependence on intervention position — full effect at the final token, nothing one token earlier — suggests that selectivity may vary systematically along the computational trajectory. Mapping where interventions transition from state-level control to answer-level control, as a grid over layers and positions with a selectivity panel at each cell, is the natural next study and a substantially larger undertaking than the present one.
 
@@ -257,3 +253,15 @@ The sharp dependence on intervention position — full effect at the final token
 | figure 4 | `src/make_selectivity_explainer.py` |
 
 Frozen outputs: `results/frozen_e91985c/`. The panel runs predate the `--out` flag and cannot be regenerated, since each seed resamples both pairs and prefix; `paper/figure_data.json` is a hand transcription of those logs and figures are built from it.
+
+---
+
+## Appendix B: supporting observations
+
+**The effect is confined to the answer boundary.** Patching at positions −2 through −7 (the queried object, "the", "has", "Who", the sentence-final period, the recipient name) produces **0/12** transport for both correct and random donors, while position −1 produces 9/12. There is no intermediate regime in which the effect is present but weaker.
+
+**Compact subspaces do not carry it either.** At rank 32, projected interchange through tracking, PCA, random, gradient-coordinate and learned-causal bases all produce 0/32, while the full-space oracle produces 24/32. Random bases fail at every rank in both architectures, and PCA performs comparably to a clean-minus-corrupt tracking basis through the useful rank regime — evidence that the tracking contrast does not identify a privileged reasoning subspace.
+
+**Successful edits are not geometrically diverse.** We tested whether behaviorally equivalent edits must be internally similar, since a negative answer would have offered an alternative explanation for our results. Across 17 restarts × 3 examples with randomized initialization, median pairwise cosine between successful edits is +0.840, +0.912, +0.948. Solutions travel ~2.5× their initialization norm and end nearly orthogonal to their starting points (cos ≈ 0.02), then converge on the same direction regardless. Independently initialized optimizations find essentially one solution, so intervention non-uniqueness does not explain the selectivity failure. *(This also accounts for the low cosine ≈ 0.08–0.15 observed between unconstrained and subspace-confined edits: that is forced by confining a vector to a rank-32 slice of a 3072-dimensional space, not evidence of distinct solutions.)*
+
+---

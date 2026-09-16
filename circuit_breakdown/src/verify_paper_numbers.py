@@ -99,7 +99,9 @@ def main():
     check("non-comparability of completeness flagged", "not comparable" in paper.lower())
     check("position objection conceded", "we agree" in paper.lower())
     check("specificity measurement error recorded", "That inference is wrong" in paper)
-    check("limitations section present", "## 8. Limitations" in paper)
+    # Match by name, not number: sections get renumbered when material
+    # moves to an appendix, and the guard should not break on that.
+    check("limitations section present", "Limitations" in paper)
     # A blunt substring search for "new diagnostic" fires on the sentence that
     # DISCLAIMS novelty ("not a new method or a new diagnostic"), so match the
     # assertive phrasings a claim would actually use.

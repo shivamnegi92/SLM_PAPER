@@ -32,7 +32,8 @@ def load(name):
 def fig_probe_sweep():
     plt.figure(figsize=(5, 3.4))
     for ds in DATASETS:
-        j = load(f"{ds}_probe_sweep.json")
+        # Prefer the dense per-layer sweep when available.
+        j = load(f"{ds}_probe_sweep_dense.json") or load(f"{ds}_probe_sweep.json")
         if not j:
             continue
         d2a = j["depth_to_probe_accuracy"]
@@ -54,7 +55,7 @@ def fig_pareto():
     plt.figure(figsize=(5, 3.4))
     for ds in DATASETS:
         xs, ys = [], []
-        for d in (3, 6, 9, 12):
+        for d in (1, 2, 3, 6, 9, 12):
             j = load(f"{ds}_pruned_depth{d}.json")
             if not j:
                 continue

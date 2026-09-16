@@ -1,0 +1,7 @@
+{"phase":"0-intake","decision":"Captured restore point and current git status","owner":"auto","restore_sha":"c1c874ccf741723be7e4aa3dc3e19429f8d58f3f"}
+{"phase":"1-strategy","decision":"Created office-hours design doc","owner":"auto","doc":"docs/SLM_PAPER-20260905-1726-design-2026-09-05.md"}
+{"phase":"1-strategy","decision":"Created CEO review doc with 3 options","owner":"auto","doc":"docs/SLM_PAPER-20260905-1726-ceo-2026-09-05.md"}
+{"phase":"1-strategy-gate","decision":"Gate timed out; selected Option 1 Safety-first by default planning principles","owner":"auto"}
+{"phase":"2-design","decision":"Skipped design-consult phase (no UI surface)","owner":"auto"}
+{"phase":"3-engineering","decision":"Created engineering review plan doc","owner":"auto","doc":"docs/SLM_PAPER-20260905-1726-eng-2026-09-05.md"}
+{"phase":"3.5-dx","decision":"Skipped DX review (no new public API/CLI/SDK surface in this hardening run)","owner":"auto"}

@@ -1,85 +1,118 @@
 # Capability Under the *Deployed* Intervention
 
-`src/capability_deployed.py`. Llama-3.2-3B, HellaSwag n=240 (95% bootstrap CI),
-Tiny-Shakespeare perplexity, layers [18,20,22,24], 3 real optimized edits.
+> **CORRECTION - 2026-09-06:** The legacy single-position rows below do not
+> establish capability preservation. Their hooks edited the final sequence
+> token, whose prediction neither scorer used. The implementation is now
+> corrected and tested; a representative corrected capability study is pending.
 
-## The problem with the old number
+## What Failed
 
-`RESULTS.md` §6b reports HellaSwag 56.7% → 50.8% and perplexity 20.9 → 127.2
-(6.1×). Reviewers read this as "the method degrades general capability."
+[src/capability_deployed.py](src/capability_deployed.py) previously edited the
+last token of each complete sequence. Both scoring functions in
+[src/capability.py](src/capability.py) use logits only through position `T-2`
+to predict tokens through `T-1`. Causal attention prevents an edit at `T-1`
+from changing any earlier scored logits. Exactly unchanged scores were
+therefore expected, including for an arbitrarily strong last-token edit.
 
-That measurement uses a **crude diff-of-means vector applied globally at every
-token position**. It is not the proposed method. The proposed method applies
-optimizer-derived edits at **four layers, one token position**. The old number
-is a deliberate worst-case upper bound that was never re-measured against the
-actual intervention.
+There was no entity-trigger detector in this evaluator. The old explanation
+that generic text lacked a targeted entity position was incorrect. A global
+edit can affect scored predictions, but it is a stress test, not a mathematical
+upper bound on damage from a different single-position intervention.
 
-## Measurement with the real thing
+## Historical Results
 
-Same optimized edits (mean ‖edit‖ = 13.60), three application protocols:
+Preserved for provenance only: Llama-3.2-3B, HellaSwag n=240, one text sample,
+layers [18,20,22,24], three evaluated optimized edits (mean total norm 13.60).
+The intervals below are the original reported bootstrap intervals.
 
 | condition | HellaSwag (95% CI) | Δ vs base | ppl | ppl × |
 |---|---:|---:|---:|---:|
 | baseline | 57.1% [50.8, 63.3] | — | 20.92 | 1.00× |
-| **deployed (1 position)** | **57.1% [50.8, 63.3]** | **+0.0%** | **20.92** | **1.00×** |
+| legacy single position (unscored) | 57.1% [50.8, 63.3] | +0.0% | 20.92 | 1.00× |
 | global (all positions) | 55.7% [49.4, 61.9] | −1.4% | 28.84 | 1.38× |
-| random equal-norm (1 pos) | 57.1% [50.8, 63.3] | +0.0% | 20.92 | 1.00× |
+| legacy random position (unscored) | 57.1% [50.8, 63.3] | +0.0% | 20.92 | 1.00× |
 
-**The deployed intervention causes exactly zero measurable degradation** —
-HellaSwag identical, perplexity identical to four significant figures, matching
-the equal-norm random control exactly.
+The original [JSON artifact](results/capability_deployed_llama-3.2-3b.json)
+has not been overwritten. Do not cite the two unscored rows as safety evidence
+or replace the older global stress results with them.
 
-## Why zero, and why that is honest rather than suspicious
+## Corrected Protocol
 
-This is not a null result hiding a small effect. It is structural:
+The new `active_prefix_v1` evaluator measures **active exposure on unrelated
+inputs**, not a validated deployment policy or entity-triggered intervention.
 
-The edit is applied at **one token position** — the entity position of a
-tracking prompt. HellaSwag items and Shakespeare text **do not contain that
-position at all**. In the deployed protocol the hook fires at the final token of
-whatever sequence is being scored, and a single-position residual perturbation
-at 4 of 28 layers, on inputs whose next-token distribution is not being
-contested, moves nothing measurable.
+- HellaSwag: edit the last **context** token for each ending and score its
+  continuation. Reject a tokenizer boundary that is not an exact prefix rather
+  than silently scoring the wrong tokens.
+- Text: edit the last token of a fixed prefix and score only subsequent tokens.
+  `--ppl-prefix-tokens` includes BOS and defaults to 32; `--ppl-max-tokens`
+  defaults to 768. Baseline and all conditions use the same scored span.
+- Conditions: baseline, optimized active-prefix edit, equal-norm random-prefix
+  edit, zero-prefix edit, and global exposure. The zero condition must reproduce
+  baseline scores within the stated numerical tolerance.
+- Record individual correctness flags, token losses, edit positions/norms,
+  benchmark item hashes, text hash, optimizer settings, seed and protocol version.
+- Use Wilson accuracy intervals and approximate 95% paired bounds formed from
+  gain/loss Wilson intervals with a Bonferroni adjustment. Report these per edit.
+  Never average interval endpoints or count the same items repeatedly as new
+  independent examples. Aggregates across edits are explicitly descriptive.
+- Report text loss/perplexity changes descriptively; a single contiguous text
+  sample does not support an independent-token CI or a capability-safety claim.
 
-So the correct claim is **not** "our steering vector is magically harmless." It
-is:
+New output defaults to a separate `results/capability_active_prefix_v1/`
+directory, with names `capability_active_prefix_<model>_s<seed>.json`.
+Existing outputs are rejected; use a fresh `--outdir` for another run.
 
-> The intervention is *positionally scoped*. It has no measurable effect on
-> inputs that lack the targeted position, which is precisely why the earlier
-> global-application number (−5.9 pts, 6.1× ppl) is an upper bound on a
-> protocol we do not use, not a property of the method.
+## Verification Completed
 
-The `global` row is the useful comparator: the *same* edits broadcast to every
-position cost 1.4 pts of HellaSwag and 1.38× perplexity. That is far milder than
-the §6b figure because these are norm-budgeted optimizer edits rather than a
-large unconstrained diff-of-means vector — but it is nonzero, and it is the
-number to cite when discussing worst-case exposure.
+- **15 CPU regression tests pass**, including a known positive control,
+  legacy last-token no-op, zero edit, paired interval edge cases, changing
+  continuation lengths, hook cleanup on errors and overwrite protection.
+- **2,880 continuation boundaries checked:** the first 240 cached HellaSwag
+  items (four endings each) across Llama, Phi and Nemotron tokenizers all passed
+  the exact-prefix check. This validates those inputs, not every possible text.
+- **Offline Llama/MPS smoke passed:** two HellaSwag items, one optimized edit,
+  one optimizer step, prefix 16, maximum 96 text tokens (80 scored), four layers.
+  Active-prefix token losses changed; the zero-edit losses matched baseline.
+  The run completed in approximately 31 seconds including loading.
 
-## Honest caveats
+The [smoke artifact](results/capability_active_prefix_v1/smoke_20260906/capability_active_prefix_llama-3.2-3b_s0.json)
+is **integration evidence only**. Its two items and one short text sample are
+not a replacement for the n=240 historical study or a meaningful capability
+estimate. No full corrected benchmark, ARC/MMLU run or cross-model capability
+study has been completed in this implementation stage.
 
-1. **This measures collateral damage on *unrelated* inputs, not on-task
-   disruption.** BREAK (26.9% pooled) already measures the latter and is the
-   real cost. Nothing here reduces BREAK.
-2. `control_drop` from the optimizer (2.6% on held-out control prompts) is the
-   in-domain analogue and is also small but nonzero.
-3. Only 3 edits evaluated (each HellaSwag pass at n=240 is expensive). The three
-   were identical to baseline, so variance across edits is not the bottleneck,
-   but more edits would tighten the claim.
-4. Llama-3.2-3B only.
+## Remaining Evidence
 
-## What to change in the paper
+1. Freeze examples, edit selection and tolerated loss before a representative
+   corrected benchmark. Use multiple edits and text windows; retain paired data.
+2. Separate same-sign damage from negative-edit BREAK. The current tracking
+   BREAK metric uses the opposite-sign edit and includes baseline-wrong cases;
+   it cannot be interpreted as the normal edit's collateral error rate.
+3. The optimizer guard uses three reused generic prompts, not held-out benchmark
+   accuracy. Small `control_drop` does not establish capability preservation.
+4. Add ARC-Easy/MMLU only after confirming its scorer uses active positions.
+   Overlapping CIs are not an equivalence test. Report uncertainty or measured
+   degradation when a predeclared tolerance cannot be established.
 
-- **Replace** the §6b capability claim with this table. Keep §6b as an explicitly
-  labelled worst-case upper bound, not the headline.
-- **State the positional-scoping argument explicitly** — it is the reason the
-  number is zero, and omitting it makes the result look too good to be true.
-- **Report BREAK as the honest cost**, since capability-on-unrelated-inputs is
-  no longer the limiting factor.
+The tracked order is in [PENDING_PLAN.md](PENDING_PLAN.md).
 
-## Reproduction
+## Commands
+
+From the `circuit_breakdown` directory, run the CPU regressions:
 
 ```bash
-python src/capability_deployed.py --n-hs 240 --n-edits 4 --n-eval 3 \
-    --text data_bench/tinyshakespeare.txt
+PYTHONPATH=src .venv/bin/python -m unittest discover -s tests \
+    -p 'test_capability_scoring.py' -v
 ```
 
-Artifact: `results/capability_deployed_llama-3.2-3b.json`.
+A corrected benchmark command for a **future**, predeclared run (not executed
+as part of this stage):
+
+```bash
+HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 .venv/bin/python src/capability_deployed.py \
+    --model ../llama-3.2-3b --device mps --layers 18 20 22 24 \
+    --n-hs 240 --n-edits 4 --n-eval 3 --ppl-prefix-tokens 32 \
+    --text data_bench/tinyshakespeare.txt \
+    --outdir results/capability_active_prefix_v1/benchmark_001
+```

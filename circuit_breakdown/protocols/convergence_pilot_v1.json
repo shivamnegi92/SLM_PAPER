@@ -1,0 +1,33 @@
+{
+  "version": "convergence_pilot_v1",
+  "scope": "development_only_diagnostic_not_confirmatory",
+  "model": "phi-3.5-mini",
+  "task": "transfer",
+  "manifest": "data/validated_manifest_v1.json",
+  "manifest_sha256": "62ff44d5085823e828e08e4a58a7906632bf6d7e72210d1d923954181ccc2ca5",
+  "training_seed": 1,
+  "development_seed": 1,
+  "development_indices": [0, 1, 2, 3, 4, 5, 6, 7],
+  "calibration_seed": 0,
+  "conditions": ["full", "track8"],
+  "optimizer": "Adam",
+  "initialization": "zero",
+  "checkpoints": [32, 64, 128],
+  "relative_budget": 0.3,
+  "objective": "cross_entropy",
+  "precision": "float32",
+  "guard_policy": "same_original_three_prompts_every_four_steps_scale_0.7_on_drop_above_0.2",
+  "learning_rates": "original_seed0_development_selections_with_original_rank_scaling",
+  "primary_comparison": "final_checkpoint_128_minus_checkpoint_32_within_each_condition",
+  "secondary": ["checkpoint64", "best_seen_success_vs_final", "target_margin", "guard_events", "gradient_norm", "edit_norms"],
+  "stopping_rule": "complete_all_16_trajectories_no_data_dependent_extension",
+  "output": "results/convergence_pilot_v1",
+  "provenance_reference": "results/postrun_audit_v1/reproducibility/manifest.json",
+  "limitations": [
+    "Eight development pairs and one checkpoint/task cannot establish convergence or population effects.",
+    "Full and track8 share trajectory length and cases but keep their original method-specific effective rates.",
+    "No test examples are evaluated; no final method or stopping rule is selected from test performance.",
+    "Different optimizer, restarts and equal-rank alternative bases remain subsequent work.",
+    "Original study results and source fingerprints are not modified."
+  ]
+}

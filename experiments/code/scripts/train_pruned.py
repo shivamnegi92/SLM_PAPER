@@ -23,7 +23,7 @@ from transformers import AutoTokenizer
 from slmpaper.batch import prepare_batch
 from slmpaper.data_registry import load_split
 from slmpaper.evaluation import evaluate_model, evaluate_model_crf
-from slmpaper.labels import build_intent_vocab, build_tag_vocab
+from slmpaper.labels import build_intent_vocab, build_tag_vocab, has_only_known_bio_tags
 from slmpaper.pruned_model import PrunedGenerativeClassifier
 
 
@@ -65,6 +65,7 @@ def main():
     id2intent = {v: k for k, v in intent2id.items()}
     id2tag = {v: k for k, v in tag2id.items()}
     test = [ex for ex in test if ex.intent in intent2id]
+    test = [ex for ex in test if has_only_known_bio_tags(ex, tag2id)]
     print(f"[{args.dataset}] depth={args.depth} train={len(train)} test={len(test)} "
           f"intents={len(intent2id)} tags={len(tag2id)}", flush=True)
 

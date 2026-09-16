@@ -1,5 +1,22 @@
 # Dissociation Experiment — n=126, 3 seeds, 4 conditions
 
+> **2026-09-07 current result:** the completed frozen study and consistency
+> audit are in [the summary](paper/VALIDATED_RESULTS.md) and
+> [detailed results](paper/RESULTS_DETAILS.md). Full-space override is 100%
+> across all six eligible comparisons; selected rank8 override is 8.7%-56%.
+> All legacy interpretation and next-step sections below are retained as
+> historical records, not current claims or a pending execution queue. The
+> rank-law and Stage-B primary claims remain retired.
+
+> **Historical interpretation superseded.** Rates below remain the saved legacy
+> observations. Their array-only artifacts lack stable sample IDs, so old
+> unpaired bootstrap significance and zero-width intervals are not validated
+> paired inference. BREAK is unconditional negative-edit error, not same-sign
+> collateral damage. A finite-budget rank-8 failure on Llama does not establish
+> universal decision-insufficiency. New analysis requires identity-bearing
+> artifacts; use `--legacy-descriptive` only to inspect historical rates.
+> See [METRICS.md](METRICS.md) and [STUDY_PROTOCOL.md](STUDY_PROTOCOL.md).
+
 `src/intervene_pareto.py` + `src/analyze_dissociation.py`.
 Llama-3.2-3B, `intermediate`, fp32, MPS, layers [18,20,22,24], n=126 per seed
 (test=26 seed 0, 26 each seeds 1–2 → **n_test=78 pooled per condition**).
@@ -131,12 +148,15 @@ still never crosses the decision boundary.
 ## Reproduction
 
 ```bash
-./run_dissociation.sh                     # 12 runs, ~75 min on M4 Pro
-python src/analyze_dissociation.py        # pooled CIs + significance tests
+python src/analyze_dissociation.py --legacy-descriptive \
+   --conditions full kl10 track8 comp8 --seeds 0 1 2 \
+   --output results/diss_descriptive_audit_v1.json
 ```
 
-Artifacts: `results/diss_{full,kl10,track8,comp8}_s{0,1,2}.json`,
-`results/diss_pooled_summary.json`.
+This now reports legacy rates descriptively, not the old unpaired significance
+claims. The raw `results/diss_{full,kl10,track8,comp8}_s{0,1,2}.json` files and
+historical `results/diss_pooled_summary.json` remain unchanged. Use the frozen
+validated protocol for new model runs rather than overwriting these files.
 
 ## Status
 

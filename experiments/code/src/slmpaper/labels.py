@@ -29,3 +29,12 @@ def build_tag_vocab(examples: list[Example]) -> dict[str, int]:
         tag2id[f"I-{t}"] = next_id + 1
         next_id += 2
     return tag2id
+
+
+def has_only_known_bio_tags(ex: Example, tag2id: dict[str, int]) -> bool:
+    """True when every BIO tag in example exists in vocab.
+
+    Useful for low-budget runs where train subsampling can make eval contain
+    unseen slot tag types that cannot be scored by the current classifier head.
+    """
+    return all(tag in tag2id for tag in ex.bio_tags)

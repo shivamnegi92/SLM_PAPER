@@ -1,0 +1,33 @@
+{
+  "goal": "Research and rank ICLR-suitable AI/ML topic directions for SLM_PAPER under strict compute/dependency constraints",
+  "prefix": "iclr-topic-scout",
+  "max_revisions": 2,
+  "user_query": "use this repo and find 30 topics, refute/discuss, align in loops, and give best topic with constraints",
+  "skills": [
+    {"name": "writing-plans", "source": "iron-law"},
+    {"name": "executing-plans", "source": "iron-law"},
+    {"name": "brainstorming", "source": "explicit-mention"},
+    {"name": "academic-writing", "source": "explicit-mention"}
+  ],
+  "steps": [
+    {
+      "description": "ANALYSIS: read repository strategy docs to ground topic proposals in existing results and constraints (public benchmarks, ICLR target, SLM focus)",
+      "type": "ANALYSIS",
+      "ctx_estimate_k": 3
+    },
+    {
+      "description": "ANALYSIS: generate 30 candidate topics in technical GenAI/SLM/VLM inference space and hard-filter by no-LLM-API + no-GPU constraints",
+      "type": "ANALYSIS",
+      "ctx_estimate_k": 6
+    },
+    {
+      "description": "ANALYSIS: run 20 iterative alignment loops (feasibility, novelty, reproducibility, ICLR fit) with refute-vs-support scoring to reduce to strongest shortlist",
+      "type": "ANALYSIS",
+      "ctx_estimate_k": 8
+    },
+    {
+      "description": "DOCUMENTATION: write a ranked recommendation report with best topic, rationale, and explicit gate conditions to reach top-20 shortlist",
+      "type": "DOCUMENTATION"
+    }
+  ]
+}

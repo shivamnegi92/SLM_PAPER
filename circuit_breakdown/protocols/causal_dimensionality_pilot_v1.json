@@ -1,0 +1,32 @@
+{
+  "version": "causal_dimensionality_pilot_v1",
+  "scope": "development_only_diagnostic_not_confirmatory",
+  "model": "phi-3.5-mini",
+  "task": "transfer",
+  "source_run": "results/convergence_pilot_v1",
+  "source_condition": "full",
+  "source_checkpoint": 128,
+  "manifest": "data/validated_manifest_v1.json",
+  "manifest_sha256": "62ff44d5085823e828e08e4a58a7906632bf6d7e72210d1d923954181ccc2ca5",
+  "training_seed": 1,
+  "development_seed": 1,
+  "development_indices": [0, 1, 2, 3, 4, 5, 6, 7],
+  "subspace_ranks": [1, 2, 4, 8, 16, 32, 64],
+  "conditions": ["baseline", "full", "tracking_projection", "tracking_orthogonal", "random_projection", "coordinate_topk", "permuted_full"],
+  "projection_basis": "clean_minus_corrupt_entity_position_svd_on_training_split_per_layer",
+  "random_projection": "orthonormal_random_subspace_per_layer_with_declared_seed_and_same_rank",
+  "coordinate_topk": "per_vector_largest_absolute_hidden_coordinates_per_layer",
+  "permutation_control": "cyclically_shift_saved_full_vectors_across_development_examples",
+  "behavior_metric": "target_probability_delta_and_target_success_at_corrupt_prompt_entity_position",
+  "energy_metric": "sum_layer_squared_norm_projected_over_sum_layer_squared_norm_full",
+  "primary_question": "Does the successful full-space causal direction retain behavioral control when projected into the selected tracking subspace?",
+  "secondary_question": "How much dimensionality is needed to recover full-space control under tracking, random and coordinate reconstructions?",
+  "output": "results/causal_dimensionality_pilot_v1",
+  "limitations": [
+    "Uses saved full-space vectors from the completed convergence development pilot; it does not optimize new low-rank interventions.",
+    "Eight development examples and one model/task are diagnostic only, not population evidence.",
+    "Tracking projection failure would show insufficiency of this selected SVD subspace for these saved full vectors, not impossibility of all low-rank causal control.",
+    "Random and coordinate controls are descriptive controls; optimized behavior subspaces remain a subsequent protocol.",
+    "No test examples are evaluated and no frozen study result is modified."
+  ]
+}

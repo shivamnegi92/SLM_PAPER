@@ -1,5 +1,12 @@
 # Rank Sweep — Direction vs. Dimensionality
 
+> **Exploratory legacy sweep.** These finite-rank observations do not establish
+> a scaling law or show that no larger subspace can steer. Ratios with tiny
+> control means can be unstable. Old inference uses array-only data without
+> audited identities; negative-edit BREAK is not same-sign collateral cost.
+> Rank top-ups and the power-law headline are retired from the primary study;
+> retain these artifacts as exploratory context, not confirmatory evidence.
+
 `src/intervene_pareto.py` + `src/analyze_rank_sweep.py`.
 Llama-3.2-3B, `intermediate`, fp32, MPS, layers [18,20,22,24], n=126/seed.
 r=8 uses 3 seeds (n_test=78); r ∈ {1,4,16,26} use 2 seeds (n_test=52).
@@ -112,12 +119,14 @@ have reported ten null cells and concluded nothing was happening.
 ## Reproduction
 
 ```bash
-./run_rank_sweep.sh                    # 16 runs (+ r8 reused from dissociation)
-python src/analyze_rank_sweep.py
+python src/analyze_rank_sweep.py --seeds 0 1 \
+	--output results/rank_descriptive_audit_v1.json
 ```
 
-Artifacts: `results/diss_{track,comp}{1,4,8,16,26}_s{0,1,2}.json`,
-`results/rank_sweep_summary.json`.
+The command now produces a descriptive audit in a fresh output, not the legacy
+significance table above. Historical artifacts are retained:
+`results/diss_{track,comp}{1,4,8,16,26}_s{0,1,2}.json` and
+`results/rank_sweep_summary.json`. Not every rank has all three seeds.
 
 ## Status
 

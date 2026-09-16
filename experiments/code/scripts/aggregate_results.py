@@ -56,7 +56,7 @@ def table2_pareto():
     print("| Dataset | Depth | Intent Acc | Slot F1 | P50 (ms) |")
     print("|---|---:|---:|---:|---:|")
     for ds in DATASETS:
-        for d in (3, 6, 9, 12):
+        for d in (1, 2, 3, 6, 9, 12):
             j = load(f"{ds}_pruned_depth{d}.json")
             if not j:
                 continue
@@ -105,6 +105,75 @@ def table4_seeds():
     print()
 
 
+def table5_lambda():
+    tags = [("1.0", "1p0"), ("1.5", "1p5"), ("2.0", "2p0"), ("2.5", "2p5"), ("3.0", "3p0")]
+    rows = []
+    for label, tag in tags:
+        j = load(f"atis_pruned_depth3_lambda{tag}.json")
+        if j:
+            rows.append((label, j))
+    if not rows:
+        return
+    print("## Table 5 — Slot-loss weight lambda sweep (ATIS depth-3, softmax slot head)\n")
+    print("| lambda | Intent Acc | Slot F1 | P50 (ms) |")
+    print("|---:|---:|---:|---:|")
+    for label, j in rows:
+        print(f"| {label} | {fmt(j['intent_accuracy'])} | {fmt(slot_f1(j))} | {j['latency_ms']['p50']:.2f} |")
+    print()
+
+
+def table6_dense_probe():
+    have_any = False
+    for ds in DATASETS:
+        if load(f"{ds}_probe_sweep_dense.json"):
+            have_any = True
+            break
+    if not have_any:
+        return
+    print("## Table 6 — Dense per-layer frozen probe (intent accuracy vs. depth)\n")
+    print("| Dataset | " + " | ".join(f"L{d}" for d in range(1, 13)) + " |")
+    print("|---" + "|---:" * 12 + "|")
+    for ds in DATASETS:
+        j = load(f"{ds}_probe_sweep_dense.json")
+        if not j:
+            continue
+        d2a = {int(k): v for k, v in j["depth_to_probe_accuracy"].items()}
+        cells = [f"{d2a[d]*100:.1f}" if d in d2a else "--" for d in range(1, 13)]
+        print(f"| {ds} | " + " | ".join(cells) + " |")
+    print()
+
+
+def table7_correlation():
+    # Delegate to the standalone script so both stdouts render identically.
+    from subprocess import run, PIPE
+    from pathlib import Path
+    script = Path(__file__).with_name("correlate_probe_vs_final.py")
+    r = run(["python", str(script)], stdout=PIPE, stderr=PIPE, text=True)
+    if r.returncode == 0 and r.stdout.strip():
+        print(r.stdout)
+
+
+def table8_slot_probe():
+    have_any = False
+    for ds in ["atis", "snips", "massive"]:
+        if load(f"{ds}_slot_probe_dense.json"):
+            have_any = True
+            break
+    if not have_any:
+        return
+    print("## Table 8 — Dense per-layer token-level slot probe (BIO-tag accuracy vs. depth)\n")
+    print("| Dataset | L1 | L2 | L3 | L4 | L5 | L6 | L7 | L8 | L9 | L10 | L11 | L12 |")
+    print("|---" + "|---:" * 12 + "|")
+    for ds in ["atis", "snips", "massive"]:
+        j = load(f"{ds}_slot_probe_dense.json")
+        if not j or "depth_to_slot_probe_accuracy" not in j:
+            continue
+        d2a = {int(k): v for k, v in j["depth_to_slot_probe_accuracy"].items()}
+        cells = [f"{d2a[d]*100:.1f}" if d in d2a else "--" for d in range(1, 13)]
+        print(f"| {ds} | " + " | ".join(cells) + " |")
+    print()
+
+
 if __name__ == "__main__":
     print("# SLM_PAPER — Final Aggregated Tables\n")
     print("Backbone gpt2-124M pruned; matched 5000-example budget; CPU P50 latency.\n")
@@ -112,3 +181,7 @@ if __name__ == "__main__":
     table2_pareto()
     table3_crf()
     table4_seeds()
+    table5_lambda()
+    table6_dense_probe()
+    table7_correlation()
+    table8_slot_probe()

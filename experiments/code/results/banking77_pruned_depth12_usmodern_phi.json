@@ -1,6 +1,6 @@
 {
   "dataset": "banking77",
-  "model": "/Users/s0n0611/Documents/GitHub/SLM_PAPER/phi-3.5-mini",
+  "model": "phi-3.5-mini",
   "kind": "pruned_discriminative",
   "depth": 12,
   "use_crf": false,

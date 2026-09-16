@@ -1,0 +1,7 @@
+# Circuit Breakdown deps. Install via Walmart index (see README quickstart).
+# Pin loosely; lock once G1 passes.
+torch>=2.2
+transformer-lens>=2.0
+transformers>=4.44
+numpy>=1.26
+tqdm>=4.66

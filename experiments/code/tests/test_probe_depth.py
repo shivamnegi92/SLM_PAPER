@@ -1,7 +1,7 @@
 """RED: pooling for probe features, and the depth-selection decision rule."""
 import torch
 
-from slmpaper.probe import pool_hidden_states
+from slmpaper.probe import pool_hidden_states, train_linear_probe
 from slmpaper.depth_selection import pick_depth
 
 
@@ -32,3 +32,20 @@ def test_pick_depth_picks_smallest_within_epsilon_of_max():
 
 def test_pick_depth_single_candidate():
     assert pick_depth({6: 0.9}, epsilon=0.01) == 6
+
+
+def test_train_linear_probe_handles_bfloat16_features():
+    # Simulates modern backbone hidden-state dtype on CPU
+    torch.manual_seed(0)
+    train_x = torch.randn(32, 8, dtype=torch.bfloat16)
+    val_x = torch.randn(8, 8, dtype=torch.bfloat16)
+    train_y = torch.randint(0, 3, (32,), dtype=torch.long)
+    val_y = torch.randint(0, 3, (8,), dtype=torch.long)
+
+    acc = train_linear_probe(
+        train_x, train_y, val_x, val_y,
+        num_classes=3,
+        epochs=3,
+        lr=0.05,
+    )
+    assert 0.0 <= acc <= 1.0

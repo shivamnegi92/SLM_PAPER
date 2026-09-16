@@ -1,5 +1,11 @@
 # Cross-Architecture Replication — Partial
 
+> **Legacy cross-model observations.** These settings are not the new
+> matched-layer, paired-manifest study. The rates do not isolate architecture
+> from checkpoint training, tokenization, layers or optimization. Negative-edit
+> BREAK is not same-sign harm; non-significance is not equivalence. See
+> [STUDY_PROTOCOL.md](STUDY_PROTOCOL.md) and [METRICS.md](METRICS.md).
+
 `run_crossarch2.sh` + `src/intervene_pareto.py`. n=126/seed, 2 seeds for Phi and
 Nemotron (n_test=52), 3 seeds for Llama (n_test=78). Layers [17,19,21,23] for the
 32-layer models (≈0.66 relative depth), [18,20,22,24] for Llama (28 layers).

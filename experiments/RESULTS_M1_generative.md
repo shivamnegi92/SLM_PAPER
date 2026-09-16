@@ -45,9 +45,9 @@ larger margin exactly where structured output is hardest.
   Qwen2.5-0.5B) would probably parse-fail less in absolute terms, but the
   *complexity-scaling trend* (fail-rate and latency rising with schema size)
   should still hold directionally for any autoregressive model.
-  SmolLM2/Qwen weren't yet pullable through the Walmart Artifactory HF proxy
-  (not pre-warmed in the mirror; needs a Remote-Proxy request) -- gpt2 was
-  fetched by curling `/resolve/` files directly into a local folder instead.
+  SmolLM2/Qwen weren't available through the local model mirror when these
+  runs were captured; gpt2 was fetched from Hugging Face directly into a local
+  folder instead.
 - Generative slot F1 is *value-based* (emitted values); encoder slot F1 is
   *span-based* (token positions). Both are standard; a value-based comparison
   for the encoder can be added for strict apples-to-apples.

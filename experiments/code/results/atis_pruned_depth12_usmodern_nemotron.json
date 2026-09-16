@@ -1,6 +1,6 @@
 {
   "dataset": "atis",
-  "model": "/Users/s0n0611/Documents/GitHub/SLM_PAPER/nemotron-mini-4b",
+  "model": "nemotron-mini-4b",
   "kind": "pruned_discriminative",
   "depth": 12,
   "use_crf": false,

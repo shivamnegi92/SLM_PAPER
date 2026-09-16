@@ -37,6 +37,11 @@ def train_linear_probe(
     probe is that it's fast enough to sweep many depths before real training.
     """
     dim = train_features.shape[1]
+    # Keep probe training numerically stable/compatible on CPU when backbone
+    # features come in bf16/fp16 from modern checkpoints.
+    train_features = train_features.float()
+    val_features = val_features.float()
+
     probe = nn.Linear(dim, num_classes)
     opt = torch.optim.Adam(probe.parameters(), lr=lr)
 

@@ -8,13 +8,18 @@ Full draft of *Generate Less, Classify More* with all real numbers from
 - `paper.tex` — main manuscript (double-blind: no author names).
 - `references.bib` — bibliography.
 
-## Compile (once a LaTeX toolchain is installed)
+## Compile
 ```bash
-# macOS: brew install --cask mactex-no-gui   (uses Walmart sysproxy if needed)
-pdflatex paper && bibtex paper && pdflatex paper && pdflatex paper
+# macOS: brew install texlive   (formula, NOT --cask basictex/mactex — those
+# pull mirror.ctan.org / relay.fullyjustified.net which are blocked on the
+# Walmart proxy with a DNS/407 failure. The `texlive` brew FORMULA ships a
+# prebuilt bottle from ghcr.io, which the proxy allows, and needs zero sudo.)
+latexmk -pdf paper.tex
+# or manually: pdflatex paper && bibtex paper && pdflatex paper && pdflatex paper
 ```
-This machine currently has no `pdflatex`; the source is written to compile
-cleanly with a standard TeX Live install.
+Confirmed working 2026-09-16: `brew install texlive` (~15 min postinstall,
+no admin password) then `latexmk -pdf paper.tex` produces `paper.pdf`
+(9 pages) cleanly via VS Code LaTeX Workshop (⌘⌥B) or the CLI.
 
 ## Before ICLR 2027 submission (see ../SUBMISSION_REQUIREMENTS.md)
 1. **Swap the preamble** for the official `iclr2027_conference.sty` /

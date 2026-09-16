@@ -36,3 +36,14 @@ def test_forward_with_labels_computes_loss():
     out = model(input_ids=input_ids, attention_mask=attention_mask,
                 intent_labels=intent_labels, slot_labels=slot_labels)
     assert out.loss is not None and out.loss.item() > 0
+
+
+def test_forward_handles_bfloat16_backbone_outputs():
+    model = PrunedGenerativeClassifier(_tiny_config(), depth=2, num_intents=3, num_tags=4)
+    model.backbone = model.backbone.to(torch.bfloat16)
+
+    input_ids = torch.randint(0, 50, (1, 4))
+    attention_mask = torch.ones(1, 4, dtype=torch.long)
+
+    out = model(input_ids=input_ids, attention_mask=attention_mask)
+    assert out.intent_logits.shape == (1, 3)

@@ -1,6 +1,6 @@
 {
   "dataset": "massive",
-  "model": "/Users/s0n0611/Documents/GitHub/SLM_PAPER/phi-3.5-mini",
+  "model": "phi-3.5-mini",
   "n_layer_full": 32,
   "config": {
     "max_train": 120,

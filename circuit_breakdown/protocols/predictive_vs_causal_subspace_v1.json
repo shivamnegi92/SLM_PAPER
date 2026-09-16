@@ -1,0 +1,55 @@
+{
+  "version": "predictive_vs_causal_subspace_v1",
+  "scope": "development_only_diagnostic_not_confirmatory",
+  "model": "phi-3.5-mini",
+  "task": "transfer",
+  "manifest": "data/validated_manifest_v1.json",
+  "manifest_sha256": "62ff44d5085823e828e08e4a58a7906632bf6d7e72210d1d923954181ccc2ca5",
+  "training_seed": 1,
+  "development_seed": 1,
+  "development_indices": [0, 1, 2, 3, 4, 5, 6, 7],
+  "ranks": [1, 2, 4, 8, 16, 32, 64],
+  "subspaces": {
+    "tracking": "clean_minus_corrupt_entity_position_svd_on_training_split",
+    "pca": "activation_pca_on_training_entity_positions",
+    "random": "random_orthonormal_basis_with_declared_seed",
+    "causal": "finite_difference_or_mask_selected_directions_ranked_by_target_behavior_effect"
+  },
+  "readout_metric": {
+    "name": "decodability",
+    "definition": "probe_accuracy_or_auc_on_projected_clean_corrupt_training_dev_states",
+    "guardrail": "fit_probe_on_training_split_only_then_evaluate_on_development_examples"
+  },
+  "control_metric": {
+    "name": "causal_controllability",
+    "definition": "target_probability_delta_and_target_success_after_intervention_on_corrupt_prompt",
+    "guardrail": "same_examples_same_layers_same_rank_same_budget_across_subspaces"
+  },
+  "utility_metrics": [
+    "clean_task_accuracy",
+    "counterfactual_task_accuracy",
+    "wrong_answer_promotion_on_hard_negatives",
+    "kl_shift_from_baseline_logits",
+    "text_perplexity_ratio_if_budget_allows"
+  ],
+  "controls": [
+    "zero_intervention",
+    "random_subspace_same_rank_and_norm",
+    "permuted_target_mapping",
+    "orthogonal_complement_projection"
+  ],
+  "primary_table": "subspace_by_rank_with_decodability_control_energy_and_utility",
+  "decision_rule": {
+    "predictive_not_causal": "tracking_decodability_high_but_tracking_control_low_relative_to_causal_same_rank",
+    "bad_tracking_estimator": "alternative_correlational_or_causal_low_rank_subspace_recovers_control",
+    "distributed_control": "no_equal_rank_sparse_subspace_recovers_dense_control_until_large_k",
+    "artifact": "random_or_permuted_controls_match_causal_control"
+  },
+  "output": "results/predictive_vs_causal_subspace_v1",
+  "limitations": [
+    "This is a development-only diagnostic until confirmed on untouched examples.",
+    "Causal-subspace discovery must be fixed before model evaluation; no data-dependent rank or metric selection after seeing outcomes.",
+    "Development examples can select the protocol but cannot support final paper claims without untouched confirmation.",
+    "A successful causal low-rank subspace would falsify any broad low-rank-impossibility claim and redirect the paper toward method comparison."
+  ]
+}

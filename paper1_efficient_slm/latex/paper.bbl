@@ -1,0 +1,184 @@
+\begin{thebibliography}{30}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Abdin et~al.(2024)]{abdin2024phi3}
+Marah Abdin et~al.
+\newblock Phi-3 technical report: A highly capable language model locally on
+  your phone.
+\newblock \emph{arXiv preprint arXiv:2404.14219}, 2024.
+
+\bibitem[Alain \& Bengio(2017)Alain and Bengio]{alain2017probes}
+Guillaume Alain and Yoshua Bengio.
+\newblock Understanding intermediate layers using linear classifier probes.
+\newblock In \emph{ICLR Workshop}, 2017.
+
+\bibitem[Allal et~al.(2024)Allal, Lozhkov, Bakouch, et~al.]{allal2024smollm}
+Loubna~Ben Allal, Anton Lozhkov, Elie Bakouch, et~al.
+\newblock {SmolLM} -- blazingly fast and remarkably powerful.
+\newblock Hugging Face Blog, 2024.
+
+\bibitem[Ansel et~al.(2024)Ansel, Yang, He, et~al.]{ansel2024torchcompile}
+Jason Ansel, Edward Yang, Horace He, et~al.
+\newblock {PyTorch 2}: Faster machine learning through dynamic python bytecode
+  transformation and graph compilation.
+\newblock In \emph{ASPLOS}, 2024.
+
+\bibitem[Ashkboos et~al.(2024)]{ashkboos2024quarot}
+Saleh Ashkboos et~al.
+\newblock Quarot: Outlier-free 4-bit inference in rotated llms.
+\newblock In \emph{NeurIPS}, 2024.
+
+\bibitem[Belinkov(2022)]{belinkov2022probing}
+Yonatan Belinkov.
+\newblock Probing classifiers: Promises, shortcomings, and advances.
+\newblock \emph{Computational Linguistics}, 48\penalty0 (1):\penalty0 207--219,
+  2022.
+
+\bibitem[Casanueva et~al.(2020)Casanueva, Tem{\v{c}}inas, Gerz,
+  et~al.]{casanueva2020banking77}
+I{\~n}igo Casanueva, Tadas Tem{\v{c}}inas, Daniela Gerz, et~al.
+\newblock Efficient intent detection with dual sentence encoders.
+\newblock In \emph{NLP4ConvAI Workshop, ACL}, 2020.
+
+\bibitem[Chen et~al.(2019)Chen, Zhuo, and Wang]{chen2019bert}
+Qian Chen, Zhu Zhuo, and Wen Wang.
+\newblock Bert for joint intent classification and slot filling.
+\newblock In \emph{arXiv preprint arXiv:1902.10909}, 2019.
+
+\bibitem[Coucke et~al.(2018)Coucke, Saade, Ball, et~al.]{coucke2018snips}
+Alice Coucke, Alaa Saade, Adrien Ball, et~al.
+\newblock Snips voice platform: an embedded spoken language understanding
+  system for private-by-design voice interfaces.
+\newblock \emph{arXiv preprint arXiv:1805.10190}, 2018.
+
+\bibitem[Devlin et~al.(2019)Devlin, Chang, Lee, and Toutanova]{devlin2019bert}
+Jacob Devlin, Ming-Wei Chang, Kenton Lee, and Kristina Toutanova.
+\newblock {BERT}: Pre-training of deep bidirectional transformers for language
+  understanding.
+\newblock In \emph{NAACL-HLT}, 2019.
+
+\bibitem[Elazar et~al.(2021)Elazar, Ravfogel, Jacovi, and
+  Goldberg]{elazar2021amnesic}
+Yanai Elazar, Shauli Ravfogel, Alon Jacovi, and Yoav Goldberg.
+\newblock Amnesic probing: Behavioral explanation with amnesic counterfactuals.
+\newblock \emph{Transactions of the Association for Computational Linguistics},
+  9:\penalty0 160--175, 2021.
+
+\bibitem[Fan et~al.(2020)Fan, Grave, and Joulin]{fan2020layerdrop}
+Angela Fan, Edouard Grave, and Armand Joulin.
+\newblock Reducing transformer depth on demand with structured dropout.
+\newblock In \emph{ICLR}, 2020.
+
+\bibitem[FitzGerald et~al.(2023)FitzGerald, Hench, Peris,
+  et~al.]{fitzgerald2023massive}
+Jack FitzGerald, Christopher Hench, Charith Peris, et~al.
+\newblock Massive: A 1m-example multilingual natural language understanding
+  dataset with 51 typologically-diverse languages.
+\newblock In \emph{ACL}, 2023.
+
+\bibitem[Gromov et~al.(2024)Gromov, Tirumala, Shapourian, Glorioso, and
+  Roberts]{gromov2024unreasonable}
+Andrey Gromov, Kushal Tirumala, Hassan Shapourian, Paolo Glorioso, and Daniel~A
+  Roberts.
+\newblock The unreasonable ineffectiveness of the deeper layers.
+\newblock In \emph{ICLR}, 2024.
+
+\bibitem[Hemphill et~al.(1990)Hemphill, Godfrey, and
+  Doddington]{hemphill1990atis}
+Charles~T Hemphill, John~J Godfrey, and George~R Doddington.
+\newblock The atis spoken language systems pilot corpus.
+\newblock In \emph{Speech and Natural Language Workshop}, 1990.
+
+\bibitem[Hewitt \& Liang(2019)Hewitt and Liang]{hewitt2019control}
+John Hewitt and Percy Liang.
+\newblock Designing and interpreting probes with control tasks.
+\newblock In \emph{EMNLP-IJCNLP}, pp.\  2733--2743, 2019.
+
+\bibitem[Iba{\~n}ez-Lissen et~al.(2025)Iba{\~n}ez-Lissen, Gonz{\'a}lez-Manzano,
+  de~Fuentes, and Anciaux]{ibanezlissen2025lpass}
+Luis Iba{\~n}ez-Lissen, Lorena Gonz{\'a}lez-Manzano, Jos{\'e}~Mar{\'i}a
+  de~Fuentes, and Nicolas Anciaux.
+\newblock {LPASS}: Linear probes as stepping stones for vulnerability detection
+  using compressed llms.
+\newblock \emph{arXiv preprint arXiv:2505.24451}, 2025.
+
+\bibitem[Lafferty et~al.(2001)Lafferty, McCallum, and Pereira]{lafferty2001crf}
+John Lafferty, Andrew McCallum, and Fernando Pereira.
+\newblock Conditional random fields: Probabilistic models for segmenting and
+  labeling sequence data.
+\newblock \emph{ICML}, 2001.
+
+\bibitem[Larson et~al.(2019)Larson, Mahendran, Peper, et~al.]{larson2019clinc}
+Stefan Larson, Anish Mahendran, Joseph~J Peper, et~al.
+\newblock An evaluation dataset for intent classification and out-of-scope
+  prediction.
+\newblock In \emph{EMNLP-IJCNLP}, 2019.
+
+\bibitem[Men et~al.(2024)Men, Xu, Zhang, Wang, Lin, Lu, Han, and
+  Chen]{men2024shortgpt}
+Xin Men, Mingyu Xu, Qingyu Zhang, Bingning Wang, Hongyu Lin, Yaojie Lu, Xianpei
+  Han, and Weipeng Chen.
+\newblock {ShortGPT}: Layers in large language models are more redundant than
+  you expect.
+\newblock \emph{arXiv preprint arXiv:2403.03853}, 2024.
+
+\bibitem[{ONNX Runtime developers}(2019)]{onnxruntime2019}
+{ONNX Runtime developers}.
+\newblock {ONNX Runtime}: cross-platform, high performance ml inferencing and
+  training accelerator.
+\newblock \url{https://onnxruntime.ai/}, 2019.
+
+\bibitem[Paszke et~al.(2019)Paszke, Gross, Massa, et~al.]{paszke2019pytorch}
+Adam Paszke, Sam Gross, Francisco Massa, et~al.
+\newblock {PyTorch}: An imperative style, high-performance deep learning
+  library.
+\newblock In \emph{NeurIPS}, 2019.
+
+\bibitem[Radford et~al.(2019)Radford, Wu, Child, et~al.]{radford2019gpt2}
+Alec Radford, Jeffrey Wu, Rewon Child, et~al.
+\newblock Language models are unsupervised multitask learners.
+\newblock \emph{OpenAI Technical Report}, 2019.
+
+\bibitem[Sanh et~al.(2019)Sanh, Debut, Chaumond, and Wolf]{sanh2019distilbert}
+Victor Sanh, Lysandre Debut, Julien Chaumond, and Thomas Wolf.
+\newblock Distilbert, a distilled version of bert: smaller, faster, cheaper and
+  lighter.
+\newblock In \emph{NeurIPS EMC2 Workshop}, 2019.
+
+\bibitem[Tenney et~al.(2019)Tenney, Das, and Pavlick]{tenney2019bert}
+Ian Tenney, Dipanjan Das, and Ellie Pavlick.
+\newblock Bert rediscovers the classical nlp pipeline.
+\newblock In \emph{ACL}, 2019.
+
+\bibitem[Vaswani et~al.(2017)Vaswani, Shazeer, Parmar, Uszkoreit, Jones, Gomez,
+  Kaiser, and Polosukhin]{vaswani2017attention}
+Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones,
+  Aidan~N Gomez, {\L}ukasz Kaiser, and Illia Polosukhin.
+\newblock Attention is all you need.
+\newblock In \emph{NeurIPS}, 2017.
+
+\bibitem[Voita \& Titov(2020)Voita and Titov]{voita2020mdl}
+Elena Voita and Ivan Titov.
+\newblock Information-theoretic probing with minimum description length.
+\newblock In \emph{EMNLP}, pp.\  183--196, 2020.
+
+\bibitem[Willard \& Louf(2023)Willard and Louf]{willard2023guidance}
+Brandon~T Willard and R{\'e}mi Louf.
+\newblock Efficient guided generation for large language models.
+\newblock 2023.
+
+\bibitem[Wolf et~al.(2020)Wolf, Debut, Sanh, et~al.]{wolf2020transformers}
+Thomas Wolf, Lysandre Debut, Victor Sanh, et~al.
+\newblock Transformers: State-of-the-art natural language processing.
+\newblock In \emph{EMNLP: System Demonstrations}, 2020.
+
+\bibitem[Xin et~al.(2020)Xin, Tang, Lee, Yu, and Lin]{xin2020deebert}
+Ji~Xin, Raphael Tang, Jaejun Lee, Yaoliang Yu, and Jimmy Lin.
+\newblock Deebert: Dynamic early exiting for accelerating bert inference.
+\newblock In \emph{ACL}, 2020.
+
+\end{thebibliography}

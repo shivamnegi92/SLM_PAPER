@@ -1,6 +1,6 @@
 {
   "dataset": "clinc150",
-  "model": "/Users/s0n0611/Documents/GitHub/SLM_PAPER/nemotron-mini-4b",
+  "model": "nemotron-mini-4b",
   "n_layer_full": 32,
   "config": {
     "max_train": 120,

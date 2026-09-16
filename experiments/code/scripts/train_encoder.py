@@ -1,12 +1,11 @@
 """Train the JointBERT-style encoder baseline (B2) on a public dataset.
 
 Produces real M1 baseline numbers: intent accuracy, slot span-F1, and latency.
-Run from experiments/code/ with the models venv active. Model downloads route
-through the Walmart Artifactory HF proxy (models are proxied; datasets are not).
+Run from experiments/code/ with the models venv active. Model weights are
+fetched from the standard Hugging Face endpoint by default; override via the
+``HF_ENDPOINT`` environment variable when using an internal mirror.
 
 Example:
-  HF_ENDPOINT=https://ci.artifacts.walmart.com/artifactory/api/huggingfaceml/hub-huggingfaceml-release-remote \
-  no_proxy=ci.artifacts.walmart.com \
   python scripts/train_encoder.py --dataset snips --epochs 3 --output results/snips_encoder.json
 """
 from __future__ import annotations

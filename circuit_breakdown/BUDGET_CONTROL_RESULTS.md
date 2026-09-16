@@ -1,4 +1,22 @@
-# Budget-Matched Control — P0.1 RESOLVED
+# Budget-Matched Control - Historical Pilot
+
+> **2026-09-07: retired interpretation below.** The original pilot rates are
+> retained as history, but its architecture-split narrative, equivalence from
+> `p=1`, and claims of identical predictions are not current paper claims.
+> The completed frozen study found full-space advantages on all six eligible
+> comparisons, including Phi: full 100% versus track8 8.7% on intermediate
+> and 20.0% on transfer. See [the current summary](paper/VALIDATED_RESULTS.md)
+> and [audited detailed tables](paper/RESULTS_DETAILS.md). The sections below,
+> including their historical next steps, are not instructions to restart runs.
+> Negative-edit BREAK is not steering's same-sign collateral damage.
+
+> **Pilot caveat:** "resolved" here refers to completion of the seed-0 budget
+> experiment, not proof that architecture is the isolated cause. Equal
+> observed rates or `p=1.0` do not establish population equivalence, nor does
+> equality of rates imply identical per-example predictions. Residual-layer
+> windows, optimization behavior and checkpoint differences require separate
+> checks. Preserve the measured gaps below as exploratory evidence. The
+> authoritative new comparison is [STUDY_PROTOCOL.md](STUDY_PROTOCOL.md).
 
 `run_budget_control.sh`. Llama-3.2-3B and Phi-3.5-mini, matched `stage_a_steps=16`,
 `rel_budget` swept at identical values on both models, n=126, seed 0, n_test=26 per cell.

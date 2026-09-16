@@ -1,22 +1,34 @@
 % Generate Less, Classify More
-% ICLR 2027 submission draft. Double-blind: NO author names/affiliations.
-% NOTE: swap this preamble for the official iclr2027_conference.sty when it is
-% released; the article-based fallback below lets the draft compile now.
+% ICLR 2027 submission. Double-blind: NO author names/affiliations.
 \documentclass{article}
+\usepackage{iclr2027_conference,times}
+\input{math_commands.tex}
+
 \usepackage[utf8]{inputenc}
-\usepackage{times}
 \usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{amsmath,amssymb}
-\usepackage{hyperref}
-\usepackage[margin=1in]{geometry}
+\usepackage[hidelinks,pdfusetitle=false]{hyperref}
+\usepackage{url}
 \usepackage{multirow}
-\usepackage{natbib}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,fit,backgrounds}
+\usepackage[capitalize,noabbrev]{cleveref}
+\usepackage{csquotes}
+
+% Uncomment to reveal authors in the camera-ready (do NOT uncomment for the submission version).
+% \iclrfinalcopy
+
+% Suppress identifying PDF metadata for double-blind submission.
+\hypersetup{pdfauthor={},pdftitle={},pdfsubject={},pdfkeywords={},pdfcreator={},pdfproducer={}}
 
 \title{Generate Less, Classify More: Probe-Guided Pruning and\\
 Discriminative Heads for Efficient Intent Detection and Slot Filling\\
 with Small Language Models}
-\author{Anonymous authors\\Paper under double-blind review}
+% The ICLR sty hides this block under \author{Anonymous authors} until
+% \iclrfinalcopy is uncommented above for camera-ready.
+\author{Shivam Negi\\
+\texttt{shivamnegi92@gmail.com}}
 \date{}
 
 \begin{document}
@@ -28,23 +40,28 @@ emit structured output (intent + slots) via autoregressive generation. We show
 that for \emph{closed-set} intent detection and slot filling this is both slow
 and brittle, and unnecessary. We present a recipe that converts a generative SLM
 into a \textbf{discriminative single-pass} model: (1) a frozen linear-probe
-layer sweep selects a pruned backbone depth \emph{a priori}, before any
-fine-tuning; (2) a linear intent head and a token-level slot head (softmax or
-CRF) replace token-by-token generation. On a 124M-parameter decoder, pruning to
-3 of 12 layers, our model runs at $\sim$5\,ms P50 on a commodity CPU versus
-$\sim$359\,ms for the generative baseline (a $\sim$70$\times$ speedup on ATIS),
-improves intent accuracy from 48.3\% to 97.95\%, and eliminates a generative
-parse-failure rate of up to 46.7\% (0\% by construction). A 15-second probe
-correctly selects a 4$\times$-shallower depth on all five of ATIS, SNIPS,
-MASSIVE, CLINC150, and BANKING77; across three seeds the selected depth is
-statistically indistinguishable from full depth on three datasets and within
-$\sim$1--2.6 points on the two most fine-grained. We further contribute a
-negative-results study of CPU inference optimizations: dynamic INT8 and
-\texttt{torch.compile} give no benefit for shallow models, while ONNX Runtime
-yields a $4.5\times$ speedup at the cost of brittle export.
+sweep over a small predefined depth grid $\{L/4, L/2, 3L/4, L\}$ identifies an
+aggressive candidate pruning region \emph{a priori}; (2) a linear intent head
+and a token-level slot head (softmax or CRF) replace token-by-token
+generation. On a 124M-parameter decoder, pruning to 3 of 12 layers yields
+approximately 5\,ms P50 CPU latency versus approximately 359\,ms for the
+autoregressive baseline on ATIS ($\sim$70$\times$ speedup) while eliminating
+a generative parse-failure rate of up to 46.7\% (0\% by construction). At a
+matched 3{,}000-example budget, depth 3 matches depth 12 at 96.08\% intent
+accuracy on ATIS while reducing P50 latency from 20.4 to 5.4\,ms. Fine-tuning
+at candidate depth 3 preserves most downstream task performance across ATIS,
+SNIPS, MASSIVE, CLINC150, and BANKING77 while substantially reducing
+inference latency relative to full depth. A diagnostic dense sweep (layers
+$1{-}12$) reveals that linear accessibility of intent information precedes
+fine-tuning sufficiency by several layers---a cheap intent probe alone
+under-selects depth on the shallow end, and a token-level slot probe on
+SNIPS mirrors that under-selection. We further report a negative-results
+study of CPU inference optimizations: dynamic INT8 and \texttt{torch.compile}
+give no benefit for shallow models, while ONNX Runtime yields a $4.5\times$
+speedup at the cost of brittle export.
 \end{abstract}
 
-\section{Introduction}
+\section{Introduction}\label{sec:introduction}
 Small language models are increasingly deployed for task-oriented natural
 language understanding (NLU), where a user utterance is mapped to a discrete
 \emph{intent} and a set of typed \emph{slots}. A common pattern is to fine-tune
@@ -55,44 +72,142 @@ rate of \emph{malformed} outputs that fail to parse into the target schema.
 
 We argue that closed-set intent + slot filling does not need generation. Our
 central claim: \emph{converting a generative SLM into a probe-pruned
-discriminative single-pass model yields a large CPU speedup at equal-or-better
-accuracy and zero structured-output parse failures, and the pruned depth can be
-chosen a priori from a cheap linear probe.}
+discriminative single-pass model yields a large CPU speedup and zero
+structured-output parse failures. Frozen probes identify an aggressive
+candidate pruning region a priori, but linear accessibility of task
+information precedes fine-tuning sufficiency by several layers; the final
+deployed depth is confirmed by downstream fine-tuning, not by the probe
+alone.}
 
-\textbf{Contributions.}
-\textbf{(C1)} \emph{Probe-guided depth selection}: a linear probe on frozen
-hidden states predicts a near-optimal pruned depth before expensive fine-tuning.
+\textbf{Contributions.} Two primary contributions:
+\textbf{(C1)} \emph{Probe-guided candidate pruning}: a frozen linear probe
+over a small predefined depth grid identifies an aggressive candidate region
+before fine-tuning, reducing the need to exhaustively train every depth.
+Dense diagnostics further reveal a failure boundary where linear task
+accessibility precedes fine-tuning sufficiency; on the slot-bearing SNIPS
+benchmark a token-level BIO-tag probe exposes this gap.
 \textbf{(C2)} \emph{Generative$\rightarrow$discriminative conversion}: a large
 speedup plus a reliability guarantee (parse-failure rate $\rightarrow$ 0 by
-construction). \textbf{(C3)} a real, measured implicit-slot scope statement (0\%
-on our benchmarks) that honestly bounds where span-based heads suffice.
-\textbf{(C4)} a negative-results study of common CPU inference optimizations and their root causes. We position our contribution honestly:
-against the generative baseline the win is decisive; against a purpose-built
-bidirectional encoder we are competitive, and our recipe requires no separate
-encoder---it reuses an existing decoder.
+construction). Supporting analyses cover a measured implicit-slot scope
+statement (0\% on our benchmarks) that bounds where span-based heads suffice,
+and a study of common CPU inference optimizations that shows the systems win
+comes from architecture (prune + classify), not post-hoc kernel/quant tricks.
+We position our contribution honestly: against the generative baseline the win
+is decisive; against a purpose-built bidirectional encoder we are competitive,
+and our recipe requires no separate encoder---it reuses an existing decoder.
 
-\section{Related Work}
-\textbf{Joint intent/slot models.} JointBERT~\citep{chen2019bert} and successors
-fine-tune an encoder with intent and slot heads. We revisit this from the angle
-of \emph{converting a decoder} and \emph{choosing depth by probing}.
-\textbf{Structured/constrained decoding}~\citep{willard2023guidance} makes
-generation valid but retains autoregressive cost; discriminative heads make
-validity structural at no decode cost.
-\textbf{Compression}: layer dropping~\citep{fan2020layerdrop}, early
-exit~\citep{xin2020deebert}, and rotation-based quantization~\citep{ashkboos2024quarot}.
-We use static depth pruning guided by probes rather than dynamic exit.
-\textbf{Probing}~\citep{alain2017probes,tenney2019bert} analyzes what layers
-encode; we repurpose probes as an \emph{a-priori depth-selection procedure}.
+\textbf{Why a decoder?} Our target setting is one in which an existing causal
+decoder is already available and must be adapted for latency-sensitive
+closed-set NLU. The goal is therefore not to outperform purpose-built
+encoders, but to determine how much of an existing decoder is actually
+necessary and to eliminate autoregressive decoding when the output space is
+closed and structured.
+\section{Related Work}\label{sec:related}
+\textbf{Structured NLU.} Discriminative intent + slot prediction has a long
+lineage; JointBERT~\citep{chen2019bert} and successors fine-tune an
+encoder~\citep{devlin2019bert,vaswani2017attention} with an intent classifier
+and a token-level tagger. Constrained decoding~\citep{willard2023guidance}
+restores validity for generative structured outputs but retains autoregressive
+cost; discriminative heads make validity structural at no decode cost.
 
-\section{Method}
+\textbf{Efficient transformer inference.} Layer dropping~\citep{fan2020layerdrop},
+dynamic early exit~\citep{xin2020deebert}, distillation~\citep{sanh2019distilbert},
+and rotation-based quantization~\citep{ashkboos2024quarot} all target inference
+cost. Closer to our setting, recent decoder-only depth-pruning
+work~\citep{men2024shortgpt,gromov2024unreasonable} removes LLM layers using an
+\emph{unsupervised} block-similarity or influence signal, then heals the
+result with light fine-tuning; we instead use a \emph{supervised} linear
+probe over task labels on a small predefined depth grid, and---unlike that
+line of work---explicitly test and find cases where the probe signal itself
+is misleading (\cref{sec:results}). We use \emph{static} depth pruning guided
+by frozen probes, complementary to and stackable with kernel/quant work (\S6).
+The upstream trend toward small
+language models~\citep{allal2024smollm,abdin2024phi3} makes the
+\enquote{how much of the decoder do we actually need} question
+increasingly practical for on-device
+NLU.
+
+\textbf{Probing.} Prior probing~\citep{alain2017probes,tenney2019bert} primarily
+analyzes \emph{where} information is encoded in a pretrained network. We
+instead operationalize frozen probing as a pre-fine-tuning signal for static
+decoder truncation, and characterize an important limitation: linear
+task-information accessibility can precede downstream fine-tuning sufficiency
+at extreme shallow depths, so a probe alone does not identify the deployed
+depth. A substantial literature already cautions against reading probe
+accuracy at face value: it can reflect probe capacity rather than
+representation content~\citep{hewitt2019control}, ignore extraction
+difficulty~\citep{voita2020mdl}, or decode information the model does not
+causally use~\citep{elazar2021amnesic}; see \citet{belinkov2022probing} for a
+survey. Our failure mode is distinct from all of these and complementary to
+them: we hold the probe fixed and ask whether its accuracy at layer $\ell$
+predicts the accuracy of a model \emph{truncated at $\ell$ and then
+fine-tuned}---a deployment-time question that decodability, extraction cost,
+and causal-use critiques do not address. We find it does not, with negative
+within-dataset rank correlation on four of five benchmarks. Concurrent
+work~\citep{ibanezlissen2025lpass}
+similarly uses frozen probes before fine-tuning to pick a layer-pruning
+cutoff, but in a different domain (source-code vulnerability classification),
+probing a proxy structural signal (code-complexity metrics) rather than the
+task label itself, via a dense per-layer sweep rather than a predefined sparse
+grid with a tolerance rule; critically, that work treats probe accuracy as
+validated evidence for the cutoff, whereas we show probe accessibility can
+\emph{over-recommend} an aggressively shallow depth that then underperforms
+after fine-tuning.
+
+\section{Method}\label{sec:method}
+
+\begin{figure}[t]\centering
+\begin{tikzpicture}[
+  font=\footnotesize,
+  node distance=5mm,
+  box/.style={draw,rounded corners=1pt,minimum width=64mm,minimum height=7mm,align=center},
+  backbone/.style={box,fill=blue!5},
+  probe/.style={box,fill=orange!15},
+  select/.style={box,fill=orange!25},
+  trunc/.style={box,fill=blue!10},
+  head/.style={box,fill=green!10},
+  outbox/.style={box,fill=green!20},
+  arrow/.style={-{Latex[length=2mm]},thick}
+]
+  \node[backbone] (n1) {Frozen decoder, 12 layers};
+  \node[probe,below=of n1] (n2) {Probe at predefined sparse grid $\{3,6,9,12\}$};
+  \node[select,below=of n2] (n3) {Select shallowest depth within $\epsilon$ of best $\Rightarrow$ depth 3};
+  \node[trunc,below=of n3] (n4) {Truncate backbone to depth 3};
+  \node[head,below=of n4] (n5) {Intent head + slot head (softmax/CRF)};
+  \node[outbox,below=of n5] (n6) {Single-pass discriminative output};
+  \draw[arrow] (n1) -- (n2);
+  \draw[arrow] (n2) -- (n3);
+  \draw[arrow] (n3) -- (n4);
+  \draw[arrow] (n4) -- (n5);
+  \draw[arrow] (n5) -- (n6);
+\end{tikzpicture}
+\caption{Pipeline (simplified causal flow). A frozen decoder is probed at a
+\emph{predefined sparse} candidate grid $\{L/4,L/2,3L/4,L\}$ ($=\{3,6,9,12\}$
+for $L{=}12$); the shallowest depth within $\epsilon$ of the best probe
+accuracy is selected \emph{a priori} as the candidate pruning depth. The
+backbone is then truncated to that depth and fine-tuned with a linear intent
+head over the pooled final state and a token-level slot head (softmax or
+CRF). No autoregressive decoding at inference. A separate dense sweep
+(layers $1{-}L$) is used diagnostically in \cref{sec:results} to test the
+rule's limits and expose the gap between linear accessibility and
+fine-tuning sufficiency.}
+\label{fig:pipeline}
+\end{figure}
+
 \textbf{Setup.} A closed intent set $\mathcal{I}$ and BIO slot tags
 $\mathcal{T}$; we predict one intent and a tag per token in a single forward
-pass. \textbf{(3.1) Probe-guided depth selection.} We freeze the pretrained
+pass. \textbf{(3.1) Probe-guided candidate pruning.} We freeze the pretrained
 decoder and, in one forward pass with hidden-state output, mean-pool the hidden
-states at candidate depths $\{L/4, L/2, 3L/4, L\}$ over non-pad tokens. A linear
+states at a \emph{predefined sparse candidate grid} of depths
+$\{L/4, L/2, 3L/4, L\}$ over non-pad tokens. A linear
 probe (logistic regression) is trained on each depth's pooled features to
 predict the intent. We select the shallowest depth whose probe accuracy is
-within $\epsilon$ of the best (we use $\epsilon=0.02$). \textbf{(3.2)
+within $\epsilon$ of the best (we use $\epsilon=0.02$). \emph{This grid is
+chosen a priori, not tuned to the data.} A dense per-layer sweep
+($\{1,\ldots,L\}$) is used as a diagnostic in \cref{sec:results} to test the rule's limits,
+not as the deployment procedure. The probe is therefore used to identify a
+candidate pruning region rather than to guarantee the final downstream
+optimal depth. \textbf{(3.2)
 Discriminative heads.} We truncate the backbone to the selected depth, add a
 linear intent head over mean-pooled hidden states and a per-token slot head
 (softmax cross-entropy, or a linear-chain CRF~\citep{lafferty2001crf} with
@@ -103,20 +218,53 @@ intent term. \textbf{(3.3) Reliability.} Because output is a fixed set of
 classifier decisions, it is structurally valid: parse-failure rate is 0 by
 construction.
 
-\section{Experimental Setup}
-\textbf{Datasets.} ATIS~\citep{hemphill1990atis},
-SNIPS~\citep{coucke2018snips}, MASSIVE-en~\citep{fitzgerald2023massive}
-(intent+slot); CLINC150~\citep{larson2019clinc} and
-BANKING77~\citep{casanueva2020banking77} (intent-only, 150 and 77 classes).
+\section{Experimental Setup}\label{sec:setup}
+
+\begin{table}[t]\centering
+\caption{Datasets. Intent-only benchmarks stress fine-grained classification
+(150 and 77 classes); slot-filling benchmarks stress structured output. All are
+public; train and test sizes are shown. Counts are measured directly from the
+exact files our pipeline loads (matching \texttt{n\_train}/\texttt{n\_test} in
+every released result JSON), not copied from prior papers; our ATIS and SNIPS
+mirrors differ slightly from other commonly-cited reformattings of these
+benchmarks (e.g.\ ATIS is often cited at 4{,}478 train / 893 test elsewhere in
+the literature). ATIS \#Slots (135) is the current BIO tag-label count (both
+B-/I- registered per observed slot type); the M1 encoder/generative baseline
+runs reported in \S\ref{sec:results} were produced immediately before this
+tag-vocabulary convention was adopted and used 101 labels for that run only,
+which does not affect their reported accuracy/F1 figures.}
+\label{tab:datasets}
+\small
+\begin{tabular}{lrrrrl}
+\toprule
+Dataset & \#Intents & \#Slots & Train & Test & Used for\\
+\midrule
+ATIS~\citep{hemphill1990atis} & 26 & 135 & 4{,}274 & 586 & C1, C2, C3, C4\\
+SNIPS~\citep{coucke2018snips} & 7 & 72 & 13{,}784 & 700 & C1, C2, C3\\
+MASSIVE-en~\citep{fitzgerald2023massive} & 60 & 55 & 11{,}514 & 2{,}974 & C1, C2, C3\\
+CLINC150~\citep{larson2019clinc} & 150 & -- & 15{,}000 & 4{,}500 & C1, C2\\
+BANKING77~\citep{casanueva2020banking77} & 77 & -- & 10{,}003 & 3{,}080 & C1, C2\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Datasets.} \cref{tab:datasets} lists the five public benchmarks.
 \textbf{Models.} Backbone: gpt2-124M~\citep{radford2019gpt2}; encoder baseline:
-DistilBERT~\citep{sanh2019distilbert}. \textbf{Metrics.} Intent accuracy,
+DistilBERT~\citep{sanh2019distilbert}; all runs use HuggingFace
+Transformers~\citep{wolf2020transformers} on top of
+PyTorch~\citep{paszke2019pytorch}. \textbf{Metrics.} Intent accuracy,
 span-level slot F1, parse-failure rate, and single-example P50 latency on a
 commodity CPU (Apple Silicon arm64, 10 threads). For fairness across the
-architecture comparison we match training-set size (5000 examples) between the
-encoder baseline and the pruned model. The generative baseline is bounded to
-3000 train / 300 eval for CPU-tractable autoregressive decoding.
+architecture comparison we cap training-set size at 5{,}000 examples for both
+the encoder baseline and the pruned model (a hard slice of the shuffled
+split, applied identically to both architectures); datasets whose full
+training split is smaller than this cap use their entire split rather than
+being upsampled. ATIS's split (4{,}274 examples, \cref{tab:datasets}) falls
+below the cap, so both architectures train on all 4{,}274 ATIS examples. The
+generative baseline is bounded to 3000 train / 300 eval for CPU-tractable
+autoregressive decoding.
 
-\section{Results}
+\section{Results}\label{sec:results}
 
 \begin{table}[t]\centering
 \caption{Main comparison on ATIS. The pruned discriminative model is
@@ -133,33 +281,154 @@ Encoder discriminative (DistilBERT) & \textbf{98.98} & \textbf{95.1} & 0 & 7.0\\
 \end{tabular}
 \end{table}
 
-\textbf{5.1 Probe-guided depth (C1).} On ATIS the frozen probe scores 95.0/95.4/
-95.3/96.0\% at depths 3/6/9/12; the rule selects depth 3 (within 1pt of full).
-\emph{All five datasets independently select depth 3.} Empirically fine-tuning
-each depth confirms the probe: depth 3 matches or beats full depth on intent
-accuracy on ATIS/SNIPS while being $\sim$4$\times$ faster.
+\textbf{5.1 Probe-guided candidate pruning (C1).} Over the predefined sparse
+grid $\{3,6,9,12\}$ the ATIS frozen probe scores 95.0/95.4/95.3/96.0\%; the
+$\epsilon{=}0.02$ rule selects depth 3 (within 1pt of full). All five datasets
+independently return depth 3 on this grid. Fine-tuning at depth 3 matches or
+beats full depth on intent accuracy on ATIS/SNIPS while being $\sim$4$\times$
+faster. To test the probe as a \emph{predictor} rather than just a decision
+rule on this grid, we compute Spearman's rank correlation between frozen probe
+accuracy and fine-tuned intent accuracy \emph{within each dataset} (the metric
+aligned with C1). Across the six evaluated depths $\{1,2,3,6,9,12\}$ per
+dataset, per-dataset
+$\rho$ is $-0.612$ (ATIS), $+0.353$ (SNIPS), $-0.754$ (MASSIVE), $-0.486$
+(CLINC150), $-0.771$ (BANKING77); mean $-0.454$, median $-0.612$. \textbf{The
+frozen intent probe does not rank-order depths within a dataset.} The pooled
+cross-dataset $\rho{=}+0.871$ we report elsewhere reflects between-dataset
+difficulty (easier tasks have higher probe \emph{and} higher fine-tuned
+accuracy), not within-dataset depth ranking. Reported honestly, frozen intent
+probes reliably identify an \emph{aggressive candidate region} for pruning
+but do not reliably rank fine-tuned depths within individual datasets---the
+final deployed depth is confirmed by downstream fine-tuning.
+
+\textbf{Does linear accessibility imply fine-tuning sufficiency?} No. The
+dense frozen probe of layers $1{-}12$ (\cref{tab:denseprobe}) shows
+intent representations are already highly linearly accessible at
+\emph{layer 1} on every dataset (ATIS 95.2\%, SNIPS 96.7\%, MASSIVE 74.4\%,
+CLINC150 87.6\%, BANKING77 81.9\%). Under the $\epsilon{=}0.02$ rule the
+dense sweep would select depth 1 for all five datasets. Yet downstream
+fine-tuning at depth 1 (\cref{tab:d1vsd3}) loses $2.7$--$4.1$pt of
+intent accuracy on the fine-grained benchmarks and substantially more slot F1
+(up to $10.9$pt on SNIPS). On ATIS and SNIPS, depth-1 intent accuracy is at
+most $3.3$pt below depth 3. Depth 2 recovers much of this gap---within
+1.73pt of depth 3 on intent across all five datasets---while depth 3 is the
+shallowest \emph{evaluated} fine-tuned depth (among $\{1,2,3,6,9,12\}$) that
+consistently preserves both intent accuracy and slot F1. Frozen intent
+probes over-report depth-1's usability; the substantive negative finding is
+that linear accessibility of task information precedes fine-tuning
+sufficiency at the extreme shallow end, and cheap intent-only probes cannot
+detect the gap.
+
+\textbf{Slot probes reveal what intent probes miss (on SNIPS).} We repeat the
+dense layer sweep with a token-level BIO-tag probe (frozen backbone, linear
+tag classifier per layer) on the three slot-bearing datasets
+(\cref{tab:slotprobe}). ATIS and MASSIVE slot signal is nearly flat with
+depth (within $\sim$1pt from L1 to L12), yet their downstream depth-1 slot F1
+still drops by $4.5$ and $2.9$pt respectively---so the flat slot probe on
+these two does \emph{not} explain their smaller collapses. SNIPS, in contrast,
+shows a sharp $\mathbf{+7}$pt jump from L1 (77.4\%) to L2 (84.5\%), then
+plateaus; that L1$\to$L2 transition mirrors the downstream depth-1 SNIPS slot
+F1 collapse (82.2 at depth 3 $\to$ 71.3 at depth 1). We take this as
+single-dataset evidence that \emph{task-aligned} token probes can reveal a
+phase transition that intent-only probing hides, and as motivation for a
+slot-probe-aware selection criterion: pick the shallowest layer that jointly
+satisfies the intent- and slot-probe $\epsilon$-rules. On SNIPS that
+refinement would select depth 2 instead of depth 1 and restore
+method-experiment consistency; we present it as a promising refinement of C1
+rather than the paper's headline rule.
+
+\textbf{Matched budget control.} To isolate pruning depth from training
+budget, we train depths 1, 3, and 12 on the same 3{,}000 ATIS examples.
+Depths 3 and 12 achieve identical intent accuracy of 96.08\%, while P50
+latency falls from 20.4 to 5.4\,ms. Depth 1 reaches 92.83\% intent accuracy
+at 1.8\,ms, confirming that the extreme shallow setting introduces a
+measurable capacity cost even at matched budget.
+
+\begin{table}[t]\centering
+\caption{Dense per-layer token-level BIO-tag probe (frozen backbone; linear
+probe validation accuracy \%). ATIS and MASSIVE saturate at L1--L2 and are
+flat thereafter; SNIPS shows a $+7$pt L1$\to$L2 jump that mirrors the
+downstream depth-1 slot F1 degradation in \cref{tab:d1vsd3}. ATIS and
+MASSIVE do not exhibit an analogous L1$\to$L2 transition.}
+\label{tab:slotprobe}
+\small
+\begin{tabular}{lrrrrrrrrrrrr}
+\toprule
+Dataset & L1 & L2 & L3 & L4 & L5 & L6 & L7 & L8 & L9 & L10 & L11 & L12\\
+\midrule
+ATIS & 95.4 & 95.6 & 96.1 & 96.4 & 96.4 & 96.4 & 96.3 & 96.2 & 95.6 & 95.7 & 95.6 & 95.5\\
+SNIPS & \textbf{77.4} & \textbf{84.5} & 84.9 & 84.7 & 85.6 & 84.9 & 81.4 & 84.8 & 85.0 & 84.6 & 83.5 & 84.6\\
+MASSIVE & 82.9 & 83.2 & 82.2 & 83.2 & 82.9 & 82.5 & 82.9 & 82.1 & 82.6 & 82.5 & 81.5 & 83.8\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]\centering
+\caption{Dense per-layer frozen probe (intent accuracy \%), all five
+datasets, layers 1--12. Bold denotes the maximum probe accuracy within each
+dataset (ties bolded); layer 1 is competitive or best on every dataset.}
+\label{tab:denseprobe}
+\small
+\begin{tabular}{lrrrrrrrrrrrr}
+\toprule
+Dataset & L1 & L2 & L3 & L4 & L5 & L6 & L7 & L8 & L9 & L10 & L11 & L12\\
+\midrule
+ATIS & 95.2 & 95.2 & 95.1 & 95.6 & 95.6 & 94.9 & 95.9 & 95.1 & 95.1 & \textbf{96.2} & 95.2 & 95.9\\
+SNIPS & 96.7 & 96.9 & 96.1 & 96.5 & \textbf{97.0} & \textbf{97.0} & 96.7 & \textbf{97.0} & 96.7 & 96.7 & 96.6 & 94.9\\
+MASSIVE & 74.4 & 75.0 & 75.0 & 74.1 & \textbf{75.5} & 73.5 & 74.8 & 74.3 & 72.3 & 72.3 & 72.1 & 72.9\\
+CLINC150 & \textbf{87.6} & 85.6 & 86.8 & \textbf{87.6} & 86.9 & 87.1 & 85.8 & 86.9 & 84.6 & 85.0 & 85.5 & 86.1\\
+BANKING77 & \textbf{81.9} & 79.9 & 80.5 & 79.8 & 76.9 & 78.5 & 79.3 & 79.1 & 77.5 & 76.2 & 73.5 & 75.7\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]\centering
+\caption{Depth-1 vs.\ depth-2 vs.\ depth-3 fine-tuning under the matched
+training-data protocol, capped at 5{,}000 examples per dataset (seed 42).
+Depth 2 is within 1.73pt of depth 3 on
+intent across all five datasets; SNIPS slot F1 is the only sizable residual
+gap. Frozen-probe accessibility at layer 1 does not imply fine-tuning
+sufficiency at depth 1.}
+\label{tab:d1vsd3}
+\small
+\begin{tabular}{lrrrrrrrrrr}
+\toprule
+Dataset & d1 Int & d2 Int & d3 Int & $\Delta$3-1 & d1 SlotF1 & d2 SlotF1 & d3 SlotF1 & d1 P50 & d2 P50 & d3 P50\\
+\midrule
+ATIS & 94.71 & 97.78 & 97.95 & $-3.24$ & 86.46 & 90.74 & 90.96 & 1.94 & 3.26 & 5.12\\
+SNIPS & 97.71 & 98.14 & 98.00 & $-0.29$ & 71.27 & 78.26 & 82.17 & 1.72 & 3.19 & 4.87\\
+MASSIVE & 69.70 & 72.46 & 73.81 & $-4.11$ & 47.66 & 51.32 & 50.59 & 1.15 & 1.84 & 2.65\\
+CLINC150 & 75.87 & 77.29 & 79.02 & $-3.15$ & \multicolumn{3}{c}{intent-only} & 1.19 & 1.81 & 2.64\\
+BANKING77 & 75.68 & 77.69 & 78.34 & $-2.66$ & \multicolumn{3}{c}{intent-only} & 1.20 & 1.81 & 2.91\\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \begin{figure}[t]\centering
 \includegraphics[width=0.6\linewidth]{../../experiments/figures/fig_probe_sweep.pdf}
-\caption{Linear-probe intent accuracy vs.\ backbone depth, all five datasets.
-Every curve is nearly flat: probe accuracy saturates by depth 3, motivating the
-a-priori depth-3 pick before any fine-tuning.}
+\caption{Frozen intent probe accuracy across backbone depth. On the
+predefined sparse candidate grid, probe performance is already saturated at
+depth 3, motivating depth 3 as an aggressive candidate pruning point before
+fine-tuning. The dense diagnostic sweep shows that linear accessibility
+emerges even earlier, but downstream experiments (\cref{sec:results}) demonstrate that
+accessibility alone does not imply fine-tuning sufficiency.}
 \end{figure}
 
 \begin{table}[t]\centering
 \caption{Multi-seed intent accuracy (mean$\pm$std, 3 seeds; MASSIVE 2 seeds).
-The probe-selected depth-3 is statistically indistinguishable from full depth on
-ATIS/SNIPS/CLINC150; MASSIVE and BANKING77 show a small, seed-robust gain from
-depth. Every depth-3 config is $\sim$4$\times$ faster.}
+With only 3 seeds we report descriptive statistics rather than an inferential
+test: no clear separation between depth-3 and depth-12 is observed on
+ATIS/SNIPS/CLINC150, while MASSIVE and BANKING77 show a small, seed-robust
+advantage for depth 12. Every depth-3 config is $\sim$4$\times$ faster.}
 \begin{tabular}{lrrc}
 \toprule
-Dataset & depth 3 & depth 12 & indistinguishable?\\
+Dataset & depth 3 & depth 12 & separation across 3 seeds?\\
 \midrule
-ATIS & 97.95$\pm$0.14 & 97.84$\pm$0.29 & yes\\
-SNIPS & 98.19$\pm$0.18 & 98.14$\pm$0.00 & yes\\
-CLINC150 & 78.06$\pm$0.91 & 80.44$\pm$1.68 & yes (overlap)\\
-MASSIVE & 73.49$\pm$0.32 & 74.50$\pm$0.12 & no ($\sim$1pt)\\
-BANKING77 & 78.74$\pm$0.29 & 81.32$\pm$0.81 & no ($\sim$2.6pt)\\
+ATIS & 97.95$\pm$0.14 & 97.84$\pm$0.29 & none observed\\
+SNIPS & 98.19$\pm$0.18 & 98.14$\pm$0.00 & none observed (d3 nominally higher)\\
+CLINC150 & 78.06$\pm$0.91 & 80.44$\pm$1.68 & none observed\\
+MASSIVE & 73.49$\pm$0.32 & 74.50$\pm$0.12 & $\sim$1pt, seed-robust\\
+BANKING77 & 78.74$\pm$0.29 & 81.32$\pm$0.81 & $\sim$2.6pt, seed-robust\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -182,7 +451,9 @@ BANKING77 & 78.34/--/2.9 & 80.91/--/5.4 & 81.79/--/9.1 & 80.78/--/10.7\\
 \end{table}
 
 \textbf{5.2 Reliability (C2).} Generative parse-failure rate tracks slot-schema
-complexity: 46.7\% on ATIS (101 tag types), 3.3\% on SNIPS (72), 0\% on
+complexity: 46.7\% on ATIS (135 BIO tag labels; the M1 baseline run itself
+used 101 under a pre-fix tag-vocabulary convention, see \cref{tab:datasets}
+footnote), 3.3\% on SNIPS (72), 0\% on
 intent-only CLINC150; generative latency likewise scales with output length
 (359/243/83\,ms). The discriminative model is flat ($\sim$5--7\,ms) and always
 valid, independent of schema complexity.
@@ -204,27 +475,80 @@ relative to the added latency.}
 \textbf{5.3 CRF ablation.} With a length-normalized CRF loss, the CRF slot head
 gives a small consistent gain over softmax at depth 3 (ATIS $+0.19$, SNIPS
 $+0.27$, MASSIVE $+0.09$ F1); it does not close the gap to the bidirectional
-encoder, indicating the encoder's slot advantage is attention directionality,
-not tag-transition modeling.
+encoder, suggesting that transition modeling alone does not explain the gap.
+Attention directionality and other encoder-specific properties (pretraining
+objective, tokenizer, model family) remain possible explanations.
 
-\textbf{5.4 Fair head-to-head.} At a matched 5000-example budget, ours (depth 3)
+\textbf{Slot-loss weight $\lambda$.} We sweep $\lambda \in \{1.0, 1.5, 2.0,
+2.5, 3.0\}$ on ATIS depth-3 (\cref{tab:lambda}). Intent accuracy is flat
+within $0.5$pt (97.61--98.12); slot F1 monotonically rises with $\lambda$ from
+$89.56$ to $91.53$ as expected. The paper's default $\lambda{=}2$ sits in the
+middle of a smooth curve---no cliff, no sharp optimum. The main conclusions
+are insensitive to $\lambda$ within this range.
+
+\begin{table}[t]\centering
+\caption{Slot-loss weight $\lambda$ sweep on ATIS depth-3 (softmax slot head,
+seed 42). Intent accuracy is stable; slot F1 rises monotonically with
+$\lambda$; the paper's default $\lambda{=}2$ is unremarkable within the sweep.}
+\label{tab:lambda}
+\small
+\begin{tabular}{crrr}
+\toprule
+$\lambda$ & Intent Acc & Slot F1 & P50 (ms)\\
+\midrule
+1.0 & 98.12 & 89.56 & 4.89\\
+1.5 & 97.95 & 90.68 & 5.07\\
+\textbf{2.0 (default)} & \textbf{97.95} & \textbf{90.96} & \textbf{4.98}\\
+2.5 & 97.78 & 91.23 & 5.18\\
+3.0 & 97.61 & 91.53 & 6.72\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{5.4 Fair head-to-head.} Under the matched training-data protocol,
+capped at 5{,}000 examples per dataset, ours (depth 3)
 vs.\ DistilBERT: ATIS 97.95 vs 97.95 intent (tie), 91.0 vs 94.5 slot F1; the
 encoder leads on slots and on fine-grained intent (CLINC150 82.0 vs 92.96). Our
 recipe's value is converting an existing decoder into a fast discriminative
 model, not beating a purpose-built encoder.
 
-\section{Negative Results: CPU Inference Optimizations}
-On the depth-3 ATIS model (identical weights; P50 ms): FP32 5.13; dynamic INT8
-5.02 (no gain, $-0.28$ slot F1, and fails to run without an explicit quantized
-engine); \texttt{torch.compile} 5.39 (\emph{slower}, overhead dominates at this
-scale); ONNX Runtime 1.14 ($4.5\times$ faster, identical accuracy, but the
-modern exporter fails on the decoder and the legacy exporter requires
-tensor-only output surgery). Takeaway: for shallow closed-set NLU the win came
-from \emph{pruning + discriminative single-pass}, not post-hoc kernel/quant
-tricks; ONNX graph execution is an orthogonal, stackable win with export
-friction.
+\section{Negative Results: CPU Inference Optimizations}\label{sec:negresults}
 
-\textbf{C3: implicit slots (scope statement).} A slot value is
+\begin{table}[t]\centering
+\caption{CPU inference optimizations on the depth-3 ATIS model (identical
+weights across conditions; P50 single-example latency, Apple Silicon arm64, 10
+threads). Full detail and root-cause analysis in
+\texttt{RESULTS\_M5\_negresults.md}.}
+\label{tab:negresults}
+\small
+\begin{tabular}{lrrrrl}
+\toprule
+Condition & Intent Acc & Slot F1 & P50 (ms) & vs FP32 & Verdict\\
+\midrule
+FP32 baseline & 97.95 & 90.96 & 5.13 & 1.00$\times$ & reference\\
+Dynamic INT8 (qnnpack) & 97.95 & 90.68 & 5.02 & 1.02$\times$ & no benefit\\
+\texttt{torch.compile}~\citep{ansel2024torchcompile} & 97.95 & 90.96 & 5.39 & 0.95$\times$ & \emph{slower}\\
+ONNX Runtime~\citep{onnxruntime2019} & 97.95 & 90.96 & \textbf{1.14} & \textbf{4.5$\times$} & big win, brittle export\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\cref{tab:negresults} summarizes four conditions on the same weights.
+\textbf{Dynamic INT8} gives no benefit: at depth 3 the Linear layers are not
+the bottleneck, per-batch quant/dequant overhead offsets the cheaper matmuls,
+and the path silently fails to run on a stock CPU build without
+\texttt{torch.backends.quantized.engine = "qnnpack"}---a portability footgun.
+\textbf{\texttt{torch.compile}} is marginally \emph{slower}: compile overhead
+and dynamic sequence shapes prevent graph fusion from amortizing at this scale.
+\textbf{ONNX Runtime} yields a real $4.5\times$ speedup at identical accuracy,
+but the modern dynamo exporter fails on the decoder and the legacy exporter
+rejects the dataclass output; it only succeeds after wrapping the model to
+return a plain \texttt{(intent\_logits, slot\_logits)} tuple. Takeaway: for
+shallow closed-set NLU the win came from \emph{pruning + discriminative
+single-pass}, not post-hoc kernel/quant tricks; ONNX graph execution is an
+orthogonal, stackable win with real export friction.
+
+\textbf{Implicit-slot scope (measured, not estimated).} A slot value is
 \emph{implicit} if it is not a contiguous span of the utterance; span-based
 taggers cannot recover it by construction. We measured the implicit-slot rate
 on all three slot-filling benchmarks and found it is exactly \textbf{0\%}
@@ -234,20 +558,32 @@ have no theoretical recall ceiling here; tasks with a genuine implicit-slot
 rate (e.g.\ coreference- or ellipsis-dependent slot filling) would need a
 generative fallback or explicit non-span recovery rules, which we leave to
 future work rather than force onto benchmarks that do not exhibit the
-phenomenon.
+phenomenon. This is a scope-validation result, not an independent contribution.
 
-\section{Discussion and Limitations}
+\section{Discussion and Limitations}\label{sec:discussion}
 Closed-set assumption; open-set/novel-intent detection is out of scope.
-Generation is still needed for free-form tasks. Results use a single 124M
-backbone and a single CPU; a second model size and rotation-INT8 with fused
-kernels are future work. The fine-grained gap on BANKING77 shows depth
-genuinely helps for many same-domain intents---probe-guided pruning trades a
-small, quantified accuracy cost there for a $4\times$ speedup.
+Generation is still needed for free-form tasks. The representation
+accessibility-versus-fine-tuning-sufficiency result is established here for a
+single 124M causal decoder on a single CPU; whether the same depth behaviour
+generalizes to newer decoder families or larger models remains an open
+question. The fine-grained gap on BANKING77 shows depth genuinely helps for
+many same-domain intents---probe-guided candidate pruning trades a small,
+quantified accuracy cost there for a $4\times$ speedup.
 
-\section{Conclusion}
-Generate less, classify more: a cheap probe selects a shallow depth, and
-discriminative heads deliver fast, reliable, single-pass intent + slot
-prediction from an existing generative SLM.
+\textbf{Fairness caveats on baselines.} Our generative baseline is bounded to
+3{,}000 train / 300 eval examples because autoregressive CPU decoding is
+expensive; the discriminative rows use 5{,}000. The latency and parse-failure
+comparisons remain apples-to-apples (they are architecture properties). The
+matched budget control in \cref{sec:results} isolates pruning depth from training budget:
+depths 3 and 12 reach identical intent accuracy at 3{,}000 examples,
+confirming that pruning depth-12$\to$3 is an architecture win, not a
+training-budget confound.
+
+\section{Conclusion}\label{sec:conclusion}
+Generate less, classify more: cheap frozen probes identify an aggressive
+candidate pruning region, downstream fine-tuning confirms a shallow operating
+depth, and discriminative heads deliver fast, reliable, single-pass intent
+and slot prediction from an existing generative SLM.
 
 \section*{Reproducibility Statement}
 All datasets are public. Code, exact commands, model revisions, seeds, and the
@@ -260,6 +596,6 @@ run the training/evaluation harness, and draft prose. All experimental design,
 result interpretation, and claims were verified by the authors; all reported
 numbers were produced by the released code on public benchmarks.
 
-\bibliographystyle{plainnat}
+\bibliographystyle{iclr2027_conference}
 \bibliography{references}
 \end{document}

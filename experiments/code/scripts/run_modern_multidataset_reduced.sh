@@ -22,8 +22,10 @@ source .venv/bin/activate
 export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1
 mkdir -p results
 
-NEMO='/Users/s0n0611/Documents/GitHub/SLM_PAPER/nemotron-mini-4b'
-PHI='/Users/s0n0611/Documents/GitHub/SLM_PAPER/phi-3.5-mini'
+# Point NEMO/PHI at local model dirs; override via env if stored elsewhere.
+REPO_ROOT="$(cd ../.. && pwd)"
+NEMO="${NEMO:-$REPO_ROOT/nemotron-mini-4b}"
+PHI="${PHI:-$REPO_ROOT/phi-3.5-mini}"
 
 # reduced budget knobs
 PROBE_MAX_TRAIN=120

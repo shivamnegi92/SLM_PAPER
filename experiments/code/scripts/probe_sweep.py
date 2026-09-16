@@ -20,6 +20,8 @@ os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
 import torch
 from transformers import AutoModel, AutoTokenizer
 
+from slmpaper.backbone import get_num_layers
+
 from slmpaper.data_registry import load_split
 from slmpaper.depth_selection import pick_depth
 from slmpaper.labels import build_intent_vocab
@@ -53,6 +55,9 @@ def main():
     ap.add_argument("--epsilon", type=float, default=0.02)
     ap.add_argument("--probe-epochs", type=int, default=100)
     ap.add_argument("--seed", type=int, default=42)
+    ap.add_argument("--depths", default="",
+                    help="Comma-separated depths override, e.g. 1,2,3,4,5,6,7,8,9,10,11,12. "
+                         "Empty (default) uses {L/4, L/2, 3L/4, L} where L is backbone depth.")
     ap.add_argument("--output", required=True)
     args = ap.parse_args()
 
@@ -76,9 +81,14 @@ def main():
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
     model = AutoModel.from_pretrained(args.model_path)
-    n_layer = model.config.n_layer
-    depths = sorted(set([max(1, n_layer // 4), max(1, n_layer // 2),
-                          max(1, 3 * n_layer // 4), n_layer]))
+    n_layer = get_num_layers(model)
+    if args.depths:
+        depths = sorted({int(d) for d in args.depths.split(",") if d.strip()})
+        # Clamp to a valid range so a bad flag doesn't waste a run.
+        depths = [d for d in depths if 1 <= d <= n_layer]
+    else:
+        depths = sorted(set([max(1, n_layer // 4), max(1, n_layer // 2),
+                              max(1, 3 * n_layer // 4), n_layer]))
     print(f"  candidate depths (of {n_layer}): {depths}", flush=True)
 
     train_labels = torch.tensor([intent2id[e.intent] for e in train_examples])

@@ -1,0 +1,30 @@
+{
+  "version": "swap_format_pilot_v1",
+  "scope": "fresh_development_format_diagnostic_only",
+  "model": "phi-3.5-mini",
+  "generator_seed": 9072601,
+  "demonstration_seed": 9072602,
+  "chain_lengths": [0, 1, 3, 4],
+  "pairs_per_length": 8,
+  "wordings": ["swap", "exchange"],
+  "answer_cues": ["in_box", "is"],
+  "demonstrations": "three separate swap/in_box examples at lengths0,1,3 and target labels A,D,G; same prefix for every query condition",
+  "sides": ["clean", "counterfactual"],
+  "precision": "float32",
+  "generation": {"do_sample": false, "max_new_tokens": 8, "use_cache": true},
+  "primary_metrics": ["strict_next_token_accuracy", "parsed_first_answer_accuracy", "unparsed_fraction"],
+  "parser": "first response prefix is optional box plus one uppercase label A-H followed by whitespace, punctuation or end",
+  "stopping_rule": "complete_256_declared_responses_no_data_dependent_extension",
+  "original_manifest": "data/validated_manifest_v1.json",
+  "original_manifest_sha256": "62ff44d5085823e828e08e4a58a7906632bf6d7e72210d1d923954181ccc2ca5",
+  "provenance_reference": "results/postrun_audit_v1/reproducibility/manifest.json",
+  "output": "results/swap_format_pilot_v1",
+  "limitations": [
+    "Diagnostic only: no intervention, no test-set claim, no new competence certification.",
+    "The same eight semantic pairs per depth are reused across cues, wordings and sides; responses are not independent.",
+    "Zero/one-swap examples are sanity checks; lengths three/four require at least two relevant moves for both sides.",
+    "The common demonstration prefix deliberately stays fixed while query wording and cue vary.",
+    "Normalized answers are a new diagnostic metric, not a replacement for original next-token accuracy.",
+    "This simpler diagnostic omits the original irrelevant final swap and cannot establish equivalence to the original harder task."
+  ]
+}

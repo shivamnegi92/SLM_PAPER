@@ -1,0 +1,85 @@
+{
+  "model": "phi-3.5-mini",
+  "n": 16,
+  "min_completeness": 0.2,
+  "cells": [
+    {
+      "completeness": 0.6875,
+      "selectivity": 0.0,
+      "donor_leak": 0.5625,
+      "change_hits": 11,
+      "n": 16,
+      "preserve_hits": 0,
+      "preserve_total": 32,
+      "layers": "late [18,20,22,24]",
+      "position": -1,
+      "interpretable": true,
+      "status": "interpretable, 0 selectivity"
+    },
+    {
+      "completeness": 0.0,
+      "selectivity": 1.0,
+      "donor_leak": 0.0,
+      "change_hits": 0,
+      "n": 16,
+      "preserve_hits": 32,
+      "preserve_total": 32,
+      "layers": "late [18,20,22,24]",
+      "position": -2,
+      "interpretable": false,
+      "status": "DEAD (inert; selectivity vacuous)"
+    },
+    {
+      "completeness": 0.0,
+      "selectivity": 1.0,
+      "donor_leak": 0.0,
+      "change_hits": 0,
+      "n": 16,
+      "preserve_hits": 32,
+      "preserve_total": 32,
+      "layers": "late [18,20,22,24]",
+      "position": -4,
+      "interpretable": false,
+      "status": "DEAD (inert; selectivity vacuous)"
+    },
+    {
+      "completeness": 0.0625,
+      "selectivity": 0.0,
+      "donor_leak": 0.0,
+      "change_hits": 1,
+      "n": 16,
+      "preserve_hits": 0,
+      "preserve_total": 32,
+      "layers": "mid  [10,12,14,16]",
+      "position": -1,
+      "interpretable": false,
+      "status": "DEAD (inert; selectivity vacuous)"
+    },
+    {
+      "completeness": 0.0,
+      "selectivity": 0.90625,
+      "donor_leak": 0.0,
+      "change_hits": 0,
+      "n": 16,
+      "preserve_hits": 29,
+      "preserve_total": 32,
+      "layers": "mid  [10,12,14,16]",
+      "position": -2,
+      "interpretable": false,
+      "status": "DEAD (inert; selectivity vacuous)"
+    },
+    {
+      "completeness": 0.0,
+      "selectivity": 1.0,
+      "donor_leak": 0.0,
+      "change_hits": 0,
+      "n": 16,
+      "preserve_hits": 32,
+      "preserve_total": 32,
+      "layers": "mid  [10,12,14,16]",
+      "position": -4,
+      "interpretable": false,
+      "status": "DEAD (inert; selectivity vacuous)"
+    }
+  ]
+}

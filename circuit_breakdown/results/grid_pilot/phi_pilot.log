@@ -1,0 +1,26 @@
+model=phi-3.5-mini  depth=32  n=16 pairs/cell
+change probe: current_holder   preserve probes: original_holder, object_identity
+a cell is INTERPRETABLE only if completeness >= 20%
+
+  layers                pos  complete   select    leak  status
+  --------------------------------------------------------------
+  late [18,20,22,24]     -1    68.8%    0.0%  56.2%  interpretable, 0 selectivity
+  late [18,20,22,24]     -2     0.0%  100.0%   0.0%  DEAD (inert; selectivity vacuous)
+  late [18,20,22,24]     -4     0.0%  100.0%   0.0%  DEAD (inert; selectivity vacuous)
+  mid  [10,12,14,16]     -1     6.2%    0.0%   0.0%  DEAD (inert; selectivity vacuous)
+  mid  [10,12,14,16]     -2     0.0%   90.6%   0.0%  DEAD (inert; selectivity vacuous)
+  mid  [10,12,14,16]     -4     0.0%  100.0%   0.0%  DEAD (inert; selectivity vacuous)
+
+==================================================================
+  interpretable cells : 1/6
+  of those, selective : 0/1
+==================================================================
+
+--- verdict ---
+  1/6 cells are interpretable, and every one has zero
+  selectivity. No positive result here, but the grid is measurable,
+  so scaling would buy a much stronger NEGATIVE claim: selectivity
+  fails across the whole accessible layer x position space, not just
+  at one site. Worth an overnight run; will not yield a method.
+
+wrote results/grid_pilot/phi_pilot.json

@@ -1,7 +1,23 @@
-# Circuit Breakdown deps. Install via Walmart index (see README quickstart).
-# Pin loosely; lock once G1 passes.
-torch>=2.2
-transformer-lens>=2.0
-transformers>=4.44
-numpy>=1.26
-tqdm>=4.66
+# Circuit Breakdown dependencies.
+#
+# Verified against the actual imports in src/ (ast scan, not guesswork) and
+# pinned to the versions the frozen e91985c results were produced with.
+#
+# Install:
+#   uv venv && source .venv/bin/activate
+#   uv pip install -r requirements.txt \
+#     --index-url https://pypi.ci.artifacts.walmart.com/artifactory/api/pypi/external-pypi/simple \
+#     --allow-insecure-host pypi.ci.artifacts.walmart.com
+#
+# Python 3.11 (results produced on 3.11.13, Apple M4 Pro, MPS).
+#
+# NOTE: transformer-lens was previously listed here but is NOT imported by any
+# script in src/ -- the harness hooks HuggingFace modules directly
+# (src/localize.py, src/causal_interchange.py). Removed rather than left as a
+# misleading heavyweight dependency.
+
+torch==2.14.0
+transformers==5.16.1
+numpy==2.4.6
+matplotlib==3.11.1   # required by make_paper_figures.py and make_selectivity_explainer.py
+tqdm==4.70.0

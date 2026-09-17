@@ -4,6 +4,94 @@
 > self-contained.** No proprietary data, framing, or results. See the parent
 > `../COMPLIANCE.md`.
 
+---
+
+## CURRENT PAPER (2026-09-17) — start here
+
+The active paper is **[`paper/PAPER_DRAFT.md`](paper/PAPER_DRAFT.md)**
+(rendered: [`paper/paper.html`](paper/paper.html)). Everything below the
+"Historical context" divider predates it and points at a superseded
+manuscript; read this section first.
+
+**Question.** Can an activation intervention be behaviourally effective,
+donor-specific, norm-controlled and dose-graded, yet still fail to control the
+reasoning variable it appears to manipulate?
+
+**Answer, in this setting: yes.** Selectivity is **0/240** in two model
+families, 95% CI [0.0%, 1.6%].
+
+| | Phi-3.5-mini (primary) | Llama-3.2-3B |
+|---|---|---|
+| completeness | 71.7% [65.7, 77.0] | 44.2% [35.6, 53.1] |
+| **selectivity** | **0/240 = 0.0%** [0.0, 1.6] | **0/240 = 0.0%** [0.0, 1.6] |
+| graded probes | 4 | 3 |
+
+The clearest single result: both models answer *"what object did X have at the
+start?"* with **100% accuracy unintervened**, and with a **person's name**
+after an intervention that was supposed to set only *who currently holds* the
+object.
+
+### Verify without models or a GPU (under 1 second)
+
+```bash
+python src/verify_paper_numbers.py   # 44 checks against the frozen snapshot
+./scripts/build_paper.sh             # verify, then render paper/paper.html
+```
+
+`build_paper.sh` refuses to render if any quoted number disagrees with
+`results/frozen_e91985c/`.
+
+### Reproducing (models required; ~25 min/model for the main panel)
+
+```bash
+python src/test_cross_question_panel.py --model phi-3.5-mini --n 40 --seeds 21 22 23
+python src/validate_selectivity_metric.py --model phi-3.5-mini --n 40
+python src/make_paper_figures.py && python src/make_selectivity_explainer.py
+```
+
+Seeds resample items *and* the few-shot prefix, so re-runs are statistically
+equivalent, **not identical**. Compare against `results/frozen_e91985c/`.
+
+Model weights are gitignored (29 GB) and resolve to the parent directory:
+`../phi-3.5-mini`, `../llama-3.2-3b`, `../nemotron-mini-4b`. Fetch via
+`../GET_MODELS.ipynb`. **Do not quantize** — 4-bit distorts activation
+geometry and invalidates these measurements.
+
+### Three caveats to read before quoting any number
+
+1. **Phi is primary; Llama corroborates selectivity only.** Llama's
+   `current_holder` competence is 46.7% at n=120, below the gate, so its
+   completeness sits on three probes against Phi's four. The two completeness
+   figures are **not comparable** and the paper does not compare them.
+2. **The cross-question diagnostic is not novel.** RAVEL (arXiv:2402.17700)
+   established effectiveness-vs-selectivity for static entity attributes; MIB
+   (arXiv:2504.13151) reports full-vector interventions failing it. The
+   contribution is the extension to a *sequentially computed* state.
+3. **Three hypotheses were tested and falsified** and are kept for provenance,
+   not hidden: the compact-basis mechanistic reading (it was answer-token
+   transport), the novelty of the panel, and non-uniqueness of successful
+   edits (median pairwise cosine +0.840/+0.912/+0.948 — they converge). See
+   [`REVIEWER_GAP_TRACKER.md`](REVIEWER_GAP_TRACKER.md).
+
+### Key paths
+
+| path | what |
+|---|---|
+| `paper/PAPER_DRAFT.md` | the paper |
+| `paper/NEXT_STEPS_PAPER.md` | venue decision + roadmap |
+| `results/frozen_e91985c/` | **the snapshot behind every number; cannot be regenerated** |
+| `results/grid_pilot/` | layer x position viability pilot — verdict: not viable |
+| `src/verify_paper_numbers.py` | the 44-check guard |
+| `REVIEWER_GAP_TRACKER.md` | full provenance incl. falsified claims |
+
+---
+
+## Historical context (pre-2026-09-07)
+
+*The material below describes the earlier study phase and refers to
+`paper/MANUSCRIPT.md`, which the current draft supersedes. Retained for
+provenance.*
+
 **Current research question:** When do answer-sensitive activation differences
 also support target-informed control, and what damage does that edit cause?
 The existing local models are **Llama-3.2-3B, Phi-3.5-mini, and

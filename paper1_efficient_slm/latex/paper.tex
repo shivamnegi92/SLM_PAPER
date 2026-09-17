@@ -572,7 +572,9 @@ quantified accuracy cost there for a $4\times$ speedup.
 
 \textbf{Fairness caveats on baselines.} Our generative baseline is bounded to
 3{,}000 train / 300 eval examples because autoregressive CPU decoding is
-expensive; the discriminative rows use 5{,}000. The latency and parse-failure
+expensive; the discriminative rows use the matched training-data protocol
+described in \cref{sec:setup}, capped at 5{,}000 examples per dataset. The
+latency and parse-failure
 comparisons remain apples-to-apples (they are architecture properties). The
 matched budget control in \cref{sec:results} isolates pruning depth from training budget:
 depths 3 and 12 reach identical intent accuracy at 3{,}000 examples,

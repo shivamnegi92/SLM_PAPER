@@ -24,29 +24,50 @@ from earlier work. This file covers the paper only.)
 
 ## Next, in the order I would do them
 
-### 1. Read the draft and decide the venue  *(you, ~1 hour)*
+### 1. Venue — DECIDED 2026-09-16
 
-`paper/paper.html` is open in Chrome. Nothing else should happen until you
-have read it end to end, because venue choice changes the next three items.
+Status as of today:
+- **BlackboxNLP 2026**: closed. Direct deadline was Jul 17, 2026; ARR-commitment
+  decisions were announced Sep 2; accepted-papers list posted Sep 15. Nothing
+  left to submit to this year's edition.
+- **ICLR 2027** (Sep 25, 2026 full-paper deadline): the team's one new-author
+  ICLR slot goes to Paper 1 (`paper1_efficient_slm`), which has conference-scale
+  GPT-2 results already. This paper's own fit assessment below rules ICLR/NeurIPS
+  main track out anyway, so there is no competition for the slot.
+- **ARR October 2026 cycle**: submission deadline **Oct 12, 2026** — live now,
+  real option. ARR is a review pool, not a venue commitment guarantee; a
+  BlackboxNLP-specific ARR-commitment window for 2027 has not been announced
+  yet. Decision: prepare for ARR Oct 12 as the near-term target, format in
+  ARR/*ACL style, and commit wherever it fits once reviews land (workshop or
+  Findings-track).
+- Fallback: **BlackboxNLP 2027 direct submission**, expected ~Jul 2027 based on
+  this year's pattern, if ARR doesn't pan out.
 
 | venue | fit | note |
 |---|---|---|
 | **ICML/NeurIPS interpretability workshop** | **strong** | Scope and scale match a 4-8 page workshop paper. Most honest fit. |
-| **BlackboxNLP** | strong | Explicitly hosts this kind of probing/intervention negative result. |
-| ACL/EMNLP Findings | plausible | Would want a third model family and a second task. |
+| **BlackboxNLP** | strong | Explicitly hosts this kind of probing/intervention negative result. Closed for 2026; target 2027. |
+| ACL/EMNLP Findings | plausible | Would want a third model family and a second task. ARR commitment route. |
 | ICML/NeurIPS main track | **weak** | Needs the layer x position study below. Not supported by current evidence. |
 
 The original plan targeted ICML main track. The evidence does not support
 that. A workshop paper with a clean negative result is a real contribution; a
 rejected main-track submission is not.
 
-### 2. Tighten the draft  *(~2 hours)*
+### 2. Tighten the draft — SUPERSEDED 2026-09-16
 
-- Sections 1 and 7 are the loosest; both can lose roughly a third.
-- Section 6 (supporting geometry) can move to an appendix if pages are tight.
-  It supports the interpretation but is not load-bearing.
-- Add a short related-work paragraph on activation steering, since reviewers
-  from that community will ask how this relates to their methods.
+Re-read against the current `PAPER_DRAFT.md`: Sections 1 and 7 are already
+lean, not loose. Section 1 already carries the activation-steering
+related-work paragraph this note called for (line 27). Cutting either section
+by a third now would remove load-bearing content (each of Section 7's six
+limitations is something a reviewer would otherwise ask about explicitly).
+
+Page-limit trimming is venue-specific (4-8pp workshop vs ~9pp ARR/*ACL) and no
+venue is finalized yet (see #1). Do not cut content to fit an unpicked
+template. Revisit only once the actual venue page limit is known.
+
+Section 6 (supporting geometry) moving to an appendix if pages are tight is
+still a live option, deferred for the same reason.
 
 ### 3. Convert to the venue template  *(~1 hour once chosen)*
 

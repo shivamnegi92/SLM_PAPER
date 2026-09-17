@@ -194,7 +194,7 @@ This is difficult to attribute to misunderstanding the question: the model answe
 
 ### 5.5 Supporting observations
 
-Three observations support the interpretation without being independent contributions, reported in full in Appendix B: the effect is confined to the answer boundary (0/12 transport at positions −2 through −7 versus 9/12 at −1); compact subspaces do not carry it (0/32 at rank 32 for every basis tested, against 24/32 full-space); and successful edits are not geometrically diverse, so intervention non-uniqueness does not explain the failure.
+Three observations support the interpretation without being independent contributions, reported in full in Appendix C: the effect is confined to the answer boundary (0/12 transport at positions −2 through −7 versus 9/12 at −1); compact subspaces do not carry it (0/32 at rank 32 for every basis tested, against 24/32 full-space); and successful edits are not geometrically diverse, so intervention non-uniqueness does not explain the failure.
 
 ---
 
@@ -215,7 +215,7 @@ Three observations support the interpretation without being independent contribu
 1. **One task family.** A single transfer-chain task with one causal program. We make no claim of universality.
 2. **Selectivity rests on two probes per model.** `transfer_count` was excluded in both models (20.8% and 18.3% competence): neither can count transfers unprompted, so post-intervention changes there are uninterpretable.
 3. **Llama supports only part of the claim.** Its current-holder competence is 46.7% at n=120, so its completeness figure is computed on a different probe set and is not comparable to Phi's.
-4. **One intervention site and one layer set.** Layers [18, 20, 22, 24] at the final pre-answer position. Other sites may behave differently — indeed Appendix B shows they behave *very* differently.
+4. **One intervention site and one layer set.** Layers [18, 20, 22, 24] at the final pre-answer position. Other sites may behave differently — indeed Appendix C shows they behave *very* differently.
 5. **Competence is not shown to drive the effect.** Phi has both higher baseline accuracy and stronger intervention takeover, but two models cannot establish a relationship between competence and selectivity failure. The defensible statement is narrower: **the selectivity failure cannot be explained by poor baseline task competence, since it persists in Phi at 99–100% baseline accuracy on all graded probes.**
 6. **Small-sample estimates were optimistic.** At n=24 Llama's current-holder competence appeared to be 88%; at n=120 with freshly resampled items it is 46.7%. Early-stage numbers in this literature, including our own, should be treated with caution.
 
@@ -256,7 +256,53 @@ Frozen outputs: `results/frozen_e91985c/`. The panel runs predate the `--out` fl
 
 ---
 
-## Appendix B: supporting observations
+## Appendix B: probe templates and the competence gate
+
+**Item construction.** Each item is a single transfer-chain body (§2) rendered
+once and then queried five ways, so completeness and selectivity are measured
+on the *same* underlying problem rather than resampled items per probe
+(`src/interchange_dataset.py` for chain generation, `src/test_cross_question_panel.py`
+for the panel). The donor is always asked the canonical question; only the
+receiver is asked all five.
+
+| probe | question template | should change under `do(Z_curr := z'_D)`? |
+|---|---|---|
+| `current_holder` | "Who has the {object}?" | YES → donor's value |
+| `last_recipient` | "Who received the {object} last?" | YES → donor's value |
+| `original_holder` | "Who originally had the {object}?" | NO → receiver's value |
+| `object_identity` | "What object did {first} have at the start?" | NO → receiver's value |
+| `transfer_count` | "How many times was the {object} given away?" | NO → receiver's value |
+
+`{object}` and `{first}` are filled from the receiver's own problem, never the
+donor's, so a probe answered correctly with the *donor's* value cannot be
+explained by surface leakage from the question text itself.
+
+**Why the competence gate exists.** A selectivity failure — a should-not-change
+probe moving after the patch — is only evidence of a semantic leak if the model
+could answer that probe correctly *unpatched*. If a model cannot perform the
+task at all, a post-intervention "change" on that probe is noise, not leakage.
+The gate is therefore applied per probe, per model, at a 50% baseline-accuracy
+floor, before any selectivity number is computed or reported (§5.1–5.2).
+
+**Why `transfer_count` was excluded for both models.** Baseline (unpatched)
+accuracy was 20.8% (Phi) and 18.3% (Llama) — both models fail to count
+transfers unprompted at a rate indistinguishable from guessing among small
+integers, independent of any intervention. Reporting a "selectivity" result on
+this probe would conflate task incapacity with semantic leakage, so it is
+dropped from the verdict in both models, leaving four graded probes for Phi and
+three for Llama (`current_holder` additionally excluded for Llama at 46.7%
+baseline competence, per §5.2).
+
+**Answer-token construction.** Count answers are rendered as words ("two", not
+"2"), because the digit form tokenizes inconsistently across architectures —
+verified to silently corrupt generated pairs before being caught. All answers
+are checked for single-token status *in the rendered context* (`"the " + word`
+as it actually appears after "the"), not a naive leading-space heuristic, since
+SentencePiece-family tokenizers (Phi) split some such forms differently.
+
+---
+
+## Appendix C: supporting observations
 
 **The effect is confined to the answer boundary.** Patching at positions −2 through −7 (the queried object, "the", "has", "Who", the sentence-final period, the recipient name) produces **0/12** transport for both correct and random donors, while position −1 produces 9/12. There is no intermediate regime in which the effect is present but weaker.
 

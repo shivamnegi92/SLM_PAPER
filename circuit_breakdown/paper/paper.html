@@ -125,7 +125,9 @@ Limitations</a></li>
 work</a></li>
 <li><a href="#references" id="toc-references">References</a></li>
 <li><a href="#appendix-a-reproduction" id="toc-appendix-a-reproduction">Appendix A: reproduction</a></li>
-<li><a href="#appendix-b-supporting-observations" id="toc-appendix-b-supporting-observations">Appendix B: supporting
+<li><a href="#appendix-b-probe-templates-and-the-competence-gate" id="toc-appendix-b-probe-templates-and-the-competence-gate">Appendix B:
+probe templates and the competence gate</a></li>
+<li><a href="#appendix-c-supporting-observations" id="toc-appendix-c-supporting-observations">Appendix C: supporting
 observations</a></li>
 </ul></li>
 </ul>
@@ -570,7 +572,7 @@ information.</p>
 <hr />
 <h3 id="55-supporting-observations">5.5 Supporting observations</h3>
 <p>Three observations support the interpretation without being
-independent contributions, reported in full in Appendix B: the effect is
+independent contributions, reported in full in Appendix C: the effect is
 confined to the answer boundary (0/12 transport at positions −2 through
 −7 versus 9/12 at −1); compact subspaces do not carry it (0/32 at rank
 32 for every basis tested, against 24/32 full-space); and successful
@@ -621,7 +623,7 @@ is computed on a different probe set and is not comparable to
 Phi&#39;s.</li>
 <li><strong>One intervention site and one layer set.</strong> Layers
 [18, 20, 22, 24] at the final pre-answer position. Other sites may
-behave differently — indeed Appendix B shows they behave <em>very</em>
+behave differently — indeed Appendix C shows they behave <em>very</em>
 differently.</li>
 <li><strong>Competence is not shown to drive the effect.</strong> Phi
 has both higher baseline accuracy and stronger intervention takeover,
@@ -722,7 +724,83 @@ each seed resamples both pairs and prefix;
 <code>paper/figure_data.json</code> is a hand transcription of those
 logs and figures are built from it.</p>
 <hr />
-<h2 id="appendix-b-supporting-observations">Appendix B: supporting
+<h2 id="appendix-b-probe-templates-and-the-competence-gate">Appendix B:
+probe templates and the competence gate</h2>
+<p><strong>Item construction.</strong> Each item is a single
+transfer-chain body (§2) rendered once and then queried five ways, so
+completeness and selectivity are measured on the <em>same</em>
+underlying problem rather than resampled items per probe
+(<code>src/interchange_dataset.py</code> for chain generation,
+<code>src/test_cross_question_panel.py</code> for the panel). The donor
+is always asked the canonical question; only the receiver is asked all
+five.</p>
+<table>
+<thead>
+<tr>
+<th>probe</th>
+<th>question template</th>
+<th>should change under <code>do(Z_curr := z&#39;_D)</code>?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>current_holder</code></td>
+<td>&quot;Who has the {object}?&quot;</td>
+<td>YES → donor&#39;s value</td>
+</tr>
+<tr>
+<td><code>last_recipient</code></td>
+<td>&quot;Who received the {object} last?&quot;</td>
+<td>YES → donor&#39;s value</td>
+</tr>
+<tr>
+<td><code>original_holder</code></td>
+<td>&quot;Who originally had the {object}?&quot;</td>
+<td>NO → receiver&#39;s value</td>
+</tr>
+<tr>
+<td><code>object_identity</code></td>
+<td>&quot;What object did {first} have at the start?&quot;</td>
+<td>NO → receiver&#39;s value</td>
+</tr>
+<tr>
+<td><code>transfer_count</code></td>
+<td>&quot;How many times was the {object} given away?&quot;</td>
+<td>NO → receiver&#39;s value</td>
+</tr>
+</tbody>
+</table>
+<p><code>{object}</code> and <code>{first}</code> are filled from the
+receiver&#39;s own problem, never the donor&#39;s, so a probe answered correctly
+with the <em>donor&#39;s</em> value cannot be explained by surface leakage
+from the question text itself.</p>
+<p><strong>Why the competence gate exists.</strong> A selectivity
+failure — a should-not-change probe moving after the patch — is only
+evidence of a semantic leak if the model could answer that probe
+correctly <em>unpatched</em>. If a model cannot perform the task at all,
+a post-intervention &quot;change&quot; on that probe is noise, not leakage. The
+gate is therefore applied per probe, per model, at a 50%
+baseline-accuracy floor, before any selectivity number is computed or
+reported (§5.1–5.2).</p>
+<p><strong>Why <code>transfer_count</code> was excluded for both
+models.</strong> Baseline (unpatched) accuracy was 20.8% (Phi) and 18.3%
+(Llama) — both models fail to count transfers unprompted at a rate
+indistinguishable from guessing among small integers, independent of any
+intervention. Reporting a &quot;selectivity&quot; result on this probe would
+conflate task incapacity with semantic leakage, so it is dropped from
+the verdict in both models, leaving four graded probes for Phi and three
+for Llama (<code>current_holder</code> additionally excluded for Llama
+at 46.7% baseline competence, per §5.2).</p>
+<p><strong>Answer-token construction.</strong> Count answers are
+rendered as words (&quot;two&quot;, not &quot;2&quot;), because the digit form tokenizes
+inconsistently across architectures — verified to silently corrupt
+generated pairs before being caught. All answers are checked for
+single-token status <em>in the rendered context</em>
+(<code>&quot;the &quot; + word</code> as it actually appears after &quot;the&quot;), not a
+naive leading-space heuristic, since SentencePiece-family tokenizers
+(Phi) split some such forms differently.</p>
+<hr />
+<h2 id="appendix-c-supporting-observations">Appendix C: supporting
 observations</h2>
 <p><strong>The effect is confined to the answer boundary.</strong>
 Patching at positions −2 through −7 (the queried object, &quot;the&quot;, &quot;has&quot;,

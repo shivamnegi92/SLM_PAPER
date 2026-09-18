@@ -28,3 +28,12 @@ experiments/code/results/*.onnx
 phi-3.5-mini/
 nemotron-mini-4b/
 llama-3.2-3b/
+
+# LaTeX build artifacts (paper.pdf IS tracked deliberately - reviewers want it)
+*.aux
+*.log
+*.fls
+*.fdb_latexmk
+*.blg
+*.out
+*.synctex.gz

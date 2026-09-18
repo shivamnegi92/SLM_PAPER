@@ -45,8 +45,13 @@ aggressive candidate pruning region \emph{a priori}; (2) a linear intent head
 and a token-level slot head (softmax or CRF) replace token-by-token
 generation. On a 124M-parameter decoder, pruning to 3 of 12 layers yields
 approximately 5\,ms P50 CPU latency versus approximately 359\,ms for the
-autoregressive baseline on ATIS ($\sim$70$\times$ speedup) while eliminating
-a generative parse-failure rate of up to 46.7\% (0\% by construction). At a
+autoregressive baseline on ATIS ($\sim$70$\times$ speedup). This factorizes
+into $\sim$18$\times$ from replacing autoregressive decoding with a single
+discriminative pass and $\sim$3.8$\times$ from depth pruning, so most of the
+win comes from the architectural conversion rather than from pruning. The
+discriminative heads also remove a generative parse-failure rate of up to
+46.7\%: a closed label space cannot emit an unparseable output, so validity
+is structural rather than empirical. At a
 matched 3{,}000-example budget, depth 3 matches depth 12 at 96.08\% intent
 accuracy on ATIS while reducing P50 latency from 20.4 to 5.4\,ms. Fine-tuning
 at candidate depth 3 preserves most downstream task performance across ATIS,
@@ -87,8 +92,11 @@ Dense diagnostics further reveal a failure boundary where linear task
 accessibility precedes fine-tuning sufficiency; on the slot-bearing SNIPS
 benchmark a token-level BIO-tag probe exposes this gap.
 \textbf{(C2)} \emph{Generative$\rightarrow$discriminative conversion}: a large
-speedup plus a reliability guarantee (parse-failure rate $\rightarrow$ 0 by
-construction). Supporting analyses cover a measured implicit-slot scope
+speedup, decomposed into its decoding and pruning components, plus the
+elimination of a measured 46.7\% generative parse-failure rate. We note that
+zero parse failures follows from the closed output parameterization rather than
+being an empirical result; the substantive number is the generative failure rate
+it displaces. Supporting analyses cover a measured implicit-slot scope
 statement (0\% on our benchmarks) that bounds where span-based heads suffice,
 and a study of common CPU inference optimizations that shows the systems win
 comes from architecture (prune + classify), not post-hoc kernel/quant tricks.
@@ -268,8 +276,12 @@ autoregressive decoding.
 
 \begin{table}[t]\centering
 \caption{Main comparison on ATIS. The pruned discriminative model is
-$\sim$70$\times$ faster than the generative baseline, matches encoder intent
-accuracy, and never emits a malformed output.}
+$\sim$70$\times$ faster than the generative baseline, which decomposes into
+$\sim$18$\times$ from eliminating autoregressive decoding (359.1 to 19.5\,ms at
+depth 12) and $\sim$3.8$\times$ from pruning (19.5 to 5.1\,ms); the conversion,
+not the pruning, dominates. It matches encoder intent accuracy and cannot emit a
+malformed output. The generative baseline is unconstrained; constrained decoding
+would reduce its parse failures at additional decode cost.}
 \begin{tabular}{lrrrr}
 \toprule
 Model & Intent Acc & Slot F1 & Parse-fail & P50 (ms)\\
@@ -462,7 +474,9 @@ valid, independent of schema complexity.
 \includegraphics[width=0.47\linewidth]{../../experiments/figures/fig_latency_bars.pdf}\hfill
 \includegraphics[width=0.47\linewidth]{../../experiments/figures/fig_parsefail.pdf}
 \caption{Left: P50 CPU latency on ATIS (log scale). Right: structured-output
-parse-failure rate; ours is 0\% by construction regardless of schema size.}
+parse-failure rate; a discriminative head over a closed label set has no
+malformed-output mode, so this is a property of the output parameterization
+rather than an empirical finding.}
 \end{figure}
 
 \begin{figure}[t]\centering
@@ -564,9 +578,18 @@ phenomenon. This is a scope-validation result, not an independent contribution.
 Closed-set assumption; open-set/novel-intent detection is out of scope.
 Generation is still needed for free-form tasks. The representation
 accessibility-versus-fine-tuning-sufficiency result is established here for a
-single 124M causal decoder on a single CPU; whether the same depth behaviour
-generalizes to newer decoder families or larger models remains an open
-question. The fine-grained gap on BANKING77 shows depth genuinely helps for
+single 124M causal decoder on a single CPU. \textbf{This is the principal
+limitation of the paper.} We deliberately state the scope narrowly: we do not
+claim that depth 3 is the right operating point for decoders in general, nor
+that the accessibility-versus-sufficiency gap appears at the same depth---or at
+all---in modern 2--7B decoders, whose depth, width, and pretraining differ
+substantially from GPT-2. Establishing whether the phenomenon is a property of
+causal decoders broadly or an artifact of this backbone requires multi-backbone
+replication on accelerator hardware, which our CPU-only setting could not
+support and which we leave to future work. Readers should treat C1 as a
+procedure validated on one backbone and the accessibility-versus-sufficiency
+finding as a single-model existence result: it demonstrates the failure mode is
+real, not that it is universal. The fine-grained gap on BANKING77 shows depth genuinely helps for
 many same-domain intents---probe-guided candidate pruning trades a small,
 quantified accuracy cost there for a $4\times$ speedup.
 

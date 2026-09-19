@@ -37,3 +37,11 @@ llama-3.2-3b/
 *.blg
 *.out
 *.synctex.gz
+
+# LaTeX build artifacts (ARR submission)
+circuit_breakdown/paper/arr/*.aux
+circuit_breakdown/paper/arr/*.log
+circuit_breakdown/paper/arr/*.out
+circuit_breakdown/paper/arr/*.fls
+circuit_breakdown/paper/arr/*.fdb_latexmk
+circuit_breakdown/paper/arr/*.blg

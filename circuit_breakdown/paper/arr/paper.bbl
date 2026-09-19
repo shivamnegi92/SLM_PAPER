@@ -1,0 +1,52 @@
+\begin{thebibliography}{5}
+\providecommand{\natexlab}[1]{#1}
+
+\bibitem[{Geiger et~al.(2021)Geiger, Lu, Icard, and
+  Potts}]{geiger2021causalabstraction}
+Atticus Geiger, Hanson Lu, Thomas Icard, and Christopher Potts. 2021.
+\newblock \href {https://arxiv.org/abs/2106.02997} {Causal abstractions of
+  neural networks}.
+\newblock In \emph{Advances in Neural Information Processing Systems 34}.
+
+\bibitem[{Geiger et~al.(2024)Geiger, Wu, Potts, Icard, and
+  Goodman}]{geiger2024das}
+Atticus Geiger, Zhengxuan Wu, Christopher Potts, Thomas Icard, and Noah~D.
+  Goodman. 2024.
+\newblock \href {https://arxiv.org/abs/2303.02536} {Finding alignments between
+  interpretable causal variables and distributed neural representations}.
+\newblock In \emph{Proceedings of the Third Conference on Causal Learning and
+  Reasoning (CLeaR)}.
+
+\bibitem[{Huang et~al.(2024)Huang, Wu, Potts, Geva, and
+  Geiger}]{huang2024ravel}
+Jing Huang, Zhengxuan Wu, Christopher Potts, Mor Geva, and Atticus Geiger.
+  2024.
+\newblock \href {https://arxiv.org/abs/2402.17700} {{RAVEL}: Evaluating
+  interpretability methods on disentangling language model representations}.
+\newblock In \emph{Proceedings of the 62nd Annual Meeting of the Association
+  for Computational Linguistics}.
+
+\bibitem[{Mueller et~al.(2025)Mueller, Geiger, Wiegreffe, Arad, Arcuschin,
+  Belfki, Chan, Fiotto-Kaufman, Haklay, Hanna, Huang, Gupta, Nikankin, Orgad,
+  Prakash, Reusch, Sankaranarayanan, Shao, Stolfo, Tutek, Zur, Bau, and
+  Belinkov}]{mueller2025mib}
+Aaron Mueller, Atticus Geiger, Sarah Wiegreffe, Dana Arad, Iv{\'a}n Arcuschin,
+  Adam Belfki, Yik~Siu Chan, Jaden Fiotto-Kaufman, Tal Haklay, Michael Hanna,
+  Jing Huang, Rohan Gupta, Yaniv Nikankin, Hadas Orgad, Nikhil Prakash, Anja
+  Reusch, Aruna Sankaranarayanan, Shun Shao, Alessandro Stolfo, and 4 others.
+  2025.
+\newblock \href {https://arxiv.org/abs/2504.13151} {{MIB}: A mechanistic
+  interpretability benchmark}.
+\newblock In \emph{Proceedings of the 42nd International Conference on Machine
+  Learning}.
+
+\bibitem[{Sutter et~al.(2025)Sutter, Minder, Hofmann, and
+  Pimentel}]{sutter2025nonlinear}
+Denis Sutter, Julian Minder, Thomas Hofmann, and Tiago Pimentel. 2025.
+\newblock \href {https://arxiv.org/abs/2507.08802} {The non-linear
+  representation dilemma: Is causal abstraction enough for mechanistic
+  interpretability?}
+\newblock In \emph{Advances in Neural Information Processing Systems 38}.
+\newblock Spotlight.
+
+\end{thebibliography}
